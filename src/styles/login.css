@@ -6,12 +6,12 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #1a365d 0%, #2c5282 50%, #3182ce 100%);
-  padding: 20px;
+  padding: 12px 12px; /* reducido verticalmente para evitar scroll */
 }
 
 .login-page .login-container {
   width: 100%;
-  max-width: 500px;
+  max-width: 1100px;
 }
 
 .login-page .login-box {
@@ -24,45 +24,45 @@
 /* Header */
 .login-page .login-header {
   text-align: center;
-  padding: 15px 25px 12px;
+  padding: 28px 60px 18px; /* menos alto en escritorio */
   background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
   border-bottom: 1px solid #e2e8f0;
 }
 
 .login-page .login-logo {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   background: linear-gradient(135deg, #1a365d, #3182ce);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 8px;
+  margin: 0 auto 8px; /* reducir espacio bajo logo */
   box-shadow: 0 4px 15px rgba(26, 54, 93, 0.3);
 }
 
 .login-page .login-logo span {
   color: white;
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 700;
 }
 
 .login-page .login-header h1 {
   color: #1a365d;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
-  margin: 0 0 2px;
+  margin: 0 0 2px; /* pequeño ajuste */
 }
 
 .login-page .login-header p {
   color: #64748b;
-  font-size: 12px;
+  font-size: 14px;
   margin: 0;
 }
 
 /* Formulario */
 .login-page .login-form {
-  padding: 20px 15px;
+  padding: 30px 60px; /* reducir alto del formulario */
 }
 
 .login-page .login-error {
@@ -84,10 +84,10 @@
 
 .login-page .form-group label {
   display: block;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: #374151;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .login-page .input-icon-wrapper {
@@ -107,8 +107,8 @@
 
 .login-page .input-icon-wrapper input {
   width: 100%;
-  padding: 9px 10px 9px 34px;
-  font-size: 13px;
+  padding: 12px 14px 12px 40px;
+  font-size: 14px;
   font-family: inherit;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -182,8 +182,8 @@
 /* Boton login */
 .login-page .btn-login {
   width: 100%;
-  padding: 10px;
-  font-size: 13px;
+  padding: 14px;
+  font-size: 15px;
   font-weight: 600;
   font-family: inherit;
   color: white;
@@ -202,7 +202,7 @@
 
 /* Footer */
 .login-page .login-footer {
-  padding: 10px 25px 12px;
+  padding: 14px 60px 16px; /* reducir alto del footer */
   text-align: center;
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
@@ -237,8 +237,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 12px 8px;
+  gap: 8px;
+  padding: 16px 10px;
   background: #f8fafc;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
@@ -257,7 +257,7 @@
 }
 
 .login-page .login-tipo-btn span {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: #64748b;
 }
@@ -298,26 +298,19 @@
 /* ========== MODO TABLET (700px a 1100px) ========== */
 @media (min-width: 700px) and (max-width: 1100px) {
   .login-page .login-container {
-    max-width: 450px;
-  }
-
-  .login-page .login-header {
-    padding: 18px 25px 15px;
-  }
-
-  .login-page .login-form {
-    padding: 22px 20px;
+    max-width: 1000px;
   }
 }
 
 /* ========== MODO MOVIL (0px a 699px) ========== */
 @media (max-width: 699px) {
   .login-page {
-    padding: 15px;
+    padding: 10px;
   }
 
   .login-page .login-container {
     max-width: 100%;
+    width: 100%;
   }
 
   .login-page .login-header {
@@ -361,5 +354,50 @@
 
   .login-page .form-group label {
     font-size: 9px;
+  }
+}
+
+/* ========== MODO ESCRITORIO (1101px en adelante) - reducir altura para evitar scroll ========== */
+@media (min-width: 1101px) {
+  .login-page {
+    padding: 8px 12px; /* menos espacio alrededor */
+  }
+
+  .login-page .login-header {
+    padding: 18px 40px 12px; /* reducir header verticalmente */
+  }
+
+  .login-page .login-logo {
+    margin: 0 auto 6px; /* menos margen inferior */
+  }
+
+  .login-page .login-header h1 {
+    margin-bottom: 2px;
+  }
+
+  .login-page .login-form {
+    padding: 18px 40px; /* formulario más compacto */
+  }
+
+  .login-page .input-icon-wrapper input {
+    padding: 10px 12px 10px 36px; /* inputs menos altos */
+    font-size: 13px;
+  }
+
+  .login-page .login-tipo-btn {
+    padding: 10px 8px; /* botones tipo más compactos */
+  }
+
+  .login-page .login-tipo-btn span {
+    font-size: 12px;
+  }
+
+  .login-page .btn-login {
+    padding: 12px; /* botón ligeramente más pequeño */
+    font-size: 14px;
+  }
+
+  .login-page .login-footer {
+    padding: 10px 40px 12px; /* footer más compacto */
   }
 }

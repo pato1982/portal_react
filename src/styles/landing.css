@@ -1696,6 +1696,41 @@
     .landing-page .hero-image {
         margin-top: 30px;
     }
+
+    /* Corregir orden del icono en tarjeta docentes para que quede arriba del texto */
+    .landing-page .feature-docentes .feature-icon {
+        order: -1;
+    }
+
+    /* Planes: 2 arriba y 1 abajo ocupando todo el ancho */
+    .landing-page .planes-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .landing-page .plan-card:nth-child(3) {
+        grid-column: 1 / -1;
+    }
+
+    /* Tercera tarjeta (Premium) con layout horizontal */
+    .landing-page .plan-card:nth-child(3) .plan-body {
+        padding: 20px 25px;
+    }
+
+    .landing-page .plan-card:nth-child(3) .plan-features.dos-columnas {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px 20px;
+    }
+
+    /* Footer: contacto centrado con info en columna */
+    .landing-page .footer-contacto {
+        text-align: center;
+    }
+
+    .landing-page .contacto-items {
+        flex-direction: column;
+        gap: 8px;
+    }
 }
 
 /* ========== MODO MOVIL (0px a 699px) ========== */

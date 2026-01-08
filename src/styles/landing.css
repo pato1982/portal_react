@@ -1,0 +1,2850 @@
+/* ==================== LANDING PAGE STYLES ==================== */
+
+/* ==================== VARIABLES ==================== */
+.landing-page {
+    --primary-color: #1a365d;
+    --primary-dark: #0f2440;
+    --primary-light: #2c5282;
+    --secondary-color: #2d3748;
+    --accent-color: #3182ce;
+    --success-color: #276749;
+    --background-color: #f7fafc;
+    --surface-color: #ffffff;
+    --border-color: #e2e8f0;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --text-muted: #718096;
+}
+
+/* ==================== RESET & BASE ==================== */
+.landing-page {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.landing-page * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ==================== BOTONES ==================== */
+.landing-page .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: 2px solid transparent;
+}
+
+.landing-page .btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.landing-page .btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
+}
+
+.landing-page .btn-outline {
+    background: transparent;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.landing-page .btn-outline:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.landing-page .btn-white {
+    background: white;
+    color: var(--primary-color);
+    border-color: white;
+}
+
+.landing-page .btn-white:hover {
+    background: var(--background-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.landing-page .btn-outline-white {
+    background: transparent;
+    color: white;
+    border-color: white;
+}
+
+.landing-page .btn-outline-white:hover {
+    background: white;
+    color: var(--primary-color);
+}
+
+.landing-page .btn-contact {
+    background: transparent;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    padding: 10px;
+    min-width: auto;
+}
+
+.landing-page .btn-contact:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.landing-page .btn-contact svg {
+    display: block;
+}
+
+.landing-page .btn-lg {
+    padding: 16px 32px;
+    font-size: 16px;
+}
+
+.landing-page .btn-sm {
+    padding: 8px 16px;
+    font-size: 12px;
+}
+
+/* ==================== NAVEGACION ==================== */
+.landing-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.landing-navbar.scrolled {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.landing-page .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.landing-page .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.landing-page .nav-logo {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.landing-page .nav-logo .logo-icon {
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.landing-page .nav-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.landing-page .nav-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.landing-page .nav-actions .btn {
+    padding: 10px 20px;
+    font-size: 13px;
+}
+
+.landing-page .nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.landing-page .nav-toggle span {
+    width: 24px;
+    height: 2px;
+    background: var(--primary-color);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.landing-page .nav-mobile {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px 30px 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.landing-page .nav-mobile.active {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 8px;
+}
+
+.landing-page .nav-mobile .btn {
+    padding: 8px 16px;
+    font-size: 12px;
+}
+
+.landing-page .nav-mobile .btn-contact {
+    padding: 8px;
+}
+
+.landing-page .nav-mobile .btn-contact svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* ==================== HERO ==================== */
+.landing-page .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 100px 30px 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 60px;
+}
+
+.landing-page .hero-content {
+    flex: 1;
+}
+
+.landing-page .hero-content h1 {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.landing-page .hero-content .highlight {
+    color: var(--accent-color);
+}
+
+.landing-page .hero-subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin-bottom: 35px;
+    line-height: 1.7;
+    max-width: 500px;
+}
+
+.landing-page .hero-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.landing-page .hero-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.landing-page .hero-graphic {
+    position: relative;
+    width: 400px;
+    height: 400px;
+}
+
+/* Cubo 3D giratorio */
+.landing-page .cube-container {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    perspective: 1000px;
+}
+
+.landing-page .cube {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: rotateCube 15s linear infinite;
+}
+
+.landing-page .cube-face {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.15);
+}
+
+.landing-page .cube-letra {
+    font-size: 100px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.landing-page .cube-texto {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-top: 5px;
+}
+
+/* Colores de cada cara */
+.landing-page .cube-front {
+    background: linear-gradient(135deg, #4a9fe0 0%, #7ec8f0 100%);
+    transform: rotateY(0deg) translateZ(125px);
+}
+.landing-page .cube-back {
+    background: linear-gradient(135deg, #5cc98a 0%, #85e0a8 100%);
+    transform: rotateY(180deg) translateZ(125px);
+}
+.landing-page .cube-right {
+    background: linear-gradient(135deg, #f0a050 0%, #f8c078 100%);
+    transform: rotateY(90deg) translateZ(125px);
+}
+.landing-page .cube-left {
+    background: linear-gradient(135deg, #b08cf0 0%, #c9a8f8 100%);
+    transform: rotateY(-90deg) translateZ(125px);
+}
+.landing-page .cube-top {
+    background: linear-gradient(135deg, #4a9fe0 0%, #b08cf0 100%);
+    transform: rotateX(90deg) translateZ(125px);
+}
+.landing-page .cube-bottom {
+    background: linear-gradient(135deg, #5cc98a 0%, #f0a050 100%);
+    transform: rotateX(-90deg) translateZ(125px);
+}
+
+@keyframes rotateCube {
+    0% { transform: rotateX(0deg) rotateY(0deg); }
+    100% { transform: rotateX(360deg) rotateY(360deg); }
+}
+
+.landing-page .graphic-card {
+    position: absolute;
+    background: white;
+    padding: 10px 14px;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-primary);
+    animation: float 3s ease-in-out infinite;
+}
+
+.landing-page .card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-color);
+}
+
+.landing-page .card-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* 7 cards en circulo alrededor del cubo */
+
+/* Card 1 - Arriba (0°) */
+.landing-page .card-1 {
+    top: -5%;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: floatTop 3s ease-in-out infinite;
+    animation-delay: 0s;
+    border: 2px solid #3182ce;
+}
+.landing-page .card-1 .card-icon { color: #3182ce; }
+
+/* Card 2 - Arriba derecha (51°) */
+.landing-page .card-2 {
+    top: 8%;
+    right: -8%;
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 0.43s;
+    border: 2px solid #48bb78;
+}
+.landing-page .card-2 .card-icon { color: #48bb78; }
+
+/* Card 3 - Derecha (103°) */
+.landing-page .card-3 {
+    top: 40%;
+    right: -18%;
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 0.86s;
+    border: 2px solid #ed8936;
+}
+.landing-page .card-3 .card-icon { color: #ed8936; }
+
+/* Card 4 - Abajo derecha (154°) */
+.landing-page .card-4 {
+    bottom: 8%;
+    right: -8%;
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 1.29s;
+    border: 2px solid #9f7aea;
+}
+.landing-page .card-4 .card-icon { color: #9f7aea; }
+
+/* Card 5 - Abajo izquierda (206°) */
+.landing-page .card-5 {
+    bottom: 8%;
+    left: -8%;
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 1.72s;
+    border: 2px solid #e53e3e;
+}
+.landing-page .card-5 .card-icon { color: #e53e3e; }
+
+/* Card 6 - Izquierda (257°) */
+.landing-page .card-6 {
+    top: 40%;
+    left: -18%;
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 2.15s;
+    border: 2px solid #38b2ac;
+}
+.landing-page .card-6 .card-icon { color: #38b2ac; }
+
+/* Card 7 - Arriba izquierda (309°) */
+.landing-page .card-7 {
+    top: 8%;
+    left: -8%;
+    animation: float 3s ease-in-out infinite;
+    animation-delay: 2.58s;
+    border: 2px solid #dd6b20;
+}
+.landing-page .card-7 .card-icon { color: #dd6b20; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+@keyframes floatTop {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+/* ==================== KPIs ==================== */
+.landing-page .kpis-container {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 30px;
+}
+
+.landing-page .kpi-card {
+    background: white;
+    border-radius: 12px;
+    padding: 40px 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    flex: 1;
+    max-width: 320px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid;
+    position: relative;
+}
+
+.landing-page .kpi-card:nth-child(1) {
+    border-left-color: #3182ce;
+}
+
+.landing-page .kpi-card:nth-child(2) {
+    border-left-color: #38a169;
+}
+
+.landing-page .kpi-card:nth-child(3) {
+    border-left-color: #d69e2e;
+}
+
+.landing-page .kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.landing-page .kpi-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.landing-page .kpi-card:nth-child(1) .kpi-icon {
+    background: rgba(49, 130, 206, 0.1);
+    color: #3182ce;
+}
+
+.landing-page .kpi-card:nth-child(2) .kpi-icon {
+    background: rgba(56, 161, 105, 0.1);
+    color: #38a169;
+}
+
+.landing-page .kpi-card:nth-child(3) .kpi-icon {
+    background: rgba(214, 158, 46, 0.1);
+    color: #d69e2e;
+}
+
+.landing-page .kpi-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.landing-page .kpi-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.landing-page .kpi-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* ==================== SECCIONES ==================== */
+.landing-page .section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 30px;
+}
+
+.landing-page .section-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.landing-page .section-header h2 {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.landing-page .section-header p {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* ==================== CARACTERISTICAS ==================== */
+.landing-page .caracteristicas {
+    padding: 100px 0 0 0;
+    background: var(--background-color);
+}
+
+.landing-page .feature-card {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    background: white;
+    border-radius: 20px;
+    padding: 50px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+}
+
+.landing-page .feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.landing-page .feature-card:last-child {
+    margin-bottom: 0;
+}
+
+.landing-page .feature-icon {
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.landing-page .feature-icon svg {
+    width: 50px;
+    height: 50px;
+}
+
+.landing-page .feature-apoderados .feature-icon {
+    background: linear-gradient(135deg, #3182ce, #63b3ed);
+}
+
+.landing-page .feature-docentes .feature-icon {
+    background: linear-gradient(135deg, #48bb78, #68d391);
+}
+
+.landing-page .feature-admin .feature-icon {
+    background: linear-gradient(135deg, #ed8936, #f6ad55);
+}
+
+.landing-page .feature-content h3 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.landing-page .feature-description {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 25px;
+}
+
+.landing-page .feature-list {
+    list-style: none;
+    display: grid;
+    gap: 12px;
+}
+
+.landing-page .feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 15px;
+    color: var(--text-secondary);
+}
+
+.landing-page .check-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    background: var(--success-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* ==================== BENEFICIOS ==================== */
+.landing-page .beneficios {
+    padding: 40px 0 100px 0;
+    background: white;
+}
+
+.landing-page .beneficios-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+}
+
+.landing-page .beneficio-item {
+    text-align: center;
+    padding: 40px 25px;
+    background: var(--background-color);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.landing-page .beneficio-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+}
+
+.landing-page .beneficio-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: var(--accent-color);
+}
+
+.landing-page .beneficio-icon svg {
+    width: 40px;
+    height: 40px;
+}
+
+.landing-page .beneficio-item h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.landing-page .beneficio-item p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Colores individuales para cada beneficio */
+.landing-page .beneficio-item:nth-child(1) {
+    border: 2px solid #3182ce;
+}
+
+.landing-page .beneficio-item:nth-child(1) .beneficio-icon {
+    color: #3182ce;
+}
+
+.landing-page .beneficio-item:nth-child(2) {
+    border: 2px solid #48bb78;
+}
+
+.landing-page .beneficio-item:nth-child(2) .beneficio-icon {
+    color: #48bb78;
+}
+
+.landing-page .beneficio-item:nth-child(3) {
+    border: 2px solid #ed8936;
+}
+
+.landing-page .beneficio-item:nth-child(3) .beneficio-icon {
+    color: #ed8936;
+}
+
+.landing-page .beneficio-item:nth-child(4) {
+    border: 2px solid #9f7aea;
+}
+
+.landing-page .beneficio-item:nth-child(4) .beneficio-icon {
+    color: #9f7aea;
+}
+
+/* ==================== CTA FINAL ==================== */
+.landing-page .cta-final {
+    padding: 100px 0;
+    background: linear-gradient(135deg, #5a7a9a, #7a9bb8);
+    text-align: center;
+}
+
+.landing-page .cta-final h2 {
+    font-size: 36px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.landing-page .cta-final p {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 35px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.landing-page .cta-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* ==================== FOOTER ==================== */
+.landing-footer {
+    background: var(--primary-dark);
+    padding: 40px 0;
+}
+
+.landing-page .footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 30px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.landing-page .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.landing-page .footer-logo {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.landing-page .footer-logo .logo-icon {
+    color: var(--primary-color);
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.landing-page .footer-brand span {
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.landing-page .footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-self: center;
+}
+
+.landing-page .footer-links-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.landing-page .footer-links a,
+.landing-page .footer-links button {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.landing-page .footer-links a:hover,
+.landing-page .footer-links button:hover {
+    color: white;
+}
+
+.landing-page .footer-copy {
+    flex-basis: 100%;
+    text-align: center;
+    margin-top: 15px;
+    order: 10;
+}
+
+.landing-page .footer-copy p {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+}
+
+/* Contacto en Footer */
+.landing-page .footer-contacto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.landing-page .footer-contacto h4 {
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+}
+
+.landing-page .contacto-items {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+}
+
+.landing-page .contacto-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.3s ease;
+}
+
+.landing-page .contacto-item:hover {
+    color: white;
+}
+
+.landing-page .contacto-item svg {
+    flex-shrink: 0;
+}
+
+/* ==================== MODALES ==================== */
+.landing-page .modal-footer-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.landing-page .modal-footer-overlay.active {
+    display: flex;
+}
+
+.landing-page .modal-footer-contenido {
+    background: white;
+    border-radius: 0;
+    max-width: 700px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalFooterFadeIn 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes modalFooterFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.landing-page .modal-footer-header {
+    background: #1e3a5f;
+    color: white;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.landing-page .modal-footer-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.landing-page .modal-footer-cerrar {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 0;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+    line-height: 1;
+}
+
+.landing-page .modal-footer-cerrar:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.landing-page .modal-footer-body {
+    padding: 25px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.landing-page .modal-footer-body h3 {
+    color: #1e3a5f;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.landing-page .modal-footer-body h3:not(:first-child) {
+    margin-top: 25px;
+}
+
+.landing-page .modal-footer-body p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #4a5568;
+    text-align: justify;
+    margin: 0 0 15px 0;
+}
+
+.landing-page .modal-footer-body ul {
+    margin: 0 0 15px 0;
+    padding-left: 20px;
+}
+
+.landing-page .modal-footer-body li {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #4a5568;
+    margin-bottom: 8px;
+    text-align: justify;
+}
+
+.landing-page .modal-footer-body strong {
+    color: #1e3a5f;
+}
+
+.landing-page .modal-footer-pie {
+    padding: 15px 25px;
+    background: #f7fafc;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.landing-page .modal-footer-pie p {
+    font-size: 12px;
+    color: #718096;
+    margin: 0;
+}
+
+/* ==================== PLANES / PRICING ==================== */
+.landing-page .planes-section {
+    margin-top: 80px;
+    padding-top: 60px;
+    border-top: 1px solid var(--border-color);
+}
+
+.landing-page .planes-section .section-header {
+    margin-bottom: 40px;
+}
+
+.landing-page .planes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    align-items: stretch;
+}
+
+.landing-page .plan-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 3px solid transparent;
+}
+
+/* Bordes de colores distintos para cada plan */
+.landing-page .plan-basico {
+    border-color: #3182ce;
+}
+
+.landing-page .plan-intermedio {
+    border-color: #48bb78;
+}
+
+.landing-page .plan-premium {
+    border-color: #ed8936;
+}
+
+.landing-page .plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.landing-page .plan-card.destacado {
+    border-color: var(--accent-color);
+    transform: scale(1.02);
+}
+
+.landing-page .plan-card.destacado:hover {
+    transform: scale(1.02) translateY(-5px);
+}
+
+.landing-page .plan-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #48bb78;
+    color: white;
+    padding: 4px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 0 10px 0 10px;
+}
+
+.landing-page .plan-badge.badge-premium {
+    background: linear-gradient(135deg, #ed8936, #dd6b20);
+}
+
+.landing-page .plan-header {
+    padding: 18px 18px 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.landing-page .plan-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.landing-page .plan-precio {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 3px;
+}
+
+.landing-page .precio-valor {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--primary-color);
+}
+
+.landing-page .precio-periodo {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.landing-page .plan-promo {
+    margin-top: 8px;
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.landing-page .plan-body {
+    padding: 15px 18px;
+    flex: 1;
+}
+
+.landing-page .plan-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.landing-page .plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.landing-page .plan-features .check {
+    width: 14px;
+    height: 14px;
+    background: var(--success-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    flex-shrink: 0;
+}
+
+/* Dos columnas para planes con muchos items */
+.landing-page .plan-features.dos-columnas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+}
+
+.landing-page .plan-footer {
+    padding: 12px 18px 18px;
+    text-align: center;
+}
+
+.landing-page .plan-footer .btn {
+    width: 100%;
+}
+
+/* Botones de cada plan con su color */
+.landing-page .plan-basico .plan-footer .btn {
+    background: #3182ce;
+    border-color: #3182ce;
+    color: white;
+}
+
+.landing-page .plan-basico .plan-footer .btn:hover {
+    background: #2c5282;
+    border-color: #2c5282;
+}
+
+.landing-page .plan-intermedio .plan-footer .btn {
+    background: #48bb78;
+    border-color: #48bb78;
+    color: white;
+}
+
+.landing-page .plan-intermedio .plan-footer .btn:hover {
+    background: #38a169;
+    border-color: #38a169;
+}
+
+.landing-page .plan-premium .plan-footer .btn {
+    background: #ed8936;
+    border-color: #ed8936;
+    color: white;
+}
+
+.landing-page .plan-premium .plan-footer .btn:hover {
+    background: #dd6b20;
+    border-color: #dd6b20;
+}
+
+/* Promo badge colores por plan */
+.landing-page .plan-basico .plan-promo {
+    background: linear-gradient(135deg, #3182ce, #2c5282);
+}
+
+/* Plan colors - headers con fondo suave del color del borde */
+.landing-page .plan-basico .plan-header {
+    background: linear-gradient(135deg, rgba(49, 130, 206, 0.08), rgba(49, 130, 206, 0.15));
+}
+
+.landing-page .plan-basico .precio-valor {
+    color: #3182ce;
+}
+
+.landing-page .plan-intermedio .plan-header {
+    background: linear-gradient(135deg, rgba(72, 187, 120, 0.08), rgba(72, 187, 120, 0.15));
+}
+
+.landing-page .plan-intermedio .precio-valor {
+    color: #38a169;
+}
+
+.landing-page .plan-premium .plan-header {
+    background: linear-gradient(135deg, rgba(237, 137, 54, 0.08), rgba(237, 137, 54, 0.15));
+}
+
+.landing-page .plan-premium .precio-valor {
+    color: #dd6b20;
+}
+
+/* ==================== MODAL PLANES ==================== */
+.landing-page .modal-plan {
+    max-width: 580px;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.landing-page .modal-plan .modal-footer-header {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.landing-page .modal-plan-header-basico {
+    background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+}
+
+.landing-page .modal-plan-header-intermedio {
+    background: linear-gradient(135deg, #48bb78 0%, #276749 100%);
+}
+
+.landing-page .modal-plan-header-premium {
+    background: linear-gradient(135deg, #ed8936 0%, #c05621 100%);
+}
+
+/* Header top: nombre a la izquierda, precio a la derecha */
+.landing-page .modal-plan-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+}
+
+.landing-page .modal-plan .modal-footer-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.landing-page .modal-plan-precio-box {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.landing-page .modal-plan-precio {
+    font-size: 26px;
+    font-weight: 800;
+    color: white;
+}
+
+.landing-page .modal-plan-periodo {
+    font-size: 12px;
+    font-weight: 400;
+    opacity: 0.85;
+    color: white;
+}
+
+/* Banner promocional llamativo */
+.landing-page .modal-plan-promo-banner {
+    background: linear-gradient(90deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.25) 100%);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.landing-page .modal-plan-promo-banner .promo-icon {
+    font-size: 18px;
+    animation: pulse-gift 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-gift {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+.landing-page .modal-plan-promo-banner .promo-text {
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    letter-spacing: 0.5px;
+}
+
+.landing-page .modal-plan-promo-banner .promo-sub {
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.9);
+}
+
+.landing-page .modal-plan .modal-footer-cerrar {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.landing-page .modal-plan .modal-footer-cerrar:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.1);
+}
+
+.landing-page .modal-plan .modal-footer-body {
+    padding: 20px;
+    background: #f8fafc;
+}
+
+.landing-page .modal-plan-incluye {
+    background: white;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.landing-page .modal-plan-incluye span {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.landing-page .modal-plan-seccion {
+    margin-bottom: 20px;
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid var(--border-color);
+}
+
+.landing-page .modal-plan-seccion:last-child {
+    margin-bottom: 0;
+}
+
+.landing-page .modal-plan-seccion h3 {
+    font-size: 15px;
+    color: var(--text-primary);
+    margin: 0 0 14px 0;
+    padding: 0 0 10px 0;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.landing-page .modal-plan-seccion h3::before {
+    content: '';
+    width: 4px;
+    height: 18px;
+    border-radius: 2px;
+}
+
+/* Colores de la barra lateral en secciones segun plan */
+.landing-page .modal-plan-header-basico ~ .modal-footer-body .modal-plan-seccion h3::before {
+    background: #3182ce;
+}
+
+.landing-page .modal-plan-header-intermedio ~ .modal-footer-body .modal-plan-seccion h3::before {
+    background: #48bb78;
+}
+
+.landing-page .modal-plan-header-premium ~ .modal-footer-body .modal-plan-seccion h3::before {
+    background: #ed8936;
+}
+
+.landing-page .modal-plan-seccion ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+}
+
+.landing-page .modal-plan-seccion li {
+    position: relative;
+    padding-left: 22px;
+    margin-bottom: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.landing-page .modal-plan-seccion li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Features destacados del Plan Intermedio */
+.landing-page .modal-plan-seccion li.feature-destacado {
+    color: #48bb78;
+    font-weight: 600;
+}
+
+.landing-page .modal-plan-seccion li.feature-destacado::before {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    box-shadow: 0 2px 4px rgba(72, 187, 120, 0.3);
+}
+
+/* Features exclusivos del Plan Premium */
+.landing-page .modal-plan-seccion li.feature-premium {
+    color: #ed8936;
+    font-weight: 600;
+}
+
+.landing-page .modal-plan-seccion li.feature-premium::before {
+    background: linear-gradient(135deg, #ed8936, #dd6b20);
+    box-shadow: 0 2px 4px rgba(237, 137, 54, 0.3);
+}
+
+.landing-page .modal-plan .modal-footer-pie {
+    display: flex;
+    justify-content: center;
+    padding: 20px 25px;
+    background: white;
+    border-top: 1px solid var(--border-color);
+}
+
+.landing-page .modal-plan .modal-footer-pie .btn {
+    min-width: 220px;
+    padding: 14px 28px;
+    font-size: 15px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+/* Colores del boton del footer segun plan */
+.landing-page .modal-plan-header-basico ~ .modal-footer-body ~ .modal-footer-pie .btn,
+.landing-page .modal-footer-contenido:has(.modal-plan-header-basico) .modal-footer-pie .btn {
+    background: #3182ce;
+    border-color: #3182ce;
+}
+
+.landing-page .modal-footer-contenido:has(.modal-plan-header-basico) .modal-footer-pie .btn:hover {
+    background: #2c5282;
+    border-color: #2c5282;
+}
+
+.landing-page .modal-footer-contenido:has(.modal-plan-header-intermedio) .modal-footer-pie .btn {
+    background: #48bb78;
+    border-color: #48bb78;
+}
+
+.landing-page .modal-footer-contenido:has(.modal-plan-header-intermedio) .modal-footer-pie .btn:hover {
+    background: #38a169;
+    border-color: #38a169;
+}
+
+.landing-page .modal-footer-contenido:has(.modal-plan-header-premium) .modal-footer-pie .btn {
+    background: #ed8936;
+    border-color: #ed8936;
+}
+
+.landing-page .modal-footer-contenido:has(.modal-plan-header-premium) .modal-footer-pie .btn:hover {
+    background: #dd6b20;
+    border-color: #dd6b20;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1100px) {
+    .landing-page .hero {
+        flex-direction: column;
+        text-align: center;
+        padding-top: 120px;
+        padding-bottom: 30px;
+        gap: 20px;
+        min-height: auto;
+    }
+
+    .landing-page .hero-content h1 {
+        font-size: 36px;
+    }
+
+    .landing-page .hero-subtitle {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .landing-page .hero-actions {
+        justify-content: center;
+    }
+
+    .landing-page .hero-graphic {
+        width: 300px;
+        height: 300px;
+    }
+
+    .landing-page .cube-container {
+        width: 200px;
+        height: 200px;
+    }
+
+    .landing-page .cube-face {
+        width: 200px;
+        height: 200px;
+    }
+
+    .landing-page .cube-letra {
+        font-size: 80px;
+    }
+
+    .landing-page .cube-texto {
+        font-size: 14px;
+    }
+
+    .landing-page .cube-front  { transform: rotateY(0deg) translateZ(100px); }
+    .landing-page .cube-back   { transform: rotateY(180deg) translateZ(100px); }
+    .landing-page .cube-right  { transform: rotateY(90deg) translateZ(100px); }
+    .landing-page .cube-left   { transform: rotateY(-90deg) translateZ(100px); }
+    .landing-page .cube-top    { transform: rotateX(90deg) translateZ(100px); }
+    .landing-page .cube-bottom { transform: rotateX(-90deg) translateZ(100px); }
+
+    .landing-page .feature-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 40px 30px;
+    }
+
+    .landing-page .feature-docentes {
+        flex-direction: column;
+    }
+
+    .landing-page .beneficios-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .landing-page .kpis-container {
+        margin-top: 40px;
+        gap: 20px;
+    }
+
+    .landing-page .kpi-card {
+        padding: 25px;
+        gap: 15px;
+    }
+
+    .landing-page .kpi-icon {
+        width: 45px;
+        height: 45px;
+    }
+
+    .landing-page .kpi-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .landing-page .kpi-number {
+        font-size: 28px;
+    }
+
+    .landing-page .kpi-label {
+        font-size: 13px;
+    }
+
+    /* Planes responsive 1100px */
+    .landing-page .planes-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+    .landing-page .plan-features.dos-columnas {
+        gap: 5px 8px;
+    }
+
+    .landing-page .plan-card.destacado {
+        transform: none;
+    }
+
+    .landing-page .plan-card.destacado:hover {
+        transform: translateY(-5px);
+    }
+}
+
+/* ========== MODO TABLET (700px a 1100px) ========== */
+@media (min-width: 700px) and (max-width: 1100px) {
+    .landing-page .card-1 {
+        white-space: nowrap;
+    }
+
+    .landing-page .hero-image {
+        margin-top: 30px;
+    }
+}
+
+/* ========== MODO MOVIL (0px a 699px) ========== */
+@media (max-width: 699px) {
+    .landing-page .nav-actions {
+        display: none;
+    }
+
+    .landing-page .nav-toggle {
+        display: flex;
+    }
+
+    .landing-page .card-1 {
+        white-space: nowrap;
+    }
+
+    .landing-page .hero {
+        gap: 40px;
+        min-height: auto;
+    }
+
+    .landing-page .hero-image {
+        flex: none;
+    }
+
+    .landing-page .hero-graphic {
+        width: 280px;
+        height: 280px;
+    }
+
+    .landing-page .hero-content h1 {
+        font-size: 24px;
+    }
+
+    .landing-page .hero-subtitle {
+        font-size: 14px;
+        text-align: justify;
+        margin-bottom: 20px;
+    }
+
+    .landing-page .kpis-container {
+        margin-top: 30px;
+        gap: 12px;
+    }
+
+    .landing-page .kpi-card {
+        padding: 18px 15px;
+        gap: 12px;
+        border-radius: 10px;
+    }
+
+    .landing-page .kpi-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+    }
+
+    .landing-page .kpi-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .landing-page .kpi-number {
+        font-size: 22px;
+    }
+
+    .landing-page .kpi-label {
+        font-size: 11px;
+    }
+
+    .landing-page .hero-actions .btn-outline {
+        display: none;
+    }
+
+    .landing-page .hero-actions .btn-primary {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+
+    .landing-page .section-header h2 {
+        font-size: 22px;
+    }
+
+    .landing-page .section-header p {
+        font-size: 14px;
+        text-align: justify;
+    }
+
+    .landing-page .feature-card {
+        text-align: left;
+    }
+
+    .landing-page .feature-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+    }
+
+    .landing-page .feature-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .landing-page .feature-card {
+        position: relative;
+        padding-top: 20px;
+    }
+
+    .landing-page .feature-content h3 {
+        font-size: 18px;
+        padding-right: 50px;
+    }
+
+    .landing-page .feature-description {
+        font-size: 13px;
+        text-align: justify;
+        line-height: 1.5;
+    }
+
+    .landing-page .feature-list li {
+        font-size: 12px;
+        text-align: left;
+    }
+
+    .landing-page .feature-list li span:last-child {
+        text-align: justify;
+    }
+
+    .landing-page .beneficios {
+        padding-top: 0;
+        margin-top: -35px;
+    }
+
+    .landing-page .kpis-container {
+        margin-bottom: 0;
+    }
+
+    .landing-page .beneficios-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .landing-page .beneficio-item {
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        padding: 25px 20px;
+    }
+
+    .landing-page .beneficio-item h4 {
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .landing-page .beneficio-icon {
+        margin-bottom: 0;
+        order: -1;
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .landing-page .beneficio-icon svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .landing-page .beneficio-item {
+        position: relative;
+        padding-right: 70px;
+    }
+
+    .landing-page .beneficio-item p {
+        font-size: 12px;
+        text-align: justify;
+        line-height: 1.5;
+    }
+
+    .landing-page .cta-final h2 {
+        font-size: 20px;
+    }
+
+    .landing-page .cta-final p {
+        font-size: 13px;
+        text-align: justify;
+    }
+
+    .landing-page .cta-actions .btn {
+        padding: 10px 18px;
+        font-size: 12px;
+    }
+
+    .landing-page .footer-container {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+
+    .landing-page .footer-links {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .landing-page .footer-links-row {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .landing-page .footer-links a,
+    .landing-page .footer-links button {
+        font-size: 12px;
+    }
+
+    .landing-page .footer-copy p {
+        font-size: 11px;
+    }
+
+    .landing-page .footer-contacto {
+        order: -1;
+        width: 100%;
+    }
+
+    .landing-page .footer-contacto h4 {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 13px;
+    }
+
+    .landing-page .contacto-items {
+        flex-direction: row;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .landing-page .contacto-item {
+        font-size: 12px;
+    }
+
+    .landing-page .btn-lg {
+        padding: 10px 18px;
+        font-size: 13px;
+    }
+
+    /* Planes responsive 767px */
+    .landing-page .planes-section {
+        margin-top: 50px;
+        padding-top: 40px;
+    }
+
+    .landing-page .planes-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        max-width: 100%;
+    }
+
+    .landing-page .plan-header {
+        padding: 14px 15px 12px;
+    }
+
+    .landing-page .plan-header h3 {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .landing-page .precio-valor {
+        font-size: 22px;
+    }
+
+    .landing-page .plan-body {
+        padding: 12px 15px;
+    }
+
+    .landing-page .plan-features li {
+        font-size: 10px;
+    }
+
+    .landing-page .plan-features .check {
+        width: 12px;
+        height: 12px;
+        font-size: 7px;
+    }
+
+    .landing-page .plan-features.dos-columnas {
+        gap: 5px 10px;
+    }
+
+    .landing-page .plan-footer {
+        padding: 10px 15px 15px;
+    }
+
+    /* Modal Plan responsive 767px */
+    .landing-page .modal-plan {
+        max-width: 95%;
+    }
+
+    .landing-page .modal-plan-header-top {
+        padding: 14px 16px;
+    }
+
+    .landing-page .modal-plan .modal-footer-header h2 {
+        font-size: 18px;
+    }
+
+    .landing-page .modal-plan-precio {
+        font-size: 22px;
+    }
+
+    .landing-page .modal-plan-periodo {
+        font-size: 10px;
+    }
+
+    .landing-page .modal-plan-promo-banner {
+        padding: 8px 16px;
+        gap: 8px;
+    }
+
+    .landing-page .modal-plan-promo-banner .promo-icon {
+        font-size: 16px;
+    }
+
+    .landing-page .modal-plan-promo-banner .promo-text {
+        font-size: 13px;
+    }
+
+    .landing-page .modal-plan-promo-banner .promo-sub {
+        font-size: 10px;
+    }
+
+    .landing-page .modal-plan .modal-footer-body {
+        padding: 18px;
+    }
+
+    .landing-page .modal-plan-seccion {
+        padding: 14px;
+        margin-bottom: 15px;
+    }
+
+    .landing-page .modal-plan-seccion h3 {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .landing-page .modal-plan-seccion ul {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .landing-page .modal-plan-seccion li {
+        font-size: 12px;
+        padding-left: 20px;
+    }
+
+    .landing-page .modal-plan-seccion li::before {
+        width: 14px;
+        height: 14px;
+        font-size: 9px;
+    }
+
+    .landing-page .modal-plan .modal-footer-pie .btn {
+        min-width: 180px;
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+
+    /* Modal responsive */
+    .landing-page .modal-footer-overlay {
+        padding: 15px;
+    }
+
+    .landing-page .modal-footer-contenido {
+        max-height: 90vh;
+    }
+
+    .landing-page .modal-footer-header {
+        padding: 15px 18px;
+    }
+
+    .landing-page .modal-footer-header h2 {
+        font-size: 16px;
+    }
+
+    .landing-page .modal-footer-cerrar {
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+    }
+
+    .landing-page .modal-footer-body {
+        padding: 18px;
+    }
+
+    .landing-page .modal-footer-body h3 {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .landing-page .modal-footer-body h3:not(:first-child) {
+        margin-top: 20px;
+    }
+
+    .landing-page .modal-footer-body p {
+        font-size: 12px;
+        line-height: 1.6;
+        margin-bottom: 12px;
+    }
+
+    .landing-page .modal-footer-body ul {
+        padding-left: 16px;
+    }
+
+    .landing-page .modal-footer-body li {
+        font-size: 12px;
+        line-height: 1.6;
+        margin-bottom: 6px;
+    }
+
+    .landing-page .modal-footer-pie {
+        padding: 12px 18px;
+    }
+
+    .landing-page .modal-footer-pie p {
+        font-size: 11px;
+    }
+}
+
+/* Movil - estilos adicionales */
+@media (max-width: 699px) {
+    .landing-page .nav-container {
+        padding: 10px 15px;
+    }
+
+    .landing-page .nav-title {
+        font-size: 14px;
+    }
+
+    .landing-page .nav-logo {
+        width: 32px;
+        height: 32px;
+    }
+
+    .landing-page .hero {
+        padding: 80px 15px 20px;
+        gap: 35px;
+        min-height: auto;
+    }
+
+    .landing-page .hero-image {
+        flex: none;
+    }
+
+    .landing-page .hero-graphic {
+        width: 200px;
+        height: 200px;
+    }
+
+    .landing-page .hero-content h1 {
+        font-size: 20px;
+        line-height: 1.3;
+    }
+
+    .landing-page .hero-subtitle {
+        font-size: 12px;
+        line-height: 1.5;
+        margin-bottom: 15px;
+    }
+
+    .landing-page .kpis-container {
+        margin-top: 25px;
+        gap: 8px;
+    }
+
+    .landing-page .kpi-card {
+        padding: 12px 10px;
+        gap: 8px;
+        border-radius: 8px;
+        flex-direction: column;
+        text-align: center;
+        border-left: none;
+        border-top: 3px solid;
+    }
+
+    .landing-page .kpi-card:nth-child(1) {
+        border-top-color: #3182ce;
+    }
+
+    .landing-page .kpi-card:nth-child(2) {
+        border-top-color: #38a169;
+    }
+
+    .landing-page .kpi-card:nth-child(3) {
+        border-top-color: #d69e2e;
+    }
+
+    .landing-page .kpi-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+    }
+
+    .landing-page .kpi-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .landing-page .kpi-number {
+        font-size: 16px;
+    }
+
+    .landing-page .kpi-label {
+        font-size: 8px;
+    }
+
+    .landing-page .hero-actions .btn-primary {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+
+    .landing-page .cube-container {
+        width: 140px;
+        height: 140px;
+    }
+
+    .landing-page .cube-face {
+        width: 140px;
+        height: 140px;
+        border-width: 3px;
+    }
+
+    .landing-page .cube-letra {
+        font-size: 55px;
+    }
+
+    .landing-page .cube-texto {
+        font-size: 10px;
+        letter-spacing: 0.5px;
+        margin-top: 3px;
+    }
+
+    .landing-page .cube-front  { transform: rotateY(0deg) translateZ(70px); }
+    .landing-page .cube-back   { transform: rotateY(180deg) translateZ(70px); }
+    .landing-page .cube-right  { transform: rotateY(90deg) translateZ(70px); }
+    .landing-page .cube-left   { transform: rotateY(-90deg) translateZ(70px); }
+    .landing-page .cube-top    { transform: rotateX(90deg) translateZ(70px); }
+    .landing-page .cube-bottom { transform: rotateX(-90deg) translateZ(70px); }
+
+    .landing-page .graphic-card {
+        padding: 8px 12px;
+        font-size: 10px;
+    }
+
+    .landing-page .card-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Tarjetas flotantes - bajar un poco en móvil */
+    .landing-page .card-2 {
+        top: 15%;
+    }
+
+    .landing-page .card-3 {
+        top: 48%;
+    }
+
+    .landing-page .card-4 {
+        bottom: 2%;
+    }
+
+    .landing-page .card-5 {
+        bottom: 2%;
+    }
+
+    .landing-page .card-6 {
+        top: 48%;
+    }
+
+    .landing-page .card-7 {
+        top: 15%;
+    }
+
+    .landing-page .section-container {
+        padding: 0 15px;
+    }
+
+    .landing-page .caracteristicas,
+    .landing-page .beneficios,
+    .landing-page .cta-final {
+        padding: 40px 0;
+    }
+
+    .landing-page .section-header {
+        margin-bottom: 30px;
+    }
+
+    .landing-page .section-header h2 {
+        font-size: 18px;
+    }
+
+    .landing-page .section-header p {
+        font-size: 12px;
+    }
+
+    .landing-page .feature-card {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+    }
+
+    .landing-page .feature-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        right: 15px;
+        top: 15px;
+    }
+
+    .landing-page .feature-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .landing-page .feature-content h3 {
+        font-size: 15px;
+        padding-right: 45px;
+        margin-bottom: 10px;
+    }
+
+    .landing-page .feature-description {
+        font-size: 11px;
+        margin-bottom: 15px;
+    }
+
+    .landing-page .feature-list {
+        gap: 8px;
+    }
+
+    .landing-page .feature-list li {
+        font-size: 11px;
+        gap: 8px;
+    }
+
+    .landing-page .check-icon {
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+    }
+
+    .landing-page .beneficio-item {
+        padding: 18px 15px;
+        padding-right: 60px;
+    }
+
+    .landing-page .beneficio-item h4 {
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .landing-page .beneficio-icon {
+        right: 15px;
+    }
+
+    .landing-page .beneficio-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .landing-page .beneficio-item p {
+        font-size: 11px;
+    }
+
+    .landing-page .cta-final h2 {
+        font-size: 17px;
+    }
+
+    .landing-page .cta-final p {
+        font-size: 11px;
+        margin-bottom: 25px;
+    }
+
+    .landing-page .cta-actions {
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .landing-page .cta-actions .btn {
+        padding: 8px 12px;
+        font-size: 11px;
+        flex: 1;
+    }
+
+    .landing-footer {
+        padding: 25px 0;
+    }
+
+    .landing-page .footer-brand span {
+        font-size: 13px;
+    }
+
+    .landing-page .footer-logo {
+        width: 28px;
+        height: 28px;
+    }
+
+    .landing-page .footer-links {
+        gap: 6px;
+    }
+
+    .landing-page .footer-links-row {
+        gap: 12px;
+    }
+
+    .landing-page .footer-links a,
+    .landing-page .footer-links button {
+        font-size: 11px;
+    }
+
+    .landing-page .footer-copy p {
+        font-size: 10px;
+    }
+
+    .landing-page .contacto-items {
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .landing-page .contacto-item {
+        font-size: 10px;
+    }
+
+    .landing-page .contacto-item svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    /* Planes responsive 480px */
+    .landing-page .planes-section {
+        margin-top: 25px;
+        padding-top: 25px;
+    }
+
+    .landing-page .planes-grid {
+        gap: 12px;
+    }
+
+    .landing-page .plan-card {
+        border-radius: 10px;
+        border-width: 2px;
+    }
+
+    .landing-page .plan-badge {
+        padding: 3px 8px;
+        font-size: 9px;
+        border-radius: 0 8px 0 8px;
+    }
+
+    .landing-page .plan-header {
+        padding: 12px 12px 10px;
+    }
+
+    .landing-page .plan-header h3 {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .landing-page .precio-valor {
+        font-size: 20px;
+    }
+
+    .landing-page .precio-periodo {
+        font-size: 10px;
+    }
+
+    .landing-page .plan-promo {
+        font-size: 9px;
+        padding: 3px 8px;
+        margin-top: 6px;
+    }
+
+    .landing-page .plan-body {
+        padding: 10px 12px;
+    }
+
+    .landing-page .plan-features {
+        gap: 5px;
+    }
+
+    .landing-page .plan-features li {
+        font-size: 9px;
+        gap: 5px;
+    }
+
+    .landing-page .plan-features .check {
+        width: 11px;
+        height: 11px;
+        font-size: 6px;
+    }
+
+    .landing-page .plan-features.dos-columnas {
+        gap: 4px 8px;
+    }
+
+    .landing-page .plan-footer {
+        padding: 8px 12px 12px;
+    }
+
+    .landing-page .plan-footer .btn {
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+
+    /* Modal Plan Movil - altura reducida con scroll */
+    .landing-page .modal-plan {
+        max-height: 75vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .landing-page .modal-plan .modal-footer-body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        flex: 1;
+        max-height: calc(75vh - 180px);
+    }
+
+    .landing-page .modal-plan-header-top {
+        padding: 12px 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .landing-page .modal-plan .modal-footer-header h2 {
+        font-size: 16px;
+    }
+
+    .landing-page .modal-plan-precio-box {
+        gap: 3px;
+    }
+
+    .landing-page .modal-plan-precio {
+        font-size: 20px;
+    }
+
+    .landing-page .modal-plan-periodo {
+        font-size: 9px;
+    }
+
+    .landing-page .modal-plan-promo-banner {
+        padding: 7px 14px;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .landing-page .modal-plan-promo-banner .promo-icon {
+        font-size: 14px;
+    }
+
+    .landing-page .modal-plan-promo-banner .promo-text {
+        font-size: 12px;
+    }
+
+    .landing-page .modal-plan-promo-banner .promo-sub {
+        font-size: 9px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .landing-page .modal-plan .modal-footer-cerrar {
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
+    }
+
+    .landing-page .modal-plan .modal-footer-body {
+        padding: 15px;
+    }
+
+    .landing-page .modal-plan-incluye {
+        padding: 10px 12px;
+        margin-bottom: 15px;
+    }
+
+    .landing-page .modal-plan-incluye span {
+        font-size: 12px;
+    }
+
+    .landing-page .modal-plan-seccion {
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 10px;
+    }
+
+    .landing-page .modal-plan-seccion h3 {
+        font-size: 13px;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+    }
+
+    .landing-page .modal-plan-seccion li {
+        font-size: 11px;
+        padding-left: 18px;
+    }
+
+    .landing-page .modal-plan-seccion li::before {
+        width: 12px;
+        height: 12px;
+        font-size: 8px;
+    }
+
+    .landing-page .modal-plan .modal-footer-pie {
+        padding: 15px;
+    }
+
+    .landing-page .modal-plan .modal-footer-pie .btn {
+        min-width: 160px;
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+
+    /* Modal 480px */
+    .landing-page .modal-footer-overlay {
+        padding: 10px;
+    }
+
+    .landing-page .modal-footer-contenido {
+        max-height: 92vh;
+    }
+
+    .landing-page .modal-footer-header {
+        padding: 12px 15px;
+    }
+
+    .landing-page .modal-footer-header h2 {
+        font-size: 14px;
+    }
+
+    .landing-page .modal-footer-cerrar {
+        width: 28px;
+        height: 28px;
+        font-size: 18px;
+    }
+
+    .landing-page .modal-footer-body {
+        padding: 15px;
+    }
+
+    .landing-page .modal-footer-body h3 {
+        font-size: 13px;
+    }
+
+    .landing-page .modal-footer-body p,
+    .landing-page .modal-footer-body li {
+        font-size: 11px;
+        line-height: 1.5;
+    }
+}
+
+/* ==================== BOTON FLOTANTE DE CONTACTO ==================== */
+.landing-page .btn-contacto-flotante {
+    position: fixed;
+    right: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #3182ce, #2c5282);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(49, 130, 206, 0.4);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.landing-page .btn-contacto-flotante:hover {
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 20px rgba(49, 130, 206, 0.5);
+}
+
+.landing-page .btn-contacto-flotante svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* ==================== MODAL DE CONTACTO ==================== */
+.landing-page .modal-contacto {
+    max-width: 450px;
+    border-radius: 6px;
+}
+
+.landing-page .modal-contacto-header {
+    background: linear-gradient(135deg, #3182ce, #2c5282);
+    color: white;
+    padding: 10px 18px;
+}
+
+.landing-page .modal-contacto-titulo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.landing-page .modal-contacto-titulo svg {
+    width: 22px;
+    height: 22px;
+}
+
+.landing-page .modal-contacto-titulo h2 {
+    color: white;
+    margin: 0;
+    font-size: 16px;
+}
+
+.landing-page .modal-contacto-header .modal-footer-cerrar {
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.landing-page .modal-contacto-header .modal-footer-cerrar:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Formulario de contacto */
+.landing-page .form-contacto {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.landing-page .form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.landing-page .form-row-doble {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.landing-page .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.landing-page .form-group label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.landing-page .form-group input,
+.landing-page .form-group textarea {
+    padding: 6px 8px;
+    font-size: 12px;
+    font-family: inherit;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    transition: all 0.2s ease;
+    background: white;
+    color: var(--text-primary);
+}
+
+.landing-page .form-group input:focus,
+.landing-page .form-group textarea:focus {
+    outline: none;
+    border-color: #3182ce;
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.landing-page .form-group input::placeholder,
+.landing-page .form-group textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.landing-page .form-group textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.landing-page .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.landing-page .form-actions .btn {
+    min-width: 90px;
+    padding: 6px 12px;
+    font-size: 11px;
+}
+
+/* Responsive para modal contacto - Movil */
+@media (max-width: 699px) {
+    .landing-page .btn-contacto-flotante {
+        right: 15px;
+        width: 50px;
+        height: 50px;
+    }
+
+    .landing-page .btn-contacto-flotante svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .landing-page .modal-contacto {
+        margin: 10px;
+        max-height: 95vh;
+    }
+
+    .landing-page .form-row,
+    .landing-page .form-row-doble {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .landing-page .form-actions {
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .landing-page .form-actions .btn {
+        flex: 1;
+    }
+
+    .landing-page .modal-contacto-header {
+        padding: 15px 20px;
+    }
+
+    .landing-page .modal-contacto-titulo h2 {
+        font-size: 18px;
+    }
+}

@@ -1,0 +1,365 @@
+/* ==================== LOGIN PAGE STYLES ==================== */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 50%, #3182ce 100%);
+  padding: 20px;
+}
+
+.login-page .login-container {
+  width: 100%;
+  max-width: 500px;
+}
+
+.login-page .login-box {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+/* Header */
+.login-page .login-header {
+  text-align: center;
+  padding: 15px 25px 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.login-page .login-logo {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1a365d, #3182ce);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  box-shadow: 0 4px 15px rgba(26, 54, 93, 0.3);
+}
+
+.login-page .login-logo span {
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.login-page .login-header h1 {
+  color: #1a365d;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.login-page .login-header p {
+  color: #64748b;
+  font-size: 12px;
+  margin: 0;
+}
+
+/* Formulario */
+.login-page .login-form {
+  padding: 20px 15px;
+}
+
+.login-page .login-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 5px;
+  color: #dc2626;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.login-page .form-group {
+  margin-bottom: 12px;
+}
+
+.login-page .form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.login-page .input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-page .input-icon-wrapper svg {
+  position: absolute;
+  left: 10px;
+  color: #9ca3af;
+  pointer-events: none;
+  width: 16px;
+  height: 16px;
+}
+
+.login-page .input-icon-wrapper input {
+  width: 100%;
+  padding: 9px 10px 9px 34px;
+  font-size: 13px;
+  font-family: inherit;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  background: white;
+  color: #1f2937;
+}
+
+.login-page .input-icon-wrapper input:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
+}
+
+.login-page .input-icon-wrapper input::placeholder {
+  color: #9ca3af;
+}
+
+.login-page .toggle-password {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.login-page .toggle-password:hover {
+  color: #6b7280;
+}
+
+/* Opciones */
+.login-page .login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 11px;
+}
+
+.login-page .checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.login-page .checkbox-wrapper input {
+  width: 14px;
+  height: 14px;
+  accent-color: #3182ce;
+  cursor: pointer;
+}
+
+.login-page .forgot-password {
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-page .forgot-password:hover {
+  text-decoration: underline;
+}
+
+/* Boton login */
+.login-page .btn-login {
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: white;
+  background: linear-gradient(135deg, #1a365d, #2c5282);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-page .btn-login:hover {
+  background: linear-gradient(135deg, #0f2440, #1a365d);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
+}
+
+/* Footer */
+.login-page .login-footer {
+  padding: 10px 25px 12px;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.login-page .btn-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.login-page .btn-volver:hover {
+  color: #3182ce;
+}
+
+/* Botones de seleccion de tipo */
+.login-page .login-tipo-btns {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.login-page .login-tipo-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.login-page .login-tipo-btn:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.login-page .login-tipo-btn svg {
+  color: #64748b;
+}
+
+.login-page .login-tipo-btn span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Estados activos por tipo */
+.login-page .login-tipo-btn.admin.activo {
+  border-color: #3182ce;
+  background: #ebf8ff;
+}
+
+.login-page .login-tipo-btn.admin.activo svg,
+.login-page .login-tipo-btn.admin.activo span {
+  color: #3182ce;
+}
+
+.login-page .login-tipo-btn.docente.activo {
+  border-color: #38a169;
+  background: #f0fff4;
+}
+
+.login-page .login-tipo-btn.docente.activo svg,
+.login-page .login-tipo-btn.docente.activo span {
+  color: #38a169;
+}
+
+.login-page .login-tipo-btn.apoderado.activo {
+  border-color: #d69e2e;
+  background: #fffff0;
+}
+
+.login-page .login-tipo-btn.apoderado.activo svg,
+.login-page .login-tipo-btn.apoderado.activo span {
+  color: #d69e2e;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+/* ========== MODO TABLET (700px a 1100px) ========== */
+@media (min-width: 700px) and (max-width: 1100px) {
+  .login-page .login-container {
+    max-width: 450px;
+  }
+
+  .login-page .login-header {
+    padding: 18px 25px 15px;
+  }
+
+  .login-page .login-form {
+    padding: 22px 20px;
+  }
+}
+
+/* ========== MODO MOVIL (0px a 699px) ========== */
+@media (max-width: 699px) {
+  .login-page {
+    padding: 15px;
+  }
+
+  .login-page .login-container {
+    max-width: 100%;
+  }
+
+  .login-page .login-header {
+    padding: 25px 20px 18px;
+  }
+
+  .login-page .login-logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .login-page .login-logo span {
+    font-size: 24px;
+  }
+
+  .login-page .login-header h1 {
+    font-size: 20px;
+  }
+
+  .login-page .login-form {
+    padding: 20px;
+  }
+
+  .login-page .login-options {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .login-page .login-footer {
+    padding: 12px 20px 18px;
+  }
+
+  /* Formularios consistentes en movil */
+  .login-page input[type="email"],
+  .login-page input[type="password"],
+  .login-page input[type="text"] {
+    font-size: 11px;
+    padding: 8px 6px 8px 34px;
+  }
+
+  .login-page .form-group label {
+    font-size: 9px;
+  }
+}

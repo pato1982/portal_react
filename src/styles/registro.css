@@ -1,0 +1,606 @@
+/* ==================== REGISTRO PAGE STYLES ==================== */
+
+.registro-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 50%, #3182ce 100%);
+  padding: 20px;
+}
+
+.registro-page .registro-container {
+  width: 100%;
+  max-width: 500px;
+}
+
+.registro-page .registro-box {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+/* Header */
+.registro-page .registro-header {
+  text-align: center;
+  padding: 15px 25px 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.registro-page .registro-logo {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1a365d, #3182ce);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  box-shadow: 0 4px 15px rgba(26, 54, 93, 0.3);
+}
+
+.registro-page .registro-logo span {
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.registro-page .registro-header h1 {
+  color: #1a365d;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.registro-page .registro-header p {
+  color: #64748b;
+  font-size: 12px;
+  margin: 0;
+}
+
+/* Formulario */
+.registro-page .registro-form {
+  padding: 18px 20px;
+}
+
+/* Boton auto-llenar */
+.registro-page .btn-autollenar {
+  display: block;
+  margin-left: auto;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-family: inherit;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.registro-page .btn-autollenar:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.registro-page .registro-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 5px;
+  color: #dc2626;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.registro-page .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.registro-page .form-group {
+  margin-bottom: 0;
+}
+
+.registro-page .form-group:last-child {
+  margin-bottom: 12px;
+}
+
+.registro-page .form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.registro-page .form-group input,
+.registro-page .form-group select {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  background: white;
+  color: #1f2937;
+}
+
+.registro-page .form-group input:focus,
+.registro-page .form-group select:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.15);
+}
+
+.registro-page .form-group input::placeholder {
+  color: #9ca3af;
+}
+
+.registro-page .form-group select {
+  cursor: pointer;
+}
+
+/* Grupo full width */
+.registro-page .form-group-full {
+  margin-bottom: 12px;
+}
+
+/* Botones */
+.registro-page .form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.registro-page .btn-cancelar {
+  flex: 1;
+  padding: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.registro-page .btn-cancelar:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.registro-page .btn-registrar {
+  flex: 1;
+  padding: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: white;
+  background: linear-gradient(135deg, #1a365d, #2c5282);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.registro-page .btn-registrar:hover {
+  background: linear-gradient(135deg, #0f2440, #1a365d);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 54, 93, 0.3);
+}
+
+/* Footer */
+.registro-page .registro-footer {
+  padding: 10px 20px;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.registro-page .registro-footer p {
+  color: #94a3b8;
+  font-size: 10px;
+  margin: 0;
+}
+
+/* Seccion de alumnos */
+.registro-page .alumno-seccion {
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.registro-page .alumno-seccion.alumno-nuevo {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+    margin-bottom: 0;
+    padding: 0 12px;
+  }
+  to {
+    opacity: 1;
+    max-height: 300px;
+    transform: translateY(0);
+    margin-bottom: 12px;
+    padding: 12px;
+  }
+}
+
+.registro-page .alumno-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.registro-page .alumno-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a365d;
+}
+
+.registro-page .btn-eliminar-alumno {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  color: #dc2626;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.registro-page .btn-eliminar-alumno:hover {
+  background: #fecaca;
+  color: #b91c1c;
+}
+
+.registro-page .alumno-seccion .form-row {
+  margin-bottom: 10px;
+}
+
+.registro-page .alumno-seccion .form-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Agregar alumno */
+.registro-page .agregar-alumno-container {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.registro-page .btn-agregar-alumno {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-family: inherit;
+  color: #3182ce;
+  background: #eff6ff;
+  border: 1px dashed #93c5fd;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.registro-page .btn-agregar-alumno:hover {
+  background: #dbeafe;
+  border-color: #3182ce;
+}
+
+.registro-page .btn-agregar-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3182ce;
+  color: white;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Password info */
+.registro-page .password-info {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 5px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.registro-page .password-info p {
+  font-size: 11px;
+  color: #0369a1;
+  margin: 0;
+  font-weight: 600;
+}
+
+.registro-page .password-info ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 12px;
+}
+
+.registro-page .password-info li {
+  font-size: 11px;
+  color: #0369a1;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.registro-page .password-info li::before {
+  content: "•";
+  font-weight: bold;
+}
+
+/* Password input con ojo */
+.registro-page .password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.registro-page .password-input-wrapper input {
+  width: 100%;
+  padding: 8px 36px 8px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  background: white;
+  color: #1f2937;
+}
+
+.registro-page .password-input-wrapper input:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.15);
+}
+
+.registro-page .password-input-wrapper input::placeholder {
+  color: #9ca3af;
+}
+
+.registro-page .toggle-password {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.registro-page .toggle-password:hover {
+  color: #6b7280;
+}
+
+/* Modal de resultado */
+.modal-resultado-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-resultado {
+  background: white;
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-resultado-icon {
+  margin-bottom: 15px;
+}
+
+.modal-resultado.exito .modal-resultado-icon {
+  color: #22c55e;
+}
+
+.modal-resultado.error .modal-resultado-icon {
+  color: #dc2626;
+}
+
+.modal-resultado h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.modal-resultado.exito h3 {
+  color: #15803d;
+}
+
+.modal-resultado.error h3 {
+  color: #b91c1c;
+}
+
+.modal-resultado p {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.btn-modal-resultado {
+  padding: 10px 30px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-resultado.exito .btn-modal-resultado {
+  background: linear-gradient(135deg, #15803d, #22c55e);
+  color: white;
+}
+
+.modal-resultado.exito .btn-modal-resultado:hover {
+  background: linear-gradient(135deg, #166534, #16a34a);
+}
+
+.modal-resultado.error .btn-modal-resultado {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.modal-resultado.error .btn-modal-resultado:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+/* ========== MODO TABLET (700px a 1100px) ========== */
+@media (min-width: 700px) and (max-width: 1100px) {
+  .registro-page .registro-container {
+    max-width: 550px;
+  }
+
+  .registro-page .registro-box {
+    padding: 0;
+  }
+
+  .registro-page .registro-header {
+    padding: 20px 25px 15px;
+  }
+
+  .registro-page .registro-form {
+    padding: 22px 25px;
+  }
+}
+
+/* ========== MODO MOVIL (0px a 699px) ========== */
+@media (max-width: 699px) {
+  .registro-page {
+    padding: 15px;
+  }
+
+  .registro-page .registro-container {
+    max-width: 100%;
+  }
+
+  .registro-page .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  /* RUT y Telefono siempre en 2 columnas */
+  .registro-page .form-row-rut-tel {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .registro-page .form-row-rut-tel .form-group {
+    margin-bottom: 0;
+  }
+
+  .registro-page .form-row .form-group {
+    margin-bottom: 12px;
+  }
+
+  .registro-page .form-actions {
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .registro-page .form-actions button {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .registro-page .registro-header h1 {
+    font-size: 18px;
+  }
+
+  .registro-page .registro-form {
+    padding: 20px 15px;
+  }
+
+  /* Formularios consistentes en movil */
+  .registro-page input[type="text"],
+  .registro-page input[type="email"],
+  .registro-page input[type="password"],
+  .registro-page input[type="tel"],
+  .registro-page select {
+    font-size: 11px;
+    padding: 8px 6px;
+  }
+
+  .registro-page label {
+    font-size: 9px;
+  }
+}

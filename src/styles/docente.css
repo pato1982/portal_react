@@ -1,0 +1,845 @@
+/* ==================== ESTILOS PORTAL DOCENTE ==================== */
+/* Este archivo contiene estilos adicionales para componentes específicos del portal docente */
+/* Los estilos base (header, panel, tabs) se heredan de colegio.css */
+
+/* ==================== PAGE HEADER ==================== */
+.docente-page-header {
+    margin-bottom: 24px;
+}
+
+.docente-page-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 4px 0;
+}
+
+.docente-page-header p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+}
+
+/* ==================== TWO COLUMNS LAYOUT ==================== */
+.docente-two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+/* MODO TABLET */
+@media (max-width: 1100px) {
+    .docente-two-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==================== CARDS ==================== */
+.docente-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.docente-card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+}
+
+.docente-card-header h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.docente-card-body {
+    padding: 20px;
+}
+
+.docente-contador {
+    font-size: 12px;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.docente-mt-20 {
+    margin-top: 20px;
+}
+
+/* ==================== FORMS ==================== */
+.docente-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+/* MODO MOVIL */
+@media (max-width: 699px) {
+    .docente-form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.docente-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.docente-form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+}
+
+.docente-form-control {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.docente-form-control:focus {
+    outline: none;
+    border-color: #1e3a5f;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+.docente-form-control:disabled {
+    background: #f1f5f9;
+    cursor: not-allowed;
+}
+
+textarea.docente-form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.docente-form-row-checkbox {
+    margin-bottom: 16px;
+}
+
+.docente-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.docente-checkbox-text {
+    font-size: 13px;
+    color: #475569;
+}
+
+.docente-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+/* ==================== AUTOCOMPLETE ==================== */
+.docente-autocomplete-container {
+    position: relative;
+}
+
+.docente-autocomplete-arrow {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #64748b;
+}
+
+.docente-autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+.docente-autocomplete-item {
+    padding: 10px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.docente-autocomplete-item:hover {
+    background: #e8f0f8;
+}
+
+.docente-autocomplete-item.disabled {
+    color: #94a3b8;
+    cursor: default;
+}
+
+/* ==================== BUTTONS ==================== */
+.docente-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.docente-btn-primary {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0d1f33 100%);
+    color: white;
+}
+
+.docente-btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+}
+
+.docente-btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.docente-btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+.docente-btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.docente-btn-danger:hover {
+    background: #dc2626;
+}
+
+.docente-btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.docente-btn-edit {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.docente-btn-edit:hover {
+    background: #bfdbfe;
+}
+
+.docente-btn-delete {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.docente-btn-delete:hover {
+    background: #fecaca;
+}
+
+.docente-acciones-btns {
+    display: flex;
+    gap: 8px;
+}
+
+/* ==================== FILTROS GRID ==================== */
+.docente-filtros-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    align-items: end;
+}
+
+.docente-filtro-actions {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.docente-filtros-ultimas {
+    margin-bottom: 16px;
+}
+
+/* ==================== TABLAS ==================== */
+.docente-tabla-container {
+    overflow-x: auto;
+}
+
+.docente-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.docente-tabla th {
+    padding: 12px 10px;
+    text-align: left;
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.docente-tabla td {
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+.docente-tabla tbody tr:hover {
+    background: #fafafa;
+}
+
+.docente-text-center {
+    text-align: center;
+}
+
+.docente-text-muted {
+    color: #94a3b8;
+}
+
+/* ==================== NOTAS BADGES ==================== */
+.docente-nota-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.nota-excelente {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.nota-buena {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.nota-suficiente {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.nota-insuficiente {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.nota-pendiente {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* ==================== TABLA TRIMESTRES ==================== */
+.docente-tabla-trimestres-container {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.docente-tabla-trimestres {
+    font-size: 10px;
+    min-width: auto;
+    width: 100%;
+}
+
+.docente-tabla-trimestres th {
+    padding: 6px 4px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.docente-tabla-trimestres td {
+    padding: 5px 4px;
+    text-align: center;
+}
+
+.docente-tabla-trimestres .th-fixed {
+    background: #1e293b;
+    color: white;
+}
+
+.docente-tabla-trimestres .th-alumno {
+    min-width: 130px;
+    max-width: 150px;
+    text-align: left;
+}
+
+.docente-tabla-trimestres .th-trimestre {
+    background: #1e3a5f;
+    color: white;
+}
+
+.docente-tabla-trimestres .th-sub {
+    background: #c7d9ed;
+    color: #0d1f33;
+    font-size: 10px;
+}
+
+.docente-tabla-trimestres .th-prom {
+    background: #a3c1e0;
+}
+
+.docente-tabla-trimestres .th-final {
+    background: #1e293b;
+}
+
+.docente-tabla-trimestres .td-alumno {
+    text-align: left;
+    font-weight: 500;
+}
+
+.docente-tabla-trimestres .td-prom {
+    font-weight: 600;
+    background: #fef3c7;
+}
+
+.docente-tabla-trimestres .td-final {
+    font-weight: 700;
+    background: #e2e8f0;
+}
+
+.estado-aprobado {
+    color: #059669;
+    font-weight: 600;
+}
+
+.estado-reprobado {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+/* ==================== MODALES ==================== */
+.docente-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.docente-modal {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.docente-modal-sm {
+    max-width: 400px;
+}
+
+.docente-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.docente-modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.docente-modal-header-danger {
+    background: #fef2f2;
+}
+
+.docente-modal-header-danger h3 {
+    color: #dc2626;
+}
+
+.docente-modal-close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    padding: 4px;
+}
+
+.docente-modal-body {
+    padding: 20px;
+}
+
+.docente-modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.docente-modal-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.docente-info-item label {
+    font-size: 11px;
+    color: #64748b;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.docente-info-item span {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.docente-alert-danger {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: #fef2f2;
+    border-radius: 8px;
+    border: 1px solid #fecaca;
+}
+
+.docente-alert-danger svg {
+    color: #dc2626;
+    flex-shrink: 0;
+}
+
+.docente-alert-danger h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #dc2626;
+    margin: 0 0 8px 0;
+}
+
+.docente-alert-danger p {
+    font-size: 13px;
+    color: #7f1d1d;
+    margin: 0;
+}
+
+/* ==================== KPIs ==================== */
+.docente-kpis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.docente-kpi-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.docente-kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.docente-kpi-card.kpi-primary .docente-kpi-icon {
+    background: #e8f0f8;
+    color: #1e3a5f;
+}
+
+.docente-kpi-card.kpi-success .docente-kpi-icon {
+    background: #d1fae5;
+    color: #10b981;
+}
+
+.docente-kpi-card.kpi-danger .docente-kpi-icon {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.docente-kpi-card.kpi-info .docente-kpi-icon {
+    background: #dbeafe;
+    color: #3b82f6;
+}
+
+.docente-kpi-card.kpi-warning .docente-kpi-icon {
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
+.docente-kpi-card.kpi-secondary .docente-kpi-icon {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.docente-kpi-data {
+    display: flex;
+    flex-direction: column;
+}
+
+.docente-kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.docente-kpi-label {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.docente-kpi-label-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.docente-kpi-trend {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.docente-kpi-trend.up {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.docente-kpi-trend.down {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* ==================== CHARTS ==================== */
+.docente-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+/* MODO TABLET - Charts */
+@media (max-width: 1100px) {
+    .docente-charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.docente-chart-card {
+    min-height: 300px;
+}
+
+.docente-chart-container {
+    height: 250px;
+    position: relative;
+}
+
+.docente-chart-sm {
+    height: 200px;
+}
+
+/* ==================== TABLA ATENCION ==================== */
+.docente-tabla-atencion .docente-tendencia {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
+    font-weight: bold;
+}
+
+.docente-tendencia.mejorando {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.docente-tendencia.empeorando {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.docente-tendencia.estable {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* ==================== ASISTENCIA ==================== */
+.asistencia-radio {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.asistencia-radio input[type="radio"] {
+    display: none;
+}
+
+.asistencia-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #e2e8f0;
+    background: white;
+    transition: all 0.2s ease;
+}
+
+.asistencia-radio input[type="radio"]:checked + .asistencia-circle.presente {
+    background: #10b981;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.asistencia-radio input[type="radio"]:checked + .asistencia-circle.ausente {
+    background: #ef4444;
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.asistencia-radio input[type="radio"]:checked + .asistencia-circle.tardio {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.asistencia-radio input[type="radio"]:checked + .asistencia-circle.justificado {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.asistencia-circle:hover {
+    border-color: #94a3b8;
+}
+
+.asistencia-circle.presente:hover {
+    border-color: #10b981;
+}
+
+.asistencia-circle.ausente:hover {
+    border-color: #ef4444;
+}
+
+.asistencia-circle.tardio:hover {
+    border-color: #f59e0b;
+}
+
+.asistencia-circle.justificado:hover {
+    border-color: #3b82f6;
+}
+
+/* ==================== RESPONSIVE ==================== */
+/* ========== MODO MOVIL (0px a 699px) ========== */
+@media (max-width: 699px) {
+    .docente-header {
+        padding: 0 16px;
+    }
+
+    .docente-main {
+        padding: 16px;
+    }
+
+    .docente-tabs-nav {
+        padding: 0 8px;
+    }
+
+    .docente-tab-btn {
+        padding: 12px 14px;
+        font-size: 13px;
+    }
+
+    .docente-tabs-content {
+        padding: 16px;
+    }
+
+    .docente-kpis-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .docente-kpi-card {
+        padding: 16px;
+    }
+
+    .docente-kpi-value {
+        font-size: 24px;
+    }
+
+    .docente-modal-info {
+        grid-template-columns: 1fr;
+    }
+
+    .docente-user-info {
+        display: none;
+    }
+
+    .docente-filtros-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Formularios consistentes en movil */
+    .docente-page .form-control,
+    .docente-page select,
+    .docente-page input[type="text"],
+    .docente-page input[type="email"],
+    .docente-page input[type="date"],
+    .docente-page input[type="number"] {
+        font-size: 11px;
+        padding: 8px 6px;
+    }
+
+    .docente-page label {
+        font-size: 9px;
+    }
+}

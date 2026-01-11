@@ -160,6 +160,7 @@ function ApoderadoPage({ onCambiarVista }) {
   const [mostrarSelectorPupilo, setMostrarSelectorPupilo] = useState(false);
   const [mostrarModalAgregar, setMostrarModalAgregar] = useState(false);
   const [comunicados, setComunicados] = useState(comunicadosDemo);
+  const [vistaModo, setVistaModo] = useState('tarjetas'); // 'tarjetas' o 'contenido'
   const dropdownRef = useRef(null);
 
   // Cerrar dropdown al hacer clic fuera
@@ -180,10 +181,10 @@ function ApoderadoPage({ onCambiarVista }) {
   }, [mostrarSelectorPupilo]);
 
   const tabs = [
-    { id: 'informacion', label: 'Informacion' },
-    { id: 'notas', label: 'Notas' },
-    { id: 'comunicados', label: 'Comunicados' },
-    { id: 'progreso', label: 'Progreso' }
+    { id: 'informacion', label: 'Información', icon: '👤', color: '#3b82f6', desc: 'Datos personales y del alumno' },
+    { id: 'notas', label: 'Notas', icon: '📝', color: '#10b981', desc: 'Calificaciones y promedios' },
+    { id: 'comunicados', label: 'Comunicados', icon: '🔔', color: '#f59e0b', desc: 'Avisos y noticias del colegio' },
+    { id: 'progreso', label: 'Progreso', icon: '📈', color: '#8b5cf6', desc: 'Evolución académica' }
   ];
 
   // Filtrar notas por pupilo seleccionado
@@ -199,6 +200,15 @@ function ApoderadoPage({ onCambiarVista }) {
   const handleCambiarPupilo = (pupilo) => {
     setPupiloSeleccionado(pupilo);
     setMostrarSelectorPupilo(false);
+  };
+
+  const seleccionarVista = (tabId) => {
+    setTabActiva(tabId);
+    setVistaModo('contenido');
+  };
+
+  const volverATarjetas = () => {
+    setVistaModo('tarjetas');
   };
 
   const marcarComoLeido = (comunicadoId) => {
@@ -242,9 +252,9 @@ function ApoderadoPage({ onCambiarVista }) {
           <div className="apoderado-header-right">
             <button className="btn-cerrar-sesion" onClick={onCambiarVista}>
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
               <span className="btn-text">Cerrar Sesion</span>
             </button>
@@ -278,9 +288,9 @@ function ApoderadoPage({ onCambiarVista }) {
                     onClick={() => setMostrarSelectorPupilo(!mostrarSelectorPupilo)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                      <circle cx="8.5" cy="7" r="4"/>
-                      <polyline points="17 11 19 13 23 9"/>
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="8.5" cy="7" r="4" />
+                      <polyline points="17 11 19 13 23 9" />
                     </svg>
                     Cambiar Pupilo
                   </button>
@@ -307,10 +317,10 @@ function ApoderadoPage({ onCambiarVista }) {
               )}
               <button className="btn-agregar-pupilo" onClick={() => setMostrarModalAgregar(true)}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="8.5" cy="7" r="4"/>
-                  <line x1="20" y1="8" x2="20" y2="14"/>
-                  <line x1="23" y1="11" x2="17" y2="11"/>
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="8.5" cy="7" r="4" />
+                  <line x1="20" y1="8" x2="20" y2="14" />
+                  <line x1="23" y1="11" x2="17" y2="11" />
                 </svg>
                 Agregar Pupilo
               </button>
@@ -318,27 +328,52 @@ function ApoderadoPage({ onCambiarVista }) {
           </div>
         </div>
 
-        {/* Tabs Navigation */}
-        <div className="apoderado-tabs-container">
-          <nav className="apoderado-tabs-nav">
+        {/* Navigation Mode */}
+        {vistaModo === 'tarjetas' ? (
+          <div className="apoderado-cards-grid">
             {tabs.map(tab => (
-              <button
+              <div
                 key={tab.id}
-                className={`apoderado-tab-btn ${tabActiva === tab.id ? 'active' : ''}`}
-                onClick={() => setTabActiva(tab.id)}
+                className="apoderado-nav-card"
+                onClick={() => seleccionarVista(tab.id)}
               >
-                {tab.label}
-                {tab.id === 'comunicados' && comunicadosNoLeidos > 0 && (
-                  <span className="tab-badge">{comunicadosNoLeidos}</span>
-                )}
-              </button>
+                <div className="nav-card-icon" style={{ backgroundColor: tab.color }}>
+                  {tab.id === 'comunicados' && comunicadosNoLeidos > 0 ? (
+                    <span className="nav-card-badge">{comunicadosNoLeidos}</span>
+                  ) : null}
+                  {tab.icon}
+                </div>
+                <div className="nav-card-info">
+                  <h3>{tab.label}</h3>
+                  <p>{tab.desc}</p>
+                </div>
+                <div className="nav-card-arrow">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </div>
+              </div>
             ))}
-          </nav>
-
-          <div className="apoderado-tabs-content">
-            {renderTabContent()}
           </div>
-        </div>
+        ) : (
+          <div className="apoderado-content-wrapper">
+            <div className="content-header-actions">
+              <button className="btn-volver" onClick={volverATarjetas}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12"></line>
+                  <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Volver al Menú
+              </button>
+              <h2 className="section-title">
+                {tabs.find(t => t.id === tabActiva)?.label}
+              </h2>
+            </div>
+            <div className="apoderado-tabs-content">
+              {renderTabContent()}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Footer */}
@@ -355,8 +390,8 @@ function ApoderadoPage({ onCambiarVista }) {
               <h3>Agregar Nuevo Pupilo</h3>
               <button className="modal-close" onClick={() => setMostrarModalAgregar(false)}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>

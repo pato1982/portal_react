@@ -161,7 +161,6 @@ const comunicadosDemo = [
 
 function ApoderadoPage({ onCambiarVista }) {
   const [tabActiva, setTabActiva] = useState('informacion');
-  const [vistaModo, setVistaModo] = useState('tarjetas'); // 'tarjetas' o 'contenido'
   const [pupiloSeleccionado, setPupiloSeleccionado] = useState(pupilosDemo[0]);
   const [mostrarSelectorPupilo, setMostrarSelectorPupilo] = useState(false);
   const [mostrarModalAgregar, setMostrarModalAgregar] = useState(false);
@@ -216,14 +215,7 @@ function ApoderadoPage({ onCambiarVista }) {
   // Contar comunicados no leidos del pupilo seleccionado
   const comunicadosNoLeidos = comunicadosFiltrados.filter(c => !c.leido).length;
 
-  const seleccionarVista = (tabId) => {
-    setTabActiva(tabId);
-    setVistaModo('contenido');
-  };
 
-  const volverAMenu = () => {
-    setVistaModo('tarjetas');
-  };
 
   // Calcular progreso dinámico (promedio de notas convertido a porcentaje)
   const progresoPorcentaje = useMemo(() => {
@@ -256,137 +248,89 @@ function ApoderadoPage({ onCambiarVista }) {
       <Header usuario={apoderadoDemo} onCerrarSesion={onCambiarVista} />
 
       <main className="apoderado-main">
-        {/* Welcome Section */}
-        <section className="notebook-header">
-          <h2>¡Hola {apoderadoDemo.nombre}! 👋</h2>
-          <p>Bienvenido al escritorio escolar de {pupiloSeleccionado.nombres}. ¡Haz clic en cualquier cuaderno para ver los detalles!</p>
-        </section>
+        <div className="control-panel">
+          <div className="panel-header" style={{ marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b' }}>
+              Panel de Apoderado
+            </h2>
+          </div>
 
-        {/* Card Pupilo Selector (Mini) */}
-        <div className="pupilo-selector-mini">
-          <div className="pupilo-selector-container" ref={dropdownRef}>
+          {/* Selector de Pupilo (Estilo Standard) */}
+          <div className="pupilo-selector-container" ref={dropdownRef} style={{ marginBottom: '20px' }}>
             <button
               className="btn-pupilo-current"
               onClick={() => setMostrarSelectorPupilo(!mostrarSelectorPupilo)}
+              style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
             >
-              <div className="avatar-mini">
+              <div className="avatar-mini" style={{ width: '30px', height: '30px', background: '#3b82f6', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
                 {pupiloSeleccionado.nombres.charAt(0)}
               </div>
-              <span>{pupiloSeleccionado.nombres} {pupiloSeleccionado.apellidos} ({pupiloSeleccionado.curso})</span>
+              <span style={{ fontWeight: '500', color: '#64748b' }}>{pupiloSeleccionado.nombres} {pupiloSeleccionado.apellidos} ({pupiloSeleccionado.curso})</span>
               <span className="material-symbols-outlined">expand_more</span>
             </button>
             {mostrarSelectorPupilo && (
-              <div className="pupilo-dropdown">
+              <div className="pupilo-dropdown" style={{ position: 'absolute', marginTop: '5px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', zIndex: 50, minWidth: '250px' }}>
                 {pupilosDemo.map(pupilo => (
                   <div
                     key={pupilo.id}
                     className={`pupilo-dropdown-item ${pupilo.id === pupiloSeleccionado.id ? 'active' : ''}`}
                     onClick={() => handleCambiarPupilo(pupilo)}
+                    style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
-                    <div className="pupilo-dropdown-avatar">
+                    <div className="pupilo-dropdown-avatar" style={{ width: '32px', height: '32px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#64748b' }}>
                       {pupilo.nombres.charAt(0)}{pupilo.apellidos.charAt(0)}
                     </div>
-                    <div className="pupilo-dropdown-info">
-                      <span className="pupilo-dropdown-name">{pupilo.nombres} {pupilo.apellidos}</span>
-                      <span className="pupilo-dropdown-curso">{pupilo.curso}</span>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: '500', color: '#334155' }}>{pupilo.nombres}</div>
+                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>{pupilo.curso}</div>
                     </div>
                   </div>
                 ))}
-                <div className="dropdown-divider"></div>
-                <div className="dropdown-action" onClick={() => setMostrarModalAgregar(true)}>
-                  <span className="material-symbols-outlined">person_add</span>
+                <div style={{ padding: '12px 16px', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setMostrarModalAgregar(true)}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person_add</span>
                   Agregar Pupilo
                 </div>
               </div>
             )}
           </div>
-        </div>
 
-        {vistaModo === 'tarjetas' ? (
-          <div className="notebook-grid" style={{ minHeight: '400px' }}>
-            {tabs.map(tab => (
-              <div
-                key={tab.id}
-                className={`notebook-card card-${tab.id} card-${tab.color}`}
-                onClick={() => seleccionarVista(tab.id)}
-              >
-                {/* Visual thematic elements based on type */}
-                {tab.id === 'notas' && <div className="spiral-bind"></div>}
-                {tab.id === 'comunicados' && <div className="folder-tab"></div>}
-                {tab.id === 'informacion' && (
-                  <div className="binder-rings">
-                    <div className="binder-ring"></div>
-                    <div className="binder-ring"></div>
-                    <div className="binder-ring"></div>
-                  </div>
-                )}
-                {tab.id === 'progreso' && (
-                  <div className="top-binds">
-                    <div className="top-bind"></div>
-                    <div className="top-bind"></div>
-                  </div>
-                )}
-
-                <div className="notebook-card-content">
-                  <div className="notebook-label-box">
-                    <img src={tab.img} alt={tab.label} />
-                    {tab.id === 'notas' && <span>{yearEscolar}-{yearEscolar + 1}</span>}
-                    {tab.id === 'informacion' && (
-                      <div className="mini-photo-overlay">
-                        {pupiloSeleccionado.foto ? (
-                          <img src={pupiloSeleccionado.foto} alt="Pupilo" />
-                        ) : (
-                          <span>{pupiloSeleccionado.nombres.charAt(0)}</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-auto">
-                    <h3 className="notebook-title">{tab.label}</h3>
-                    <p className="notebook-desc">{tab.desc}</p>
-
-                    {tab.id === 'progreso' && (
-                      <div className="notebook-progress-mini">
-                        <div className="notebook-progress-bar">
-                          <div className="notebook-progress-fill" style={{ width: `${progresoPorcentaje}%` }}></div>
-                        </div>
-                        <span className="progreso-text-mini">{progresoPorcentaje}% Completado</span>
-                      </div>
-                    )}
-
-                    {tab.id === 'comunicados' && comunicadosNoLeidos > 0 && (
-                      <div className="comunicados-alert-mini">
-                        <span className="material-symbols-outlined">notifications_active</span>
-                        <span>{comunicadosNoLeidos} por leer</span>
-                      </div>
-                    )}
-
-                    <div className="notebook-footer">
-                      <span className="notebook-badge">{tab.badge}</span>
-                      <div className="notebook-icon-circle">
-                        <span className="material-symbols-outlined">{tab.icon}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="notebook-content-view">
-            <div className="notebook-content-header">
-              <button className="btn-volver-notebook" onClick={volverAMenu}>
-                <span className="material-symbols-outlined">arrow_back</span>
-                Volver al Menú
-              </button>
-              <h3 className="section-title-notebook">{tabActiva.charAt(0).toUpperCase() + tabActiva.slice(1)}</h3>
+          <div className="tabs-container">
+            <div className="tabs-nav" style={{ display: 'flex', gap: '10px', borderBottom: '1px solid #e2e8f0', paddingBottom: '0', marginBottom: '25px', overflowX: 'auto' }}>
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  className={`tab-btn ${tabActiva === tab.id ? 'active' : ''}`}
+                  onClick={() => setTabActiva(tab.id)}
+                  style={{
+                    padding: '12px 20px',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: tabActiva === tab.id ? `3px solid var(--edu-${tab.color})` : '3px solid transparent',
+                    color: tabActiva === tab.id ? '#1e293b' : '#64748b',
+                    fontWeight: tabActiva === tab.id ? '600' : '500',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{tab.icon}</span>
+                  {tab.label}
+                  {tab.id === 'comunicados' && comunicadosNoLeidos > 0 && (
+                    <span style={{ background: '#ef4444', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '10px', marginLeft: '5px' }}>
+                      {comunicadosNoLeidos}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
-            <div className="notebook-content-body">
+
+            <div className="tabs-content">
               {renderTabContent()}
             </div>
           </div>
-        )}
+        </div>
 
       </main>
 

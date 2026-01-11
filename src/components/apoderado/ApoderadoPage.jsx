@@ -155,7 +155,13 @@ const comunicadosDemo = [
 ];
 
 function ApoderadoPage({ onCambiarVista }) {
+  const [tabActiva, setTabActiva] = useState('informacion');
   const [vistaModo, setVistaModo] = useState('tarjetas'); // 'tarjetas' o 'contenido'
+  const [pupiloSeleccionado, setPupiloSeleccionado] = useState(pupilosDemo[0]);
+  const [mostrarSelectorPupilo, setMostrarSelectorPupilo] = useState(false);
+  const [mostrarModalAgregar, setMostrarModalAgregar] = useState(false);
+  const [comunicados, setComunicados] = useState(comunicadosDemo);
+  const dropdownRef = useRef(null);
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {

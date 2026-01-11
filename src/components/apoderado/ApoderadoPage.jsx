@@ -181,10 +181,10 @@ function ApoderadoPage({ onCambiarVista }) {
   }, [mostrarSelectorPupilo]);
 
   const tabs = [
-    { id: 'informacion', label: 'Información', icon: '👤', color: '#3b82f6', desc: 'Datos personales y del alumno' },
-    { id: 'notas', label: 'Notas', icon: '📝', color: '#10b981', desc: 'Calificaciones y promedios' },
-    { id: 'comunicados', label: 'Comunicados', icon: '🔔', color: '#f59e0b', desc: 'Avisos y noticias del colegio' },
-    { id: 'progreso', label: 'Progreso', icon: '📈', color: '#8b5cf6', desc: 'Evolución académica' }
+    { id: 'informacion', label: 'Información', icon: '👤', color: '#3b82f6', desc: 'Datos personales y del alumno', img: '/assets/navigation/info.png', type: 'center' },
+    { id: 'notas', label: 'Notas', icon: '📝', color: '#10b981', desc: 'Calificaciones y promedios', img: '/assets/navigation/notas.png', type: 'orbit' },
+    { id: 'comunicados', label: 'Comunicados', icon: '🔔', color: '#f59e0b', desc: 'Avisos y noticias', img: '/assets/navigation/comunicados.png', type: 'orbit' },
+    { id: 'progreso', label: 'Progreso', icon: '📈', color: '#8b5cf6', desc: 'Evolución académica', img: '/assets/navigation/progreso.png', type: 'orbit' }
   ];
 
   // Filtrar notas por pupilo seleccionado
@@ -330,30 +330,32 @@ function ApoderadoPage({ onCambiarVista }) {
 
         {/* Navigation Mode */}
         {vistaModo === 'tarjetas' ? (
-          <div className="apoderado-cards-grid">
-            {tabs.map(tab => (
-              <div
-                key={tab.id}
-                className="apoderado-nav-card"
-                onClick={() => seleccionarVista(tab.id)}
-              >
-                <div className="nav-card-icon" style={{ backgroundColor: tab.color }}>
-                  {tab.id === 'comunicados' && comunicadosNoLeidos > 0 ? (
-                    <span className="nav-card-badge">{comunicadosNoLeidos}</span>
-                  ) : null}
-                  {tab.icon}
+          <div className="apoderado-spiral-container">
+            <div className="apoderado-cards-spiral">
+              {tabs.map((tab, index) => (
+                <div
+                  key={tab.id}
+                  className={`apoderado-nav-card ${tab.type} card-pos-${index}`}
+                  onClick={() => seleccionarVista(tab.id)}
+                >
+                  <div className="nav-card-image">
+                    <img src={tab.img} alt={tab.label} />
+                    {tab.id === 'comunicados' && comunicadosNoLeidos > 0 ? (
+                      <span className="nav-card-badge">{comunicadosNoLeidos}</span>
+                    ) : null}
+                  </div>
+                  <div className="nav-card-info">
+                    <h3>{tab.label}</h3>
+                    <p>{tab.desc}</p>
+                  </div>
+                  <div className="nav-card-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </div>
                 </div>
-                <div className="nav-card-info">
-                  <h3>{tab.label}</h3>
-                  <p>{tab.desc}</p>
-                </div>
-                <div className="nav-card-arrow">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                  </svg>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         ) : (
           <div className="apoderado-content-wrapper">

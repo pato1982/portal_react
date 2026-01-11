@@ -2163,3 +2163,153 @@
   }
 }
 
+
+/* ===================================
+   SPIRAL / SNAIL NAVIGATION STYLES
+   =================================== */
+
+.apoderado-spiral-container {
+  padding: 40px 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.apoderado-cards-spiral {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 25px;
+  align-items: stretch;
+  perspective: 1000px;
+}
+
+.apoderado-nav-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(0,0,0,0.05);
+  overflow: hidden;
+  position: relative;
+}
+
+.apoderado-nav-card.center {
+  grid-column: 2;
+  grid-row: 2;
+  transform: scale(1.1);
+  z-index: 10;
+  box-shadow: 0 20px 50px -12px rgba(59, 130, 246, 0.25);
+  border: 2px solid #3b82f6;
+}
+
+.apoderado-nav-card.card-pos-1 { grid-column: 1; grid-row: 1; transform: rotate(-3deg) translateY(20px); }
+.apoderado-nav-card.card-pos-2 { grid-column: 3; grid-row: 1; transform: rotate(3deg) translateY(-10px); }
+.apoderado-nav-card.card-pos-3 { grid-column: 3; grid-row: 2; transform: rotate(2deg) translateX(-15px); }
+/* Small adjustment if there were more */
+
+.apoderado-nav-card:hover {
+  transform: scale(1.05) translateY(-10px) rotate(0deg) !important;
+  z-index: 20;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+}
+
+.nav-card-image {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  position: relative;
+  background: #f8fafc;
+}
+
+.nav-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.apoderado-nav-card:hover .nav-card-image img {
+  transform: scale(1.1);
+}
+
+.nav-card-info {
+  padding: 20px;
+  text-align: center;
+}
+
+.nav-card-info h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.nav-card-info p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.nav-card-arrow {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background: #f1f5f9;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.3s ease;
+}
+
+.apoderado-nav-card:hover .nav-card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* Redesign back button to match */
+.btn-volver {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-volver:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  color: #fff;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .apoderado-cards-spiral {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .apoderado-nav-card {
+    transform: none !important;
+  }
+  
+  .apoderado-nav-card.center {
+    order: -1;
+    transform: none;
+  }
+}
+

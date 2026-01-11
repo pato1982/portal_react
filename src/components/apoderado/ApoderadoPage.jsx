@@ -330,12 +330,12 @@ function ApoderadoPage({ onCambiarVista }) {
 
         {/* Navigation Mode */}
         {vistaModo === 'tarjetas' ? (
-          <div className="apoderado-spiral-container">
-            <div className="apoderado-cards-spiral">
-              {tabs.map((tab, index) => (
+          <div className="apoderado-grid-container">
+            <div className="apoderado-cards-row">
+              {tabs.map((tab) => (
                 <div
                   key={tab.id}
-                  className={`apoderado-nav-card ${tab.type} card-pos-${index}`}
+                  className="apoderado-nav-card"
                   onClick={() => seleccionarVista(tab.id)}
                 >
                   <div className="nav-card-image">

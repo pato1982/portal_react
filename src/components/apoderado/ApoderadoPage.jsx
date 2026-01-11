@@ -250,7 +250,7 @@ function ApoderadoPage({ onCambiarVista }) {
       <main className="apoderado-main">
         <div className="control-panel">
           <div className="panel-header" style={{ marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
               Panel de Apoderado
             </h2>
           </div>

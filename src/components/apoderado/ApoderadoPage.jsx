@@ -258,8 +258,8 @@ function ApoderadoPage({ onCambiarVista }) {
       <main className="apoderado-main">
         {/* Welcome Section */}
         <section className="notebook-header">
-          <h2>Hi {apoderadoDemo.nombre}! 👋</h2>
-          <p>Welcome back to {pupiloSeleccionado.nombres}'s school materials. Click on any notebook to open the details!</p>
+          <h2>¡Hola {apoderadoDemo.nombre}! 👋</h2>
+          <p>Bienvenido al escritorio escolar de {pupiloSeleccionado.nombres}. ¡Haz clic en cualquier cuaderno para ver los detalles!</p>
         </section>
 
         {/* Card Pupilo Selector (Mini) */}
@@ -303,11 +303,11 @@ function ApoderadoPage({ onCambiarVista }) {
         </div>
 
         {vistaModo === 'tarjetas' ? (
-          <div className="notebook-grid">
+          <div className="notebook-grid" style={{ minHeight: '400px' }}>
             {tabs.map(tab => (
               <div
                 key={tab.id}
-                className={`notebook-card card-${tab.id}`}
+                className={`notebook-card card-${tab.id} card-${tab.color}`}
                 onClick={() => seleccionarVista(tab.id)}
               >
                 {/* Visual thematic elements based on type */}

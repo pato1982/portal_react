@@ -506,3 +506,4 @@ function ApoderadoPage({ onCambiarVista }) {
 }
 
 export default ApoderadoPage;
+// Force commit for Notebook Edition

@@ -160,7 +160,6 @@ function ApoderadoPage({ onCambiarVista }) {
   const [mostrarSelectorPupilo, setMostrarSelectorPupilo] = useState(false);
   const [mostrarModalAgregar, setMostrarModalAgregar] = useState(false);
   const [comunicados, setComunicados] = useState(comunicadosDemo);
-  const [vistaModo, setVistaModo] = useState('tarjetas'); // 'tarjetas' o 'contenido'
   const dropdownRef = useRef(null);
 
   // Cerrar dropdown al hacer clic fuera
@@ -181,10 +180,10 @@ function ApoderadoPage({ onCambiarVista }) {
   }, [mostrarSelectorPupilo]);
 
   const tabs = [
-    { id: 'informacion', label: 'Información', icon: '👤', color: '#3b82f6', desc: 'Datos personales y del alumno', img: '/assets/navigation/info.png', type: 'center' },
-    { id: 'notas', label: 'Notas', icon: '📝', color: '#10b981', desc: 'Calificaciones y promedios', img: '/assets/navigation/notas.png', type: 'orbit' },
-    { id: 'comunicados', label: 'Comunicados', icon: '🔔', color: '#f59e0b', desc: 'Avisos y noticias', img: '/assets/navigation/comunicados.png', type: 'orbit' },
-    { id: 'progreso', label: 'Progreso', icon: '📈', color: '#8b5cf6', desc: 'Evolución académica', img: '/assets/navigation/progreso.png', type: 'orbit' }
+    { id: 'informacion', label: 'Informacion' },
+    { id: 'notas', label: 'Notas' },
+    { id: 'comunicados', label: 'Comunicados' },
+    { id: 'progreso', label: 'Progreso' }
   ];
 
   // Filtrar notas por pupilo seleccionado
@@ -200,15 +199,6 @@ function ApoderadoPage({ onCambiarVista }) {
   const handleCambiarPupilo = (pupilo) => {
     setPupiloSeleccionado(pupilo);
     setMostrarSelectorPupilo(false);
-  };
-
-  const seleccionarVista = (tabId) => {
-    setTabActiva(tabId);
-    setVistaModo('contenido');
-  };
-
-  const volverATarjetas = () => {
-    setVistaModo('tarjetas');
   };
 
   const marcarComoLeido = (comunicadoId) => {
@@ -328,54 +318,27 @@ function ApoderadoPage({ onCambiarVista }) {
           </div>
         </div>
 
-        {/* Navigation Mode */}
-        {vistaModo === 'tarjetas' ? (
-          <div className="apoderado-grid-container">
-            <div className="apoderado-cards-row">
-              {tabs.map((tab) => (
-                <div
-                  key={tab.id}
-                  className="apoderado-nav-card"
-                  onClick={() => seleccionarVista(tab.id)}
-                >
-                  <div className="nav-card-image">
-                    <img src={tab.img} alt={tab.label} />
-                    {tab.id === 'comunicados' && comunicadosNoLeidos > 0 ? (
-                      <span className="nav-card-badge">{comunicadosNoLeidos}</span>
-                    ) : null}
-                  </div>
-                  <div className="nav-card-info">
-                    <h3>{tab.label}</h3>
-                    <p>{tab.desc}</p>
-                  </div>
-                  <div className="nav-card-arrow">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="apoderado-content-wrapper">
-            <div className="content-header-actions">
-              <button className="btn-volver" onClick={volverATarjetas}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="19" y1="12" x2="5" y2="12"></line>
-                  <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-                Volver al Menú
+        {/* Tabs Navigation */}
+        <div className="apoderado-tabs-container">
+          <nav className="apoderado-tabs-nav">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                className={`apoderado-tab-btn ${tabActiva === tab.id ? 'active' : ''}`}
+                onClick={() => setTabActiva(tab.id)}
+              >
+                {tab.label}
+                {tab.id === 'comunicados' && comunicadosNoLeidos > 0 && (
+                  <span className="tab-badge">{comunicadosNoLeidos}</span>
+                )}
               </button>
-              <h2 className="section-title">
-                {tabs.find(t => t.id === tabActiva)?.label}
-              </h2>
-            </div>
-            <div className="apoderado-tabs-content">
-              {renderTabContent()}
-            </div>
+            ))}
+          </nav>
+
+          <div className="apoderado-tabs-content">
+            {renderTabContent()}
           </div>
-        )}
+        </div>
       </main>
 
       {/* Footer */}

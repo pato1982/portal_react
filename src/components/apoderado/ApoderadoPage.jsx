@@ -155,12 +155,7 @@ const comunicadosDemo = [
 ];
 
 function ApoderadoPage({ onCambiarVista }) {
-  const [tabActiva, setTabActiva] = useState('informacion');
-  const [pupiloSeleccionado, setPupiloSeleccionado] = useState(pupilosDemo[0]);
-  const [mostrarSelectorPupilo, setMostrarSelectorPupilo] = useState(false);
-  const [mostrarModalAgregar, setMostrarModalAgregar] = useState(false);
-  const [comunicados, setComunicados] = useState(comunicadosDemo);
-  const dropdownRef = useRef(null);
+  const [vistaModo, setVistaModo] = useState('tarjetas'); // 'tarjetas' o 'contenido'
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
@@ -180,10 +175,10 @@ function ApoderadoPage({ onCambiarVista }) {
   }, [mostrarSelectorPupilo]);
 
   const tabs = [
-    { id: 'informacion', label: 'Informacion' },
-    { id: 'notas', label: 'Notas' },
-    { id: 'comunicados', label: 'Comunicados' },
-    { id: 'progreso', label: 'Progreso' }
+    { id: 'notas', label: 'Notas', color: 'blue', desc: 'Review final grades & term performance.', badge: 'Calificaciones', icon: 'auto_stories' },
+    { id: 'comunicados', label: 'Comunicados', color: 'green', desc: "Don't forget the field trip next week!", badge: 'Avisos', icon: 'drafts' },
+    { id: 'informacion', label: 'Información', color: 'pink', desc: 'Records and medical forms.', badge: 'Datos Personales', icon: 'person_book' },
+    { id: 'progreso', label: 'Progreso', color: 'yellow', desc: 'Leo is doing great in Science this week!', badge: 'Evolución Académica', icon: 'trending_up' }
   ];
 
   // Filtrar notas por pupilo seleccionado
@@ -210,6 +205,15 @@ function ApoderadoPage({ onCambiarVista }) {
   // Contar comunicados no leidos del pupilo seleccionado
   const comunicadosNoLeidos = comunicadosFiltrados.filter(c => !c.leido).length;
 
+  const seleccionarVista = (tabId) => {
+    setTabActiva(tabId);
+    setVistaModo('contenido');
+  };
+
+  const volverAMenu = () => {
+    setVistaModo('tarjetas');
+  };
+
   const renderTabContent = () => {
     switch (tabActiva) {
       case 'informacion':
@@ -232,119 +236,214 @@ function ApoderadoPage({ onCambiarVista }) {
         <div className="apoderado-header-content">
           <div className="apoderado-header-left">
             <div className="apoderado-logo">
-              <span>E</span>
+              <span className="material-symbols-outlined">child_care</span>
             </div>
             <div className="apoderado-header-info">
-              <h1>Portal del Apoderado</h1>
-              <p>Bienvenido/a, {apoderadoDemo.nombre} {apoderadoDemo.apellidos}</p>
+              <h1>Evergreen Academy</h1>
+              <p className="subtitle">
+                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>rocket_launch</span>
+                Parent Universe
+              </p>
             </div>
           </div>
           <div className="apoderado-header-right">
-            <button className="btn-cerrar-sesion" onClick={onCambiarVista}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              <span className="btn-text">Cerrar Sesion</span>
-            </button>
+            <div className="user-profile-header">
+              <div className="user-text">
+                <p className="user-name">{apoderadoDemo.nombre} {apoderadoDemo.apellidos}</p>
+                <p className="user-subtext">{pupiloSeleccionado.nombres}'s Learning Path</p>
+              </div>
+              <button className="btn-cerrar-sesion-icon" onClick={onCambiarVista} title="Cerrar Sesión">
+                <span className="material-symbols-outlined">logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="apoderado-main">
-        {/* Card Pupilo */}
-        <div className="pupilo-card">
-          <div className="pupilo-card-content">
-            <div className="pupilo-avatar">
-              {pupiloSeleccionado.foto ? (
-                <img src={pupiloSeleccionado.foto} alt={pupiloSeleccionado.nombres} />
-              ) : (
-                <div className="pupilo-avatar-placeholder">
-                  {pupiloSeleccionado.nombres.charAt(0)}{pupiloSeleccionado.apellidos.charAt(0)}
-                </div>
-              )}
-            </div>
-            <div className="pupilo-info">
-              <h2>{pupiloSeleccionado.nombres} {pupiloSeleccionado.apellidos}</h2>
-              <p className="pupilo-curso">{pupiloSeleccionado.curso}</p>
-              <p className="pupilo-rut">RUT: {pupiloSeleccionado.rut}</p>
-            </div>
-            <div className="pupilo-actions">
-              {pupilosDemo.length > 1 && (
-                <div className="pupilo-selector-container" ref={dropdownRef}>
-                  <button
-                    className="btn-cambiar-pupilo"
-                    onClick={() => setMostrarSelectorPupilo(!mostrarSelectorPupilo)}
+        {/* Welcome Section */}
+        <section className="notebook-header">
+          <h2>Hi {apoderadoDemo.nombre}! 👋</h2>
+          <p>Welcome back to {pupiloSeleccionado.nombres}'s school materials. Click on any notebook to open the details!</p>
+        </section>
+
+        {/* Card Pupilo Selector (Mini) */}
+        <div className="pupilo-selector-mini">
+          <div className="pupilo-selector-container" ref={dropdownRef}>
+            <button
+              className="btn-pupilo-current"
+              onClick={() => setMostrarSelectorPupilo(!mostrarSelectorPupilo)}
+            >
+              <div className="avatar-mini">
+                {pupiloSeleccionado.nombres.charAt(0)}
+              </div>
+              <span>{pupiloSeleccionado.nombres} {pupiloSeleccionado.apellidos} ({pupiloSeleccionado.curso})</span>
+              <span className="material-symbols-outlined">expand_more</span>
+            </button>
+            {mostrarSelectorPupilo && (
+              <div className="pupilo-dropdown">
+                {pupilosDemo.map(pupilo => (
+                  <div
+                    key={pupilo.id}
+                    className={`pupilo-dropdown-item ${pupilo.id === pupiloSeleccionado.id ? 'active' : ''}`}
+                    onClick={() => handleCambiarPupilo(pupilo)}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="8.5" cy="7" r="4" />
-                      <polyline points="17 11 19 13 23 9" />
-                    </svg>
-                    Cambiar Pupilo
-                  </button>
-                  {mostrarSelectorPupilo && (
-                    <div className="pupilo-dropdown">
-                      {pupilosDemo.map(pupilo => (
-                        <div
-                          key={pupilo.id}
-                          className={`pupilo-dropdown-item ${pupilo.id === pupiloSeleccionado.id ? 'active' : ''}`}
-                          onClick={() => handleCambiarPupilo(pupilo)}
-                        >
-                          <div className="pupilo-dropdown-avatar">
-                            {pupilo.nombres.charAt(0)}{pupilo.apellidos.charAt(0)}
-                          </div>
-                          <div className="pupilo-dropdown-info">
-                            <span className="pupilo-dropdown-name">{pupilo.nombres} {pupilo.apellidos}</span>
-                            <span className="pupilo-dropdown-curso">{pupilo.curso}</span>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="pupilo-dropdown-avatar">
+                      {pupilo.nombres.charAt(0)}{pupilo.apellidos.charAt(0)}
+                    </div>
+                    <div className="pupilo-dropdown-info">
+                      <span className="pupilo-dropdown-name">{pupilo.nombres} {pupilo.apellidos}</span>
+                      <span className="pupilo-dropdown-curso">{pupilo.curso}</span>
+                    </div>
+                  </div>
+                ))}
+                <div className="dropdown-divider"></div>
+                <div className="dropdown-action" onClick={() => setMostrarModalAgregar(true)}>
+                  <span className="material-symbols-outlined">person_add</span>
+                  Agregar Pupilo
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {vistaModo === 'tarjetas' ? (
+          <div className="notebook-grid">
+            {/* Card: NOTAS */}
+            <div className="notebook-card card-notas" onClick={() => seleccionarVista('notas')}>
+              <div className="spiral-bind"></div>
+              <div className="notebook-card-content">
+                <div className="notebook-label-box">
+                  <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYTrW7k7QN3wjX6xXc6eXvC8b8R_Yv4W12gIkVxiTSXaBaIKu63F5-KwJTBFUxl6QrVAtAhU97scLQTlvAQ2nDDu3rE7H4BwuctcPqLWfllEPXryoa5j4kjtQ2STX28-eo5AlhSBE4QcyYgAY0h3yEg_T-sGR4eC2S_UGMkFvr7JUgUbg6V8M63pXNeUhjEusnEc0A3YdrbJxa_mFfNY9pH1EYjfYCpQq5vU7XAYuoBcpB_MZ90TVJuZtmvfgGtra6YgabB-tQwmc" alt="Grades" />
+                  <span>2023-2024</span>
+                </div>
+                <div className="mt-auto">
+                  <h3 className="notebook-title">Notas</h3>
+                  <p className="notebook-desc">Review final grades & term performance.</p>
+                  <div className="notebook-footer">
+                    <span className="notebook-badge">Calificaciones</span>
+                    <div className="notebook-icon-circle">
+                      <span className="material-symbols-outlined">auto_stories</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card: COMUNICADOS */}
+            <div className="notebook-card card-comunicados" onClick={() => seleccionarVista('comunicados')}>
+              <div className="folder-tab"></div>
+              <div className="notebook-card-content">
+                <div className="paper-sheet">
+                  <div className="lined-paper"></div>
+                  <div className="paper-content">
+                    <span className="material-symbols-outlined icon">campaign</span>
+                    <h4 className="font-hand" style={{ fontSize: '1.5rem', color: '#1e293b' }}>Weekly News</h4>
+                    <p className="font-hand" style={{ color: '#64748b', marginTop: '8px' }}>
+                      {comunicadosNoLeidos > 0 ? `Tienes ${comunicadosNoLeidos} avisos nuevos.` : "No hay avisos nuevos hoy."}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-auto">
+                  <h3 className="notebook-title">Comunicados</h3>
+                  <div className="notebook-footer">
+                    <span className="notebook-badge">Avisos</span>
+                    <div className="notebook-icon-circle">
+                      <span className="material-symbols-outlined">drafts</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card: INFORMACION */}
+            <div className="notebook-card card-informacion" onClick={() => seleccionarVista('informacion')}>
+              <div className="binder-rings">
+                <div className="binder-ring"></div>
+                <div className="binder-ring"></div>
+                <div className="binder-ring"></div>
+              </div>
+              <div className="notebook-card-content">
+                <div className="photo-circle">
+                  {pupiloSeleccionado.foto ? (
+                    <img src={pupiloSeleccionado.foto} alt={pupiloSeleccionado.nombres} />
+                  ) : (
+                    <div className="pupilo-avatar-placeholder" style={{ width: '100%', height: '100%', fontSize: '3rem' }}>
+                      {pupiloSeleccionado.nombres.charAt(0)}
                     </div>
                   )}
                 </div>
-              )}
-              <button className="btn-agregar-pupilo" onClick={() => setMostrarModalAgregar(true)}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="8.5" cy="7" r="4" />
-                  <line x1="20" y1="8" x2="20" y2="14" />
-                  <line x1="23" y1="11" x2="17" y2="11" />
-                </svg>
-                Agregar Pupilo
-              </button>
+                <div className="mt-auto">
+                  <h3 className="notebook-title">Información</h3>
+                  <p className="notebook-desc">Records and medical forms.</p>
+                  <div className="notebook-footer">
+                    <span className="notebook-badge">Datos Personales</span>
+                    <div className="notebook-icon-circle">
+                      <span className="material-symbols-outlined">person_book</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card: PROGRESO */}
+            <div className="notebook-card card-progreso" onClick={() => seleccionarVista('progreso')}>
+              <div className="top-binds">
+                <div className="top-bind"></div>
+                <div className="top-bind"></div>
+              </div>
+              <div className="flip-paper">
+                <div className="lined-paper" style={{ position: 'relative' }}>
+                  <div style={{ position: 'absolute', inset: 0, paddingTop: '10px' }}>
+                    <h3 className="notebook-title yellow-flip-title">Progreso</h3>
+                    <div className="notebook-progress-container">
+                      <div className="notebook-progress-bar">
+                        <div className="notebook-progress-fill" style={{ width: '75%' }}></div>
+                      </div>
+                      <span className="font-hand" style={{ color: '#64748b' }}>75% Completado</span>
+                    </div>
+                    <p className="font-hand" style={{ color: '#64748b', fontSize: '1.2rem' }}>
+                      {pupiloSeleccionado.nombres} is doing great this term!
+                    </p>
+                  </div>
+                </div>
+                <div className="notebook-footer" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+                  <span className="notebook-badge yellow-flip-badge">Evolución Académica</span>
+                  <div className="notebook-icon-circle">
+                    <span className="material-symbols-outlined">trending_up</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Tabs Navigation */}
-        <div className="apoderado-tabs-container">
-          <nav className="apoderado-tabs-nav">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                className={`apoderado-tab-btn ${tabActiva === tab.id ? 'active' : ''}`}
-                onClick={() => setTabActiva(tab.id)}
-              >
-                {tab.label}
-                {tab.id === 'comunicados' && comunicadosNoLeidos > 0 && (
-                  <span className="tab-badge">{comunicadosNoLeidos}</span>
-                )}
+        ) : (
+          <div className="notebook-content-view">
+            <div className="notebook-content-header">
+              <button className="btn-volver-notebook" onClick={volverAMenu}>
+                <span className="material-symbols-outlined">arrow_back</span>
+                Volver al Menú
               </button>
-            ))}
-          </nav>
-
-          <div className="apoderado-tabs-content">
-            {renderTabContent()}
+              <h3 className="section-title-notebook">{tabActiva.charAt(0).toUpperCase() + tabActiva.slice(1)}</h3>
+            </div>
+            <div className="notebook-content-body">
+              {renderTabContent()}
+            </div>
           </div>
-        </div>
+        )}
+
       </main>
 
       {/* Footer */}
-      <footer className="apoderado-footer">
-        <p>Sistema de Gestion Academica &copy; 2024 | Portal del Apoderado</p>
-        <p className="footer-creditos">Sistema escolar desarrollado por <span className="ch-naranja">CH</span>system</p>
+      <footer className="notebook-footer-main">
+        <div className="footer-content">
+          <div className="footer-left">
+            <span className="material-symbols-outlined">auto_stories</span>
+            <p>© 2024 Evergreen Academy. Sparking Joy in Learning.</p>
+          </div>
+          <div className="footer-right">
+            <span className="ch-naranja">CH</span>system
+          </div>
+        </div>
       </footer>
 
       {/* Modal Agregar Pupilo */}

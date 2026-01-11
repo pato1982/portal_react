@@ -2004,3 +2004,578 @@
   }
 }
 
+
+/* ===================================
+   NOTEBOOK EDITION STYLES
+   =================================== */
+
+:root {
+  --edu-yellow: #ffcf4b;
+  --edu-green: #4ade80;
+  --edu-blue: #60a5fa;
+  --edu-pink: #f472b6;
+  --edu-orange: #fb923c;
+  --edu-primary: #6366f1;
+}
+
+.notebook-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.notebook-header {
+  margin-bottom: 50px;
+  position: relative;
+}
+
+.notebook-header h2 {
+  font-family: "Fredoka", sans-serif;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 10px;
+}
+
+.notebook-header p {
+  font-family: "Quicksand", sans-serif;
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.notebook-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+}
+
+/* Base Notebook Card */
+.notebook-card {
+  height: 420px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0 16px 16px 0;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: left center;
+  text-decoration: none;
+  background-image: url("https://www.transparenttextures.com/patterns/pinstriped-suit.png"); /* Notebook texture */
+}
+
+.notebook-card:hover {
+  transform: perspective(1000px) rotateY(-10deg);
+  box-shadow: 20px 20px 40px rgba(0,0,0,0.1);
+}
+
+.notebook-card .spiral-bind {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #94a3b8 0px,
+    #94a3b8 10px,
+    transparent 10px,
+    transparent 24px
+  );
+  opacity: 0.4;
+  z-index: 5;
+}
+
+.notebook-card-content {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  z-index: 10;
+}
+
+/* Card: NOTAS (Blue) */
+.card-notas {
+  background-color: var(--edu-blue);
+  border-left: 12px solid #2563eb;
+}
+
+.notebook-label-box {
+  width: 100%;
+  height: 160px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(96, 165, 250, 0.3);
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.notebook-label-box img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.notebook-label-box span {
+  font-family: "Gochi Hand", cursive;
+  color: var(--edu-blue);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Card: COMUNICADOS (Green Folder) */
+.card-comunicados {
+  background-color: var(--edu-green);
+  border-radius: 0 16px 16px 16px;
+}
+
+.folder-tab {
+  position: absolute;
+  top: 8px;
+  right: -16px;
+  width: 50%;
+  height: 32px;
+  background-color: #16a34a;
+  clip-path: polygon(0 0, 80% 0, 100% 100%, 0% 100%);
+}
+
+.paper-sheet {
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 16px;
+  flex-grow: 1;
+  margin-bottom: 24px;
+  position: relative;
+  transform: rotate(1deg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.lined-paper {
+  height: 100%;
+  width: 100%;
+  background-image: linear-gradient(#e5e7eb 1px, transparent 1px);
+  background-size: 100% 1.5rem;
+}
+
+.paper-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.paper-content .icon {
+  color: var(--edu-green);
+  font-size: 2.5rem;
+}
+
+/* Card: INFORMACION (Pink Binder) */
+.card-informacion {
+  background-color: var(--edu-pink);
+  border-left: 30px solid rgba(244, 114, 182, 0.8);
+  border-radius: 16px;
+}
+
+.binder-rings {
+  position: absolute;
+  left: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.binder-ring {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: rgba(226, 232, 240, 0.5);
+}
+
+.photo-circle {
+  width: 100%;
+  aspect-ratio: 1/1;
+  background: white;
+  border-radius: 50%;
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 8px solid rgba(244, 114, 182, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.photo-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Card: PROGRESO (Yellow Flip) */
+.card-progreso {
+  background-color: var(--edu-yellow);
+  border-top: 40px solid rgba(255, 207, 75, 0.9);
+  border-radius: 0 0 16px 16px;
+}
+
+.top-binds {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+
+.top-bind {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(113, 63, 18, 0.3);
+}
+
+.flip-paper {
+  background-color: rgba(255, 255, 255, 0.95);
+  margin: 0 8px;
+  height: 100%;
+  border-radius: 0 0 8px 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography and common elements */
+.notebook-title {
+  font-family: "Gochi Hand", cursive;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 8px;
+}
+
+.yellow-flip-title {
+  color: #1e293b;
+}
+
+.notebook-desc {
+  font-family: "Quicksand", sans-serif;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.25;
+  margin-bottom: 24px;
+}
+
+.notebook-progress-container {
+  margin-bottom: 16px;
+}
+
+.notebook-progress-bar {
+  height: 8px;
+  width: 100%;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.notebook-progress-fill {
+  height: 100%;
+  background-color: var(--edu-yellow);
+}
+
+.notebook-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notebook-badge {
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.yellow-flip-badge {
+  color: var(--edu-yellow);
+  background: transparent;
+}
+
+.notebook-icon-circle {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.card-notas .notebook-icon-circle { color: var(--edu-blue); }
+.card-comunicados .notebook-icon-circle { color: var(--edu-green); }
+.card-informacion .notebook-icon-circle { color: var(--edu-pink); }
+.card-progreso .notebook-icon-circle { color: #1e293b; }
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+@media (max-width: 1024px) {
+  .notebook-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .notebook-grid { grid-template-columns: 1fr; }
+}
+
+
+/* Integration Styles for Notebook Edition */
+
+.apoderado-header {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid #f1f5f9;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.apoderado-header-content {
+  max-width: 1300px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.apoderado-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.apoderado-logo {
+  width: 48px;
+  height: 48px;
+  background: var(--edu-yellow);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e293b;
+  transform: rotate(3deg);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.apoderado-header-info h1 {
+  font-family: "Fredoka", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1;
+}
+
+.apoderado-header-info .subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--edu-blue);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.user-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding-left: 20px;
+  border-left: 2px solid #f1f5f9;
+}
+
+.user-text {
+  text-align: right;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.user-subtext {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.btn-cerrar-sesion-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.btn-cerrar-sesion-icon:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+/* Pupilo Mini Selector */
+.pupilo-selector-mini {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.btn-pupilo-current {
+  background: white;
+  border: 2px solid #f1f5f9;
+  border-radius: 14px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #1e293b;
+  transition: all 0.2s;
+}
+
+.btn-pupilo-current:hover {
+  border-color: var(--edu-yellow);
+}
+
+.avatar-mini {
+  width: 32px;
+  height: 32px;
+  background: var(--edu-pink);
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+/* Content View Styles */
+.notebook-content-view {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  overflow: hidden;
+  animation: notebookFadeIn 0.4s ease-out;
+}
+
+@keyframes notebookFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notebook-content-header {
+  padding: 20px 30px;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.btn-volver-notebook {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-volver-notebook:hover {
+  background: #f1f5f9;
+  transform: translateX(-5px);
+}
+
+.section-title-notebook {
+  font-family: "Fredoka", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1e293b;
+}
+
+.notebook-content-body {
+  padding: 30px;
+}
+
+/* Footer Main */
+.notebook-footer-main {
+  margin-top: 60px;
+  padding: 40px 0;
+  border-top: 2px solid #f1f5f9;
+}
+
+.footer-content {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #94a3b8;
+}
+
+.footer-left p {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.footer-right {
+  font-size: 14px;
+  font-weight: 700;
+}
+

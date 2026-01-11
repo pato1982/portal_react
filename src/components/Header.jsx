@@ -26,8 +26,8 @@ function Header({ usuario, onCerrarSesion }) {
             <span className="logo-icon">E</span>
           </div>
           <div className="brand-mobile">
-            <span className="rol-titulo">Administrador</span>
-            <span className="establecimiento-nombre">Liceo Demo Santiago</span>
+            <span className="rol-titulo">{usuario.tipo_usuario || 'Usuario'}</span>
+            <span className="establecimiento-nombre">{usuario.nombre_establecimiento || 'Establecimiento Educacional'}</span>
           </div>
         </div>
         <div className="header-info">

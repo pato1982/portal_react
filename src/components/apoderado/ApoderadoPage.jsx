@@ -3,6 +3,7 @@ import InformacionTab from './InformacionTab';
 import NotasTab from './NotasTab';
 import ComunicadosTab from './ComunicadosTab';
 import ProgresoTab from './ProgresoTab';
+import Header from '../Header';
 
 // Datos demo del apoderado
 const apoderadoDemo = {
@@ -13,7 +14,11 @@ const apoderadoDemo = {
   email: 'maria.gonzalez@email.com',
   telefono: '+56 9 1234 5678',
   direccion: 'Av. Principal 123, Santiago',
-  parentesco: 'Madre'
+  parentesco: 'Madre',
+  tipo_usuario: 'Apoderado',
+  nombre_establecimiento: 'Evergreen Academy',
+  nombres: 'Maria', // Added for Header compatibility
+  apellidos: 'Gonzalez Rodriguez' // Added for Header compatibility
 };
 
 // Datos demo de pupilos
@@ -181,10 +186,10 @@ function ApoderadoPage({ onCambiarVista }) {
   }, [mostrarSelectorPupilo]);
 
   const tabs = [
-    { id: 'notas', label: 'Notas', color: 'blue', desc: 'Review final grades & term performance.', badge: 'Calificaciones', icon: 'auto_stories' },
-    { id: 'comunicados', label: 'Comunicados', color: 'green', desc: "Don't forget the field trip next week!", badge: 'Avisos', icon: 'drafts' },
-    { id: 'informacion', label: 'Información', color: 'pink', desc: 'Records and medical forms.', badge: 'Datos Personales', icon: 'person_book' },
-    { id: 'progreso', label: 'Progreso', color: 'yellow', desc: 'Leo is doing great in Science this week!', badge: 'Evolución Académica', icon: 'trending_up' }
+    { id: 'informacion', label: 'Ficha de Información', color: 'pink', desc: 'Expediente académico, ficha médica y documentos oficiales.', badge: 'Datos Pupilo', icon: 'person_book', img: '/assets/navigation/info.png' },
+    { id: 'notas', label: 'Libro de Notas', color: 'blue', desc: 'Consulta las calificaciones detalladas y el rendimiento del periodo.', badge: 'Calificaciones', icon: 'auto_stories', img: '/assets/navigation/notas.png' },
+    { id: 'comunicados', label: 'Cuaderno de Comunicados', color: 'green', desc: 'Revisa los avisos y noticias del establecimiento.', badge: 'Avisos', icon: 'drafts', img: '/assets/navigation/comunicados.png' },
+    { id: 'progreso', label: 'Libro de Progreso', color: 'yellow', desc: 'Visualiza la evolución y metas académicas.', badge: 'Evolución', icon: 'trending_up', img: '/assets/navigation/progreso.png' }
   ];
 
   // Filtrar notas por pupilo seleccionado
@@ -220,6 +225,16 @@ function ApoderadoPage({ onCambiarVista }) {
     setVistaModo('tarjetas');
   };
 
+  // Calcular progreso dinámico (promedio de notas convertido a porcentaje)
+  const progresoPorcentaje = useMemo(() => {
+    if (notasFiltradas.length === 0) return 0;
+    const promedio = notasFiltradas.reduce((acc, nota) => acc + nota.nota, 0) / notasFiltradas.length;
+    // Escala de 1.0 a 7.0 a porcentaje 0-100%
+    return Math.round(((promedio - 1) / 6) * 100);
+  }, [notasFiltradas]);
+
+  const yearEscolar = new Date().getFullYear();
+
   const renderTabContent = () => {
     switch (tabActiva) {
       case 'informacion':
@@ -237,34 +252,8 @@ function ApoderadoPage({ onCambiarVista }) {
 
   return (
     <div className="apoderado-container">
-      {/* Header */}
-      <header className="apoderado-header">
-        <div className="apoderado-header-content">
-          <div className="apoderado-header-left">
-            <div className="apoderado-logo">
-              <span className="material-symbols-outlined">child_care</span>
-            </div>
-            <div className="apoderado-header-info">
-              <h1>Evergreen Academy</h1>
-              <p className="subtitle">
-                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>rocket_launch</span>
-                Parent Universe
-              </p>
-            </div>
-          </div>
-          <div className="apoderado-header-right">
-            <div className="user-profile-header">
-              <div className="user-text">
-                <p className="user-name">{apoderadoDemo.nombre} {apoderadoDemo.apellidos}</p>
-                <p className="user-subtext">{pupiloSeleccionado.nombres}'s Learning Path</p>
-              </div>
-              <button className="btn-cerrar-sesion-icon" onClick={onCambiarVista} title="Cerrar Sesión">
-                <span className="material-symbols-outlined">logout</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header Corporativo Reemplazado */}
+      <Header usuario={apoderadoDemo} onCerrarSesion={onCambiarVista} />
 
       <main className="apoderado-main">
         {/* Welcome Section */}
@@ -315,112 +304,74 @@ function ApoderadoPage({ onCambiarVista }) {
 
         {vistaModo === 'tarjetas' ? (
           <div className="notebook-grid">
-            {/* Card: NOTAS */}
-            <div className="notebook-card card-notas" onClick={() => seleccionarVista('notas')}>
-              <div className="spiral-bind"></div>
-              <div className="notebook-card-content">
-                <div className="notebook-label-box">
-                  <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYTrW7k7QN3wjX6xXc6eXvC8b8R_Yv4W12gIkVxiTSXaBaIKu63F5-KwJTBFUxl6QrVAtAhU97scLQTlvAQ2nDDu3rE7H4BwuctcPqLWfllEPXryoa5j4kjtQ2STX28-eo5AlhSBE4QcyYgAY0h3yEg_T-sGR4eC2S_UGMkFvr7JUgUbg6V8M63pXNeUhjEusnEc0A3YdrbJxa_mFfNY9pH1EYjfYCpQq5vU7XAYuoBcpB_MZ90TVJuZtmvfgGtra6YgabB-tQwmc" alt="Grades" />
-                  <span>2023-2024</span>
-                </div>
-                <div className="mt-auto">
-                  <h3 className="notebook-title">Notas</h3>
-                  <p className="notebook-desc">Review final grades & term performance.</p>
-                  <div className="notebook-footer">
-                    <span className="notebook-badge">Calificaciones</span>
-                    <div className="notebook-icon-circle">
-                      <span className="material-symbols-outlined">auto_stories</span>
-                    </div>
+            {tabs.map(tab => (
+              <div
+                key={tab.id}
+                className={`notebook-card card-${tab.id}`}
+                onClick={() => seleccionarVista(tab.id)}
+              >
+                {/* Visual thematic elements based on type */}
+                {tab.id === 'notas' && <div className="spiral-bind"></div>}
+                {tab.id === 'comunicados' && <div className="folder-tab"></div>}
+                {tab.id === 'informacion' && (
+                  <div className="binder-rings">
+                    <div className="binder-ring"></div>
+                    <div className="binder-ring"></div>
+                    <div className="binder-ring"></div>
                   </div>
-                </div>
-              </div>
-            </div>
+                )}
+                {tab.id === 'progreso' && (
+                  <div className="top-binds">
+                    <div className="top-bind"></div>
+                    <div className="top-bind"></div>
+                  </div>
+                )}
 
-            {/* Card: COMUNICADOS */}
-            <div className="notebook-card card-comunicados" onClick={() => seleccionarVista('comunicados')}>
-              <div className="folder-tab"></div>
-              <div className="notebook-card-content">
-                <div className="paper-sheet">
-                  <div className="lined-paper"></div>
-                  <div className="paper-content">
-                    <span className="material-symbols-outlined icon">campaign</span>
-                    <h4 className="font-hand" style={{ fontSize: '1.5rem', color: '#1e293b' }}>Weekly News</h4>
-                    <p className="font-hand" style={{ color: '#64748b', marginTop: '8px' }}>
-                      {comunicadosNoLeidos > 0 ? `Tienes ${comunicadosNoLeidos} avisos nuevos.` : "No hay avisos nuevos hoy."}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-auto">
-                  <h3 className="notebook-title">Comunicados</h3>
-                  <div className="notebook-footer">
-                    <span className="notebook-badge">Avisos</span>
-                    <div className="notebook-icon-circle">
-                      <span className="material-symbols-outlined">drafts</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card: INFORMACION */}
-            <div className="notebook-card card-informacion" onClick={() => seleccionarVista('informacion')}>
-              <div className="binder-rings">
-                <div className="binder-ring"></div>
-                <div className="binder-ring"></div>
-                <div className="binder-ring"></div>
-              </div>
-              <div className="notebook-card-content">
-                <div className="photo-circle">
-                  {pupiloSeleccionado.foto ? (
-                    <img src={pupiloSeleccionado.foto} alt={pupiloSeleccionado.nombres} />
-                  ) : (
-                    <div className="pupilo-avatar-placeholder" style={{ width: '100%', height: '100%', fontSize: '3rem' }}>
-                      {pupiloSeleccionado.nombres.charAt(0)}
-                    </div>
-                  )}
-                </div>
-                <div className="mt-auto">
-                  <h3 className="notebook-title">Información</h3>
-                  <p className="notebook-desc">Records and medical forms.</p>
-                  <div className="notebook-footer">
-                    <span className="notebook-badge">Datos Personales</span>
-                    <div className="notebook-icon-circle">
-                      <span className="material-symbols-outlined">person_book</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card: PROGRESO */}
-            <div className="notebook-card card-progreso" onClick={() => seleccionarVista('progreso')}>
-              <div className="top-binds">
-                <div className="top-bind"></div>
-                <div className="top-bind"></div>
-              </div>
-              <div className="flip-paper">
-                <div className="lined-paper" style={{ position: 'relative' }}>
-                  <div style={{ position: 'absolute', inset: 0, paddingTop: '10px' }}>
-                    <h3 className="notebook-title yellow-flip-title">Progreso</h3>
-                    <div className="notebook-progress-container">
-                      <div className="notebook-progress-bar">
-                        <div className="notebook-progress-fill" style={{ width: '75%' }}></div>
+                <div className="notebook-card-content">
+                  <div className="notebook-label-box">
+                    <img src={tab.img} alt={tab.label} />
+                    {tab.id === 'notas' && <span>{yearEscolar}-{yearEscolar + 1}</span>}
+                    {tab.id === 'informacion' && (
+                      <div className="mini-photo-overlay">
+                        {pupiloSeleccionado.foto ? (
+                          <img src={pupiloSeleccionado.foto} alt="Pupilo" />
+                        ) : (
+                          <span>{pupiloSeleccionado.nombres.charAt(0)}</span>
+                        )}
                       </div>
-                      <span className="font-hand" style={{ color: '#64748b' }}>75% Completado</span>
-                    </div>
-                    <p className="font-hand" style={{ color: '#64748b', fontSize: '1.2rem' }}>
-                      {pupiloSeleccionado.nombres} is doing great this term!
-                    </p>
+                    )}
                   </div>
-                </div>
-                <div className="notebook-footer" style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
-                  <span className="notebook-badge yellow-flip-badge">Evolución Académica</span>
-                  <div className="notebook-icon-circle">
-                    <span className="material-symbols-outlined">trending_up</span>
+
+                  <div className="mt-auto">
+                    <h3 className="notebook-title">{tab.label}</h3>
+                    <p className="notebook-desc">{tab.desc}</p>
+
+                    {tab.id === 'progreso' && (
+                      <div className="notebook-progress-mini">
+                        <div className="notebook-progress-bar">
+                          <div className="notebook-progress-fill" style={{ width: `${progresoPorcentaje}%` }}></div>
+                        </div>
+                        <span className="progreso-text-mini">{progresoPorcentaje}% Completado</span>
+                      </div>
+                    )}
+
+                    {tab.id === 'comunicados' && comunicadosNoLeidos > 0 && (
+                      <div className="comunicados-alert-mini">
+                        <span className="material-symbols-outlined">notifications_active</span>
+                        <span>{comunicadosNoLeidos} por leer</span>
+                      </div>
+                    )}
+
+                    <div className="notebook-footer">
+                      <span className="notebook-badge">{tab.badge}</span>
+                      <div className="notebook-icon-circle">
+                        <span className="material-symbols-outlined">{tab.icon}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         ) : (
           <div className="notebook-content-view">
@@ -439,17 +390,10 @@ function ApoderadoPage({ onCambiarVista }) {
 
       </main>
 
-      {/* Footer */}
-      <footer className="notebook-footer-main">
-        <div className="footer-content">
-          <div className="footer-left">
-            <span className="material-symbols-outlined">auto_stories</span>
-            <p>© 2024 Evergreen Academy. Sparking Joy in Learning.</p>
-          </div>
-          <div className="footer-right">
-            <span className="ch-naranja">CH</span>system
-          </div>
-        </div>
+      {/* Footer Corporativo Reemplazado */}
+      <footer className="main-footer">
+        <p>Sistema de Gestion Academica &copy; 2024 | Todos los derechos reservados</p>
+        <p className="footer-creditos">Sistema escolar desarrollado por <span className="ch-naranja">CH</span>system</p>
       </footer>
 
       {/* Modal Agregar Pupilo */}

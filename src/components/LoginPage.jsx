@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../styles/login.css';
+import { obtenerCredencialesDemo, login, esModoDemo } from '../services/authService';
 
 function LoginPage({ onVolver, onLoginExitoso }) {
   const [formData, setFormData] = useState({
@@ -9,13 +10,7 @@ function LoginPage({ onVolver, onLoginExitoso }) {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [error, setError] = useState('');
   const [tipoSeleccionado, setTipoSeleccionado] = useState(null);
-
-  // Credenciales demo por tipo de usuario
-  const credencialesDemo = {
-    admin: { email: 'admin@colegio.cl', password: 'Admin123' },
-    docente: { email: 'docente@colegio.cl', password: 'Docente123' },
-    apoderado: { email: 'apoderado@colegio.cl', password: 'Apoderado123' }
-  };
+  const [cargando, setCargando] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,11 +20,15 @@ function LoginPage({ onVolver, onLoginExitoso }) {
 
   const seleccionarTipo = (tipo) => {
     setTipoSeleccionado(tipo);
-    setFormData(credencialesDemo[tipo]);
+    // Obtener credenciales demo del servicio (solo en modo demo)
+    const credenciales = obtenerCredencialesDemo(tipo);
+    if (credenciales) {
+      setFormData(credenciales);
+    }
     setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!tipoSeleccionado) {
@@ -42,8 +41,22 @@ function LoginPage({ onVolver, onLoginExitoso }) {
       return;
     }
 
-    // Login exitoso - navegar a la vista correspondiente
-    onLoginExitoso(tipoSeleccionado);
+    setCargando(true);
+    setError('');
+
+    try {
+      const resultado = await login(formData.email, formData.password, tipoSeleccionado);
+
+      if (resultado.success) {
+        onLoginExitoso(tipoSeleccionado, resultado.usuario);
+      } else {
+        setError(resultado.error || 'Error al iniciar sesión');
+      }
+    } catch (err) {
+      setError('Error de conexión. Intente nuevamente.');
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
@@ -76,8 +89,8 @@ function LoginPage({ onVolver, onLoginExitoso }) {
             <div className="login-tipo-btns">
               <button
                 type="button"
-                className={`login-tipo-btn admin ${tipoSeleccionado === 'admin' ? 'activo' : ''}`}
-                onClick={() => seleccionarTipo('admin')}
+                className={`login-tipo-btn admin ${tipoSeleccionado === 'administrador' ? 'activo' : ''}`}
+                onClick={() => seleccionarTipo('administrador')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2L2 7l10 5 10-5-10-5z"/>
@@ -165,8 +178,8 @@ function LoginPage({ onVolver, onLoginExitoso }) {
               </div>
             </div>
 
-            <button type="submit" className="btn-login">
-              Iniciar Sesion
+            <button type="submit" className="btn-login" disabled={cargando}>
+              {cargando ? 'Ingresando...' : 'Iniciar Sesion'}
             </button>
           </form>
 

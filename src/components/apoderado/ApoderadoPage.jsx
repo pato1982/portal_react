@@ -4,168 +4,111 @@ import NotasTab from './NotasTab';
 import ComunicadosTab from './ComunicadosTab';
 import ProgresoTab from './ProgresoTab';
 import Header from '../Header';
+import config from '../../config/env';
 
-// Datos demo del apoderado
+// Datos base del apoderado (estructura mínima para la sesión demo)
 const apoderadoDemo = {
   id: 1,
-  nombre: 'Maria',
-  apellidos: 'Gonzalez Rodriguez',
+  nombres: 'Apoderado',
+  apellidos: 'Demo',
   rut: '12.345.678-9',
-  email: 'maria.gonzalez@email.com',
-  telefono: '+56 9 1234 5678',
-  direccion: 'Av. Principal 123, Santiago',
-  parentesco: 'Madre',
+  email: '',
+  telefono: '',
+  direccion: '',
+  parentesco: '',
   tipo_usuario: 'Apoderado',
-  nombre_establecimiento: 'Evergreen Academy',
-  nombres: 'Maria', // Added for Header compatibility
-  apellidos: 'Gonzalez Rodriguez' // Added for Header compatibility
+  nombre_establecimiento: 'Sin establecimiento'
 };
 
-// Datos demo de pupilos
-const pupilosDemo = [
-  {
-    id: 1,
-    nombres: 'Pedro',
-    apellidos: 'Gonzalez Martinez',
-    rut: '21.234.567-8',
-    fechaNacimiento: '2012-03-15',
-    curso: '6to Basico A',
-    curso_id: 1,
-    email: 'pedro.gonzalez@colegio.cl',
-    foto: null
-  },
-  {
-    id: 2,
-    nombres: 'Ana',
-    apellidos: 'Gonzalez Martinez',
-    rut: '22.345.678-9',
-    fechaNacimiento: '2014-07-22',
-    curso: '4to Basico B',
-    curso_id: 2,
-    email: 'ana.gonzalez@colegio.cl',
-    foto: null
-  }
-];
+// Sin notas registradas
+const notasDemo = [];
 
-// Notas demo - Pedro (alumno_id: 1)
-const notasDemo = [
-  // Pedro - Trimestre 1
-  { id: 1, alumno_id: 1, asignatura: 'Matematicas', asignatura_id: 1, nota: 6.5, trimestre: 1, fecha: '2024-04-15', comentario: 'Excelente desempeno en algebra' },
-  { id: 2, alumno_id: 1, asignatura: 'Lenguaje', asignatura_id: 2, nota: 5.8, trimestre: 1, fecha: '2024-04-18', comentario: '' },
-  { id: 3, alumno_id: 1, asignatura: 'Ciencias', asignatura_id: 3, nota: 6.2, trimestre: 1, fecha: '2024-04-20', comentario: 'Muy buen trabajo en laboratorio' },
-  { id: 4, alumno_id: 1, asignatura: 'Historia', asignatura_id: 4, nota: 5.5, trimestre: 1, fecha: '2024-04-22', comentario: '' },
-  { id: 5, alumno_id: 1, asignatura: 'Ingles', asignatura_id: 5, nota: 6.8, trimestre: 1, fecha: '2024-04-25', comentario: 'Destacado en pronunciacion' },
-  // Pedro - Trimestre 2
-  { id: 6, alumno_id: 1, asignatura: 'Matematicas', asignatura_id: 1, nota: 6.3, trimestre: 2, fecha: '2024-07-10', comentario: '' },
-  { id: 7, alumno_id: 1, asignatura: 'Lenguaje', asignatura_id: 2, nota: 6.0, trimestre: 2, fecha: '2024-07-12', comentario: 'Mejoro en comprension lectora' },
-  { id: 8, alumno_id: 1, asignatura: 'Ciencias', asignatura_id: 3, nota: 6.5, trimestre: 2, fecha: '2024-07-15', comentario: '' },
-  { id: 9, alumno_id: 1, asignatura: 'Historia', asignatura_id: 4, nota: 5.8, trimestre: 2, fecha: '2024-07-18', comentario: '' },
-  { id: 10, alumno_id: 1, asignatura: 'Ingles', asignatura_id: 5, nota: 7.0, trimestre: 2, fecha: '2024-07-20', comentario: 'Excelente' },
-  // Pedro - Trimestre 3
-  { id: 11, alumno_id: 1, asignatura: 'Matematicas', asignatura_id: 1, nota: 6.7, trimestre: 3, fecha: '2024-10-05', comentario: '' },
-  { id: 12, alumno_id: 1, asignatura: 'Lenguaje', asignatura_id: 2, nota: 6.2, trimestre: 3, fecha: '2024-10-08', comentario: '' },
-  // Ana - Trimestre 1
-  { id: 13, alumno_id: 2, asignatura: 'Matematicas', asignatura_id: 1, nota: 5.8, trimestre: 1, fecha: '2024-04-15', comentario: '' },
-  { id: 14, alumno_id: 2, asignatura: 'Lenguaje', asignatura_id: 2, nota: 6.5, trimestre: 1, fecha: '2024-04-18', comentario: 'Excelente redaccion' },
-  { id: 15, alumno_id: 2, asignatura: 'Ciencias', asignatura_id: 3, nota: 5.5, trimestre: 1, fecha: '2024-04-20', comentario: '' },
-  { id: 16, alumno_id: 2, asignatura: 'Historia', asignatura_id: 4, nota: 6.0, trimestre: 1, fecha: '2024-04-22', comentario: '' },
-  { id: 17, alumno_id: 2, asignatura: 'Ingles', asignatura_id: 5, nota: 5.2, trimestre: 1, fecha: '2024-04-25', comentario: 'Debe practicar vocabulario' },
-  // Ana - Trimestre 2
-  { id: 18, alumno_id: 2, asignatura: 'Matematicas', asignatura_id: 1, nota: 6.0, trimestre: 2, fecha: '2024-07-10', comentario: '' },
-  { id: 19, alumno_id: 2, asignatura: 'Lenguaje', asignatura_id: 2, nota: 6.8, trimestre: 2, fecha: '2024-07-12', comentario: '' },
-  { id: 20, alumno_id: 2, asignatura: 'Ciencias', asignatura_id: 3, nota: 5.8, trimestre: 2, fecha: '2024-07-15', comentario: 'Mejorando' },
-  { id: 21, alumno_id: 2, asignatura: 'Historia', asignatura_id: 4, nota: 6.2, trimestre: 2, fecha: '2024-07-18', comentario: '' },
-  { id: 22, alumno_id: 2, asignatura: 'Ingles', asignatura_id: 5, nota: 5.5, trimestre: 2, fecha: '2024-07-20', comentario: '' },
-  // Ana - Trimestre 3
-  { id: 23, alumno_id: 2, asignatura: 'Matematicas', asignatura_id: 1, nota: 6.2, trimestre: 3, fecha: '2024-10-05', comentario: '' },
-  { id: 24, alumno_id: 2, asignatura: 'Lenguaje', asignatura_id: 2, nota: 7.0, trimestre: 3, fecha: '2024-10-08', comentario: 'Sobresaliente' },
-];
+// Sin comunicados
+const comunicadosDemo = [];
 
-// Comunicados demo - con alumno_id para filtrar por pupilo
-const comunicadosDemo = [
-  // Comunicados de Pedro (alumno_id: 1)
-  {
-    id: 1,
-    alumno_id: 1,
-    titulo: 'Reunion de Apoderados 6to Basico',
-    mensaje: 'Se convoca a reunion de apoderados del 6to Basico A el dia viernes 15 de noviembre a las 18:00 hrs en el salon principal del establecimiento. Se trataran temas importantes sobre el cierre del ano escolar.',
-    fecha: '2024-11-08',
-    tipo: 'reunion',
-    leido: false
-  },
-  {
-    id: 2,
-    alumno_id: 1,
-    titulo: 'Calendario de Examenes Finales',
-    mensaje: 'Informamos que los examenes finales del 6to Basico se realizaran del 2 al 13 de diciembre. Adjunto encontrara el calendario detallado por asignatura.',
-    fecha: '2024-11-05',
-    tipo: 'academico',
-    leido: true
-  },
-  {
-    id: 3,
-    alumno_id: 1,
-    titulo: 'Actividad Dia del Alumno',
-    mensaje: 'El proximo miercoles 20 de noviembre celebraremos el Dia del Alumno con diversas actividades recreativas. Los estudiantes pueden asistir con ropa de color.',
-    fecha: '2024-11-01',
-    tipo: 'evento',
-    leido: true
-  },
-  {
-    id: 4,
-    alumno_id: 1,
-    titulo: 'Felicitaciones por rendimiento',
-    mensaje: 'Felicitamos a Pedro por su excelente desempeno en la asignatura de Ingles durante el segundo trimestre.',
-    fecha: '2024-10-15',
-    tipo: 'academico',
-    leido: true
-  },
-  // Comunicados de Ana (alumno_id: 2)
-  {
-    id: 5,
-    alumno_id: 2,
-    titulo: 'Reunion de Apoderados 4to Basico',
-    mensaje: 'Se convoca a reunion de apoderados del 4to Basico B el dia jueves 14 de noviembre a las 17:00 hrs en la sala de reuniones.',
-    fecha: '2024-11-07',
-    tipo: 'reunion',
-    leido: false
-  },
-  {
-    id: 6,
-    alumno_id: 2,
-    titulo: 'Excursion Pedagogica',
-    mensaje: 'El 4to Basico B realizara una excursion al Museo de Historia Natural el dia 22 de noviembre. Se adjunta autorizacion para firmar.',
-    fecha: '2024-11-04',
-    tipo: 'evento',
-    leido: true
-  },
-  {
-    id: 7,
-    alumno_id: 2,
-    titulo: 'Destacada en Lenguaje',
-    mensaje: 'Felicitamos a Ana por obtener la mejor nota del curso en la evaluacion de comprension lectora.',
-    fecha: '2024-10-20',
-    tipo: 'academico',
-    leido: true
-  },
-  {
-    id: 8,
-    alumno_id: 2,
-    titulo: 'Actualizacion de Datos',
-    mensaje: 'Solicitamos actualizar los datos de contacto de emergencia en secretaria antes del 30 de noviembre.',
-    fecha: '2024-10-28',
-    tipo: 'administrativo',
-    leido: true
-  }
-];
-
-function ApoderadoPage({ onCambiarVista }) {
+function ApoderadoPage({ onCambiarVista, usuario }) {
   const [tabActiva, setTabActiva] = useState('informacion');
-  const [pupiloSeleccionado, setPupiloSeleccionado] = useState(pupilosDemo[0]);
+  const [pupilos, setPupilos] = useState([]);
+  const [pupilosPendientes, setPupilosPendientes] = useState([]);
+  const [pupiloSeleccionado, setPupiloSeleccionado] = useState(null);
   const [mostrarSelectorPupilo, setMostrarSelectorPupilo] = useState(false);
   const [mostrarModalAgregar, setMostrarModalAgregar] = useState(false);
+  const [mostrarModalPendientes, setMostrarModalPendientes] = useState(false);
   const [comunicados, setComunicados] = useState(comunicadosDemo);
+  const [cargando, setCargando] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Datos del apoderado (del usuario logueado o demo)
+  const apoderadoActual = usuario || apoderadoDemo;
+
+  // Cargar pupilos y pupilos pendientes al montar
+  useEffect(() => {
+    if (apoderadoActual.id) {
+      cargarMisPupilos();
+    }
+    if (apoderadoActual.rut) {
+      cargarPupilosPendientes();
+    }
+  }, [apoderadoActual.id, apoderadoActual.rut]);
+
+  // Seleccionar primer pupilo cuando se cargan
+  useEffect(() => {
+    if (pupilos.length > 0 && !pupiloSeleccionado) {
+      setPupiloSeleccionado(pupilos[0]);
+    }
+  }, [pupilos]);
+
+  const cargarMisPupilos = async () => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/apoderado/mis-pupilos/${apoderadoActual.id}`);
+      const data = await response.json();
+      if (data.success) {
+        setPupilos(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando pupilos:', error);
+    }
+  };
+
+  const cargarPupilosPendientes = async () => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/apoderado/pupilos-pendientes/${encodeURIComponent(apoderadoActual.rut)}`);
+      const data = await response.json();
+      if (data.success) {
+        setPupilosPendientes(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando pupilos pendientes:', error);
+    }
+  };
+
+  const confirmarPupilo = async (preregistroId) => {
+    setCargando(true);
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/apoderado/confirmar-pupilo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          preregistro_id: preregistroId,
+          apoderado_id: apoderadoActual.id
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        // Recargar ambas listas
+        await cargarMisPupilos();
+        await cargarPupilosPendientes();
+        setMostrarModalPendientes(false);
+      } else {
+        alert(data.error || 'Error al vincular pupilo');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error de conexión');
+    } finally {
+      setCargando(false);
+    }
+  };
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
@@ -193,13 +136,15 @@ function ApoderadoPage({ onCambiarVista }) {
 
   // Filtrar notas por pupilo seleccionado
   const notasFiltradas = useMemo(() => {
+    if (!pupiloSeleccionado) return [];
     return notasDemo.filter(nota => nota.alumno_id === pupiloSeleccionado.id);
-  }, [pupiloSeleccionado.id]);
+  }, [pupiloSeleccionado]);
 
   // Filtrar comunicados por pupilo seleccionado
   const comunicadosFiltrados = useMemo(() => {
+    if (!pupiloSeleccionado) return [];
     return comunicados.filter(c => c.alumno_id === pupiloSeleccionado.id);
-  }, [comunicados, pupiloSeleccionado.id]);
+  }, [comunicados, pupiloSeleccionado]);
 
   const handleCambiarPupilo = (pupilo) => {
     setPupiloSeleccionado(pupilo);
@@ -215,8 +160,6 @@ function ApoderadoPage({ onCambiarVista }) {
   // Contar comunicados no leidos del pupilo seleccionado
   const comunicadosNoLeidos = comunicadosFiltrados.filter(c => !c.leido).length;
 
-
-
   // Calcular progreso dinámico (promedio de notas convertido a porcentaje)
   const progresoPorcentaje = useMemo(() => {
     if (notasFiltradas.length === 0) return 0;
@@ -230,7 +173,7 @@ function ApoderadoPage({ onCambiarVista }) {
   const renderTabContent = () => {
     switch (tabActiva) {
       case 'informacion':
-        return <InformacionTab pupilo={pupiloSeleccionado} apoderado={apoderadoDemo} />;
+        return <InformacionTab pupilo={pupiloSeleccionado} apoderado={apoderadoActual} />;
       case 'notas':
         return <NotasTab notas={notasFiltradas} pupilo={pupiloSeleccionado} />;
       case 'comunicados':
@@ -238,21 +181,43 @@ function ApoderadoPage({ onCambiarVista }) {
       case 'progreso':
         return <ProgresoTab notas={notasFiltradas} pupilo={pupiloSeleccionado} />;
       default:
-        return <InformacionTab pupilo={pupiloSeleccionado} apoderado={apoderadoDemo} />;
+        return <InformacionTab pupilo={pupiloSeleccionado} apoderado={apoderadoActual} />;
     }
   };
 
   return (
     <div className="apoderado-container">
       {/* Header Corporativo Reemplazado */}
-      <Header usuario={apoderadoDemo} onCerrarSesion={onCambiarVista} />
+      <Header usuario={apoderadoActual} onCerrarSesion={onCambiarVista} />
 
       <main className="apoderado-main">
         <div className="control-panel">
-          <div className="panel-header" style={{ marginBottom: '20px' }}>
+          <div className="panel-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
               Panel de Apoderado
             </h2>
+            {/* Notificación de pupilos pendientes */}
+            {pupilosPendientes.length > 0 && (
+              <button
+                onClick={() => setMostrarModalPendientes(true)}
+                style={{
+                  background: '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: '500',
+                  animation: 'pulse 2s infinite'
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>notification_important</span>
+                {pupilosPendientes.length} pupilo(s) pendiente(s)
+              </button>
+            )}
           </div>
 
           {/* Selector de Pupilo (Estilo Standard) */}
@@ -262,18 +227,24 @@ function ApoderadoPage({ onCambiarVista }) {
               onClick={() => setMostrarSelectorPupilo(!mostrarSelectorPupilo)}
               style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
             >
-              <div className="avatar-mini" style={{ width: '30px', height: '30px', background: '#3b82f6', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-                {pupiloSeleccionado.nombres.charAt(0)}
-              </div>
-              <span style={{ fontWeight: '500', color: '#64748b' }}>{pupiloSeleccionado.nombres} {pupiloSeleccionado.apellidos} ({pupiloSeleccionado.curso})</span>
+              {pupiloSeleccionado ? (
+                <>
+                  <div className="avatar-mini" style={{ width: '30px', height: '30px', background: '#3b82f6', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
+                    {pupiloSeleccionado.nombres.charAt(0)}
+                  </div>
+                  <span style={{ fontWeight: '500', color: '#64748b' }}>{pupiloSeleccionado.nombres} {pupiloSeleccionado.apellidos} ({pupiloSeleccionado.curso_nombre || 'Sin curso'})</span>
+                </>
+              ) : (
+                <span style={{ fontWeight: '500', color: '#94a3b8' }}>Sin pupilos registrados</span>
+              )}
               <span className="material-symbols-outlined">expand_more</span>
             </button>
             {mostrarSelectorPupilo && (
               <div className="pupilo-dropdown" style={{ position: 'absolute', marginTop: '5px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', zIndex: 50, minWidth: '250px' }}>
-                {pupilosDemo.map(pupilo => (
+                {pupilos.map(pupilo => (
                   <div
                     key={pupilo.id}
-                    className={`pupilo-dropdown-item ${pupilo.id === pupiloSeleccionado.id ? 'active' : ''}`}
+                    className={`pupilo-dropdown-item ${pupiloSeleccionado && pupilo.id === pupiloSeleccionado.id ? 'active' : ''}`}
                     onClick={() => handleCambiarPupilo(pupilo)}
                     style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px' }}
                   >
@@ -281,12 +252,30 @@ function ApoderadoPage({ onCambiarVista }) {
                       {pupilo.nombres.charAt(0)}{pupilo.apellidos.charAt(0)}
                     </div>
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: '500', color: '#334155' }}>{pupilo.nombres}</div>
-                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>{pupilo.curso}</div>
+                      <div style={{ fontSize: '14px', fontWeight: '500', color: '#334155' }}>{pupilo.nombres} {pupilo.apellidos}</div>
+                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>{pupilo.curso_nombre || 'Sin curso'}</div>
                     </div>
                   </div>
                 ))}
-                <div style={{ padding: '12px 16px', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setMostrarModalAgregar(true)}>
+                {pupilos.length === 0 && (
+                  <div style={{ padding: '12px 16px', color: '#94a3b8', fontSize: '14px' }}>
+                    No tiene pupilos vinculados
+                  </div>
+                )}
+                {/* Separador si hay pupilos pendientes */}
+                {pupilosPendientes.length > 0 && (
+                  <>
+                    <div style={{ borderTop: '2px solid #f59e0b', margin: '0' }}></div>
+                    <div
+                      style={{ padding: '12px 16px', cursor: 'pointer', background: '#fffbeb', color: '#d97706', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      onClick={() => { setMostrarSelectorPupilo(false); setMostrarModalPendientes(true); }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>pending</span>
+                      {pupilosPendientes.length} pupilo(s) pendiente(s) de vincular
+                    </div>
+                  </>
+                )}
+                <div style={{ padding: '12px 16px', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #f1f5f9' }} onClick={() => setMostrarModalAgregar(true)}>
                   <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person_add</span>
                   Agregar Pupilo
                 </div>
@@ -340,6 +329,85 @@ function ApoderadoPage({ onCambiarVista }) {
         <p className="footer-creditos">Sistema escolar desarrollado por <span className="ch-naranja">CH</span>system</p>
       </footer>
 
+      {/* Modal Pupilos Pendientes */}
+      {mostrarModalPendientes && (
+        <div className="modal-overlay" onClick={() => setMostrarModalPendientes(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ background: '#f59e0b', color: 'white' }}>
+              <h3>Pupilos Pendientes de Vincular</h3>
+              <button className="modal-close" onClick={() => setMostrarModalPendientes(false)} style={{ color: 'white' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="modal-body">
+              <p style={{ marginBottom: '16px', color: '#64748b' }}>
+                El establecimiento ha registrado los siguientes alumnos para vincular a su cuenta:
+              </p>
+              {pupilosPendientes.map(pendiente => (
+                <div
+                  key={pendiente.preregistro_id}
+                  style={{
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    marginBottom: '12px',
+                    background: '#f8fafc'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '16px' }}>
+                        {pendiente.nombres_alumno} {pendiente.apellidos_alumno}
+                      </div>
+                      <div style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+                        RUT: {pendiente.rut_alumno}
+                      </div>
+                      <div style={{ color: '#64748b', fontSize: '14px' }}>
+                        Curso: {pendiente.curso_nombre || 'Sin asignar'}
+                      </div>
+                      <div style={{ color: '#64748b', fontSize: '14px' }}>
+                        Parentesco: {pendiente.parentesco}
+                      </div>
+                      <div style={{ color: '#94a3b8', fontSize: '12px', marginTop: '4px' }}>
+                        {pendiente.establecimiento_nombre}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => confirmarPupilo(pendiente.preregistro_id)}
+                      disabled={cargando}
+                      style={{
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        cursor: cargando ? 'not-allowed' : 'pointer',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        opacity: cargando ? 0.7 : 1
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check</span>
+                      {cargando ? 'Vinculando...' : 'Vincular'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setMostrarModalPendientes(false)}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Agregar Pupilo */}
       {mostrarModalAgregar && (
         <div className="modal-overlay" onClick={() => setMostrarModalAgregar(false)}>
@@ -389,9 +457,16 @@ function ApoderadoPage({ onCambiarVista }) {
           </div>
         </div>
       )}
+
+      {/* Estilos para animación */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+      `}</style>
     </div>
   );
 }
 
 export default ApoderadoPage;
-// Force commit for Notebook Edition

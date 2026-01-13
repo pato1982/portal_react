@@ -1,4 +1,21 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useResponsive, useDropdown } from '../../hooks';
+import { SelectNativo, SelectMovil } from './shared';
+
+// Componente radio para asistencia
+const AsistenciaRadio = ({ alumnoId, estado, estadoActual, onChange }) => (
+  <td style={{ textAlign: 'center' }}>
+    <label className="asistencia-radio">
+      <input
+        type="radio"
+        name={`asistencia-${alumnoId}`}
+        checked={estadoActual === estado}
+        onChange={() => onChange(alumnoId, estado)}
+      />
+      <span className={`asistencia-circle ${estado}`}></span>
+    </label>
+  </td>
+);
 
 function AsistenciaTab({ cursos, alumnosPorCurso }) {
   const [cursoSeleccionado, setCursoSeleccionado] = useState('');
@@ -7,30 +24,13 @@ function AsistenciaTab({ cursos, alumnosPorCurso }) {
   const [mostrarLista, setMostrarLista] = useState(false);
   const [asistencia, setAsistencia] = useState({});
   const [modoEdicion, setModoEdicion] = useState(false);
-  const [asistenciaGuardada, setAsistenciaGuardada] = useState({}); // Simula BD
-  const [dropdownAbierto, setDropdownAbierto] = useState(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 699);
+  const [asistenciaGuardada, setAsistenciaGuardada] = useState({});
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 699);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const { isMobile } = useResponsive();
+  const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.custom-select-container')) {
-        setDropdownAbierto(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Verificar si la fecha seleccionada es hoy
   const esHoy = fechaSeleccionada === new Date().toISOString().split('T')[0];
 
-  // Alumnos del curso seleccionado
   const alumnosDelCurso = useMemo(() => {
     if (!cursoSeleccionado) return [];
     return alumnosPorCurso[cursoSeleccionado] || [];
@@ -48,7 +48,6 @@ function AsistenciaTab({ cursos, alumnosPorCurso }) {
       alert('Seleccione curso y fecha');
       return;
     }
-    // Inicializar asistencia con "presente" por defecto
     const asistenciaInicial = {};
     alumnosDelCurso.forEach(alumno => {
       asistenciaInicial[alumno.id] = 'presente';
@@ -58,28 +57,12 @@ function AsistenciaTab({ cursos, alumnosPorCurso }) {
   };
 
   const handleAsistenciaChange = (alumnoId, estado) => {
-    setAsistencia(prev => ({
-      ...prev,
-      [alumnoId]: estado
-    }));
+    setAsistencia(prev => ({ ...prev, [alumnoId]: estado }));
   };
 
   const handleGuardarAsistencia = () => {
-    // Crear clave unica para esta asistencia
     const clave = `${cursoSeleccionado}-${fechaSeleccionada}`;
-
-    // Guardar en el estado (simula BD)
-    setAsistenciaGuardada(prev => ({
-      ...prev,
-      [clave]: { ...asistencia }
-    }));
-
-    console.log('Asistencia guardada:', {
-      curso_id: cursoSeleccionado,
-      fecha: fechaSeleccionada,
-      asistencia: asistencia
-    });
-
+    setAsistenciaGuardada(prev => ({ ...prev, [clave]: { ...asistencia } }));
     setModoEdicion(false);
     alert('Asistencia guardada exitosamente');
   };
@@ -89,21 +72,16 @@ function AsistenciaTab({ cursos, alumnosPorCurso }) {
       alert('Solo puede modificar la asistencia del dia de hoy');
       return;
     }
-
     if (!cursoSeleccionado) {
       alert('Seleccione un curso');
       return;
     }
-
     const clave = `${cursoSeleccionado}-${fechaSeleccionada}`;
     const asistenciaExistente = asistenciaGuardada[clave];
-
     if (!asistenciaExistente) {
       alert('No hay asistencia registrada para modificar en esta fecha');
       return;
     }
-
-    // Cargar la asistencia existente
     setAsistencia({ ...asistenciaExistente });
     setModoEdicion(true);
     setMostrarLista(true);
@@ -118,100 +96,61 @@ function AsistenciaTab({ cursos, alumnosPorCurso }) {
     setModoEdicion(false);
   };
 
-  // Formatear nombre del alumno: "Perez Silva P."
   const formatearNombreAlumno = (alumno) => {
     const nombresArr = alumno.nombres.split(' ');
     const apellidosArr = alumno.apellidos.split(' ');
-
     const primerApellido = apellidosArr[0] || '';
     const segundoApellido = apellidosArr[1] || '';
     const inicialPrimerNombre = nombresArr[0] ? `${nombresArr[0].charAt(0)}.` : '';
-
     return `${primerApellido} ${segundoApellido} ${inicialPrimerNombre}`.replace(/\s+/g, ' ').trim();
   };
 
-  const formatearFecha = (fecha) => {
+  const formatearFechaLarga = (fecha) => {
     const date = new Date(fecha + 'T00:00:00');
-    const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-    return date.toLocaleDateString('es-CL', options);
+    return date.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  // Contar asistencia
-  const contarAsistencia = () => {
-    const conteo = { presente: 0, ausente: 0, tardio: 0, justificado: 0 };
+  const conteo = useMemo(() => {
+    const c = { presente: 0, ausente: 0, tardio: 0, justificado: 0 };
     Object.values(asistencia).forEach(estado => {
-      if (conteo[estado] !== undefined) {
-        conteo[estado]++;
-      }
+      if (c[estado] !== undefined) c[estado]++;
     });
-    return conteo;
-  };
+    return c;
+  }, [asistencia]);
 
-  const conteo = contarAsistencia();
+  const estados = ['presente', 'ausente', 'tardio', 'justificado'];
 
   return (
     <div className="tab-panel active">
-      {/* Filtros */}
       <div className="card">
-        <div className="card-header">
-          <h3>Registro de Asistencia</h3>
-        </div>
+        <div className="card-header"><h3>Registro de Asistencia</h3></div>
         <div className="card-body">
           <div className="docente-asistencia-filtros">
             <div className="docente-asistencia-filtros-row">
-              <div className="form-group">
-                <label>Curso</label>
-                {isMobile ? (
-                  <div className="custom-select-container">
-                    <div
-                      className="custom-select-trigger"
-                      onClick={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
-                    >
-                      <span>{cursoNombre || 'Seleccionar...'}</span>
-                      <span className="custom-select-arrow">{dropdownAbierto === 'curso' ? '▲' : '▼'}</span>
-                    </div>
-                    {dropdownAbierto === 'curso' && (
-                      <div className="custom-select-options">
-                        <div
-                          className="custom-select-option"
-                          onClick={() => {
-                            handleCursoChange('', '');
-                            setDropdownAbierto(null);
-                          }}
-                        >
-                          Seleccionar...
-                        </div>
-                        {cursos.map(curso => (
-                          <div
-                            key={curso.id}
-                            className={`custom-select-option ${cursoSeleccionado === curso.id.toString() ? 'selected' : ''}`}
-                            onClick={() => {
-                              handleCursoChange(curso.id, curso.nombre);
-                              setDropdownAbierto(null);
-                            }}
-                          >
-                            {curso.nombre}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <select
-                    className="form-control"
-                    value={cursoSeleccionado}
-                    onChange={(e) => {
-                      const curso = cursos.find(c => c.id.toString() === e.target.value);
-                      handleCursoChange(e.target.value, curso?.nombre || '');
-                    }}
-                  >
-                    <option value="">Seleccionar</option>
-                    {cursos.map(curso => (
-                      <option key={curso.id} value={curso.id}>{curso.nombre}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
+              {isMobile ? (
+                <SelectMovil
+                  label="Curso"
+                  value={cursoSeleccionado}
+                  valueName={cursoNombre}
+                  onChange={handleCursoChange}
+                  options={cursos}
+                  placeholder="Seleccionar..."
+                  isOpen={dropdownAbierto === 'curso'}
+                  onToggle={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
+                  onClose={() => setDropdownAbierto(null)}
+                />
+              ) : (
+                <SelectNativo
+                  label="Curso"
+                  value={cursoSeleccionado}
+                  onChange={(e) => {
+                    const curso = cursos.find(c => c.id.toString() === e.target.value);
+                    handleCursoChange(e.target.value, curso?.nombre || '');
+                  }}
+                  options={cursos}
+                  placeholder="Seleccionar"
+                />
+              )}
               <div className="form-group">
                 <label>Fecha</label>
                 <input
@@ -223,24 +162,19 @@ function AsistenciaTab({ cursos, alumnosPorCurso }) {
               </div>
             </div>
             <div className="docente-filtros-actions">
-              <button className="btn btn-secondary" onClick={limpiarFiltros}>
-                Limpiar
-              </button>
-              <button className="btn btn-primary" onClick={handleCargarLista}>
-                Cargar Lista
-              </button>
+              <button className="btn btn-secondary" onClick={limpiarFiltros}>Limpiar</button>
+              <button className="btn btn-primary" onClick={handleCargarLista}>Cargar Lista</button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Lista de Asistencia */}
       {mostrarLista && (
         <div className="card" style={{ marginTop: '20px' }}>
           {!isMobile && (
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3>
-                Lista de Asistencia - {formatearFecha(fechaSeleccionada)}
+                Lista de Asistencia - {formatearFechaLarga(fechaSeleccionada)}
                 {modoEdicion && <span style={{ marginLeft: '10px', fontSize: '12px', color: '#f59e0b', fontWeight: 'normal' }}>(Editando)</span>}
               </h3>
               <div style={{ display: 'flex', gap: '16px', fontSize: '12px' }}>
@@ -255,7 +189,7 @@ function AsistenciaTab({ cursos, alumnosPorCurso }) {
             {isMobile && (
               <div className="docente-asistencia-info-movil">
                 <p className="docente-asistencia-titulo-movil">
-                  Lista de Asistencia - {formatearFecha(fechaSeleccionada)}
+                  Lista de Asistencia - {formatearFechaLarga(fechaSeleccionada)}
                   {modoEdicion && <span style={{ marginLeft: '6px', color: '#f59e0b' }}>(Editando)</span>}
                 </p>
                 <div className="docente-asistencia-conteo-movil">
@@ -283,50 +217,15 @@ function AsistenciaTab({ cursos, alumnosPorCurso }) {
                     <tr key={alumno.id}>
                       <td style={{ textAlign: 'center' }}>{index + 1}</td>
                       <td>{formatearNombreAlumno(alumno)}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <label className="asistencia-radio">
-                          <input
-                            type="radio"
-                            name={`asistencia-${alumno.id}`}
-                            checked={asistencia[alumno.id] === 'presente'}
-                            onChange={() => handleAsistenciaChange(alumno.id, 'presente')}
-                          />
-                          <span className="asistencia-circle presente"></span>
-                        </label>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <label className="asistencia-radio">
-                          <input
-                            type="radio"
-                            name={`asistencia-${alumno.id}`}
-                            checked={asistencia[alumno.id] === 'ausente'}
-                            onChange={() => handleAsistenciaChange(alumno.id, 'ausente')}
-                          />
-                          <span className="asistencia-circle ausente"></span>
-                        </label>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <label className="asistencia-radio">
-                          <input
-                            type="radio"
-                            name={`asistencia-${alumno.id}`}
-                            checked={asistencia[alumno.id] === 'tardio'}
-                            onChange={() => handleAsistenciaChange(alumno.id, 'tardio')}
-                          />
-                          <span className="asistencia-circle tardio"></span>
-                        </label>
-                      </td>
-                      <td style={{ textAlign: 'center' }}>
-                        <label className="asistencia-radio">
-                          <input
-                            type="radio"
-                            name={`asistencia-${alumno.id}`}
-                            checked={asistencia[alumno.id] === 'justificado'}
-                            onChange={() => handleAsistenciaChange(alumno.id, 'justificado')}
-                          />
-                          <span className="asistencia-circle justificado"></span>
-                        </label>
-                      </td>
+                      {estados.map(estado => (
+                        <AsistenciaRadio
+                          key={estado}
+                          alumnoId={alumno.id}
+                          estado={estado}
+                          estadoActual={asistencia[alumno.id]}
+                          onChange={handleAsistenciaChange}
+                        />
+                      ))}
                     </tr>
                   ))}
                 </tbody>
@@ -348,7 +247,6 @@ function AsistenciaTab({ cursos, alumnosPorCurso }) {
           </div>
         </div>
       )}
-
     </div>
   );
 }

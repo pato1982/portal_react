@@ -1,7 +1,133 @@
-import React, { useState } from 'react';
-import { docentesDB, asignaturasDB, docenteEspecialidadesDB } from '../data/demoData';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useMensaje } from '../contexts';
+import config from '../config/env';
 
-function DocentesTab({ mostrarMensaje }) {
+// Modal para editar docente
+const ModalEditarDocente = ({ docente, asignaturas, onGuardar, onCerrar }) => {
+  const [formEditar, setFormEditar] = useState({
+    rut: docente?.rut || '',
+    nombres: docente?.nombres || '',
+    apellidos: docente?.apellidos || '',
+    email: docente?.email || '',
+    especialidades: docente?.asignaturas?.map(a => a.id) || []
+  });
+  const [guardando, setGuardando] = useState(false);
+
+  const handleChange = (e) => {
+    setFormEditar({ ...formEditar, [e.target.name]: e.target.value });
+  };
+
+  const handleEspecialidadChange = (asignaturaId) => {
+    const nuevas = formEditar.especialidades.includes(asignaturaId)
+      ? formEditar.especialidades.filter(id => id !== asignaturaId)
+      : [...formEditar.especialidades, asignaturaId];
+    setFormEditar({ ...formEditar, especialidades: nuevas });
+  };
+
+  const handleSubmit = async () => {
+    if (!formEditar.rut || !formEditar.nombres || !formEditar.apellidos) {
+      alert('Complete todos los campos obligatorios');
+      return;
+    }
+
+    setGuardando(true);
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/docentes/${docente.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rut: formEditar.rut,
+          nombres: formEditar.nombres,
+          apellidos: formEditar.apellidos,
+          email: formEditar.email,
+          asignaturas: formEditar.especialidades,
+          establecimiento_id: 1,
+          usuario_id: null,
+          tipo_usuario: 'administrador',
+          nombre_usuario: 'Administrador del Sistema'
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        onGuardar();
+      } else {
+        alert(data.error || 'Error al actualizar');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error de conexion');
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const abreviarNombre = (nombre) => {
+    const palabras = nombre.split(' ');
+    if (palabras.length >= 2) {
+      return palabras.map(p => p.length <= 4 ? p : p.substring(0, 3) + '.').join(' ');
+    }
+    return nombre;
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onCerrar}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Editar Docente</h3>
+          <button className="modal-close" onClick={onCerrar}>&times;</button>
+        </div>
+        <div className="modal-body">
+          <div className="form-row">
+            <div className="form-group">
+              <label>Nombres</label>
+              <input type="text" className="form-control" name="nombres" value={formEditar.nombres} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label>Apellidos</label>
+              <input type="text" className="form-control" name="apellidos" value={formEditar.apellidos} onChange={handleChange} />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>RUT</label>
+              <input type="text" className="form-control" name="rut" value={formEditar.rut} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label>Email</label>
+              <input type="email" className="form-control" name="email" value={formEditar.email} onChange={handleChange} />
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Especialidades</label>
+            <div className="checkbox-group checkbox-4-columnas especialidades-grid">
+              {asignaturas.map(asignatura => (
+                <div key={asignatura.id} className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id={`edit-esp-${asignatura.id}`}
+                    checked={formEditar.especialidades.includes(asignatura.id)}
+                    onChange={() => handleEspecialidadChange(asignatura.id)}
+                  />
+                  <label htmlFor={`edit-esp-${asignatura.id}`}>{abreviarNombre(asignatura.nombre)}</label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-secondary" onClick={onCerrar} disabled={guardando}>Cancelar</button>
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={guardando}>
+            {guardando ? 'Guardando...' : 'Guardar Cambios'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+function DocentesTab() {
+  const { mostrarMensaje } = useMensaje();
   const [subTab, setSubTab] = useState('agregar');
   const [formData, setFormData] = useState({
     nombres: '',
@@ -10,10 +136,47 @@ function DocentesTab({ mostrarMensaje }) {
     email: '',
     especialidades: []
   });
-  const [filtros, setFiltros] = useState({ docente: '', asignatura: '' });
+  const [filtros, setFiltros] = useState({ docenteId: '', asignaturaId: '' });
   const [modalEditar, setModalEditar] = useState({ visible: false, docente: null });
   const [modalAgregarAsignatura, setModalAgregarAsignatura] = useState(false);
   const [modalEliminarAsignatura, setModalEliminarAsignatura] = useState(false);
+  const [nuevaAsignatura, setNuevaAsignatura] = useState('');
+  const [asignaturaEliminar, setAsignaturaEliminar] = useState('');
+
+  // Datos de la BD
+  const [asignaturasDB, setAsignaturasDB] = useState([]);
+  const [docentesDB, setDocentesDB] = useState([]);
+  const [cargando, setCargando] = useState(false);
+
+  // Cargar datos al montar
+  useEffect(() => {
+    cargarAsignaturas();
+    cargarDocentes();
+  }, []);
+
+  const cargarAsignaturas = async () => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/asignaturas`);
+      const data = await response.json();
+      if (data.success) {
+        setAsignaturasDB(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando asignaturas:', error);
+    }
+  };
+
+  const cargarDocentes = async () => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/docentes`);
+      const data = await response.json();
+      if (data.success) {
+        setDocentesDB(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando docentes:', error);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -27,10 +190,45 @@ function DocentesTab({ mostrarMensaje }) {
     setFormData({ ...formData, especialidades: nuevasEspecialidades });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    mostrarMensaje('Exito', 'Docente agregado correctamente (demo)', 'success');
-    limpiarFormulario();
+
+    if (!formData.rut || !formData.nombres || !formData.apellidos) {
+      mostrarMensaje('Error', 'Complete los campos obligatorios (nombres, apellidos, RUT)', 'error');
+      return;
+    }
+
+    setCargando(true);
+
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/docentes/agregar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rut: formData.rut,
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          email: formData.email,
+          asignaturas: formData.especialidades,
+          establecimiento_id: 1
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        mostrarMensaje('Exito', data.message, 'success');
+        limpiarFormulario();
+        cargarDocentes();
+      } else {
+        mostrarMensaje('Error', data.error || 'Error al agregar docente', 'error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      mostrarMensaje('Error', 'Error de conexion al servidor', 'error');
+    } finally {
+      setCargando(false);
+    }
   };
 
   const limpiarFormulario = () => {
@@ -43,21 +241,130 @@ function DocentesTab({ mostrarMensaje }) {
     });
   };
 
-  const getDocentesFiltrados = () => {
-    return docentesDB.filter(docente => {
-      const matchNombre = !filtros.docente || docente.nombre_completo.toLowerCase().includes(filtros.docente.toLowerCase());
-      const especialidades = docenteEspecialidadesDB[docente.id] || [];
-      const matchAsignatura = !filtros.asignatura || especialidades.some(esp => esp.nombre.toLowerCase().includes(filtros.asignatura.toLowerCase()));
-      return matchNombre && matchAsignatura;
+  const eliminarDocente = async (docente) => {
+    if (window.confirm(`¿Desea eliminar al docente ${docente.nombre_completo} de este establecimiento?\n\nEsta accion desactivara al docente y sus asignaturas asignadas.`)) {
+      try {
+        const response = await fetch(`${config.apiBaseUrl}/docentes/${docente.id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            establecimiento_id: 1,
+            usuario_id: null,
+            tipo_usuario: 'administrador',
+            nombre_usuario: 'Administrador del Sistema'
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          mostrarMensaje('Exito', 'Docente eliminado correctamente', 'success');
+          cargarDocentes();
+        } else {
+          mostrarMensaje('Error', data.error || 'Error al eliminar', 'error');
+        }
+      } catch (error) {
+        mostrarMensaje('Error', 'Error de conexion', 'error');
+      }
+    }
+  };
+
+  const handleGuardarEdicion = () => {
+    mostrarMensaje('Exito', 'Docente actualizado correctamente', 'success');
+    setModalEditar({ visible: false, docente: null });
+    cargarDocentes();
+  };
+
+  // Agregar nueva asignatura
+  const agregarAsignatura = async () => {
+    if (!nuevaAsignatura.trim()) {
+      mostrarMensaje('Error', 'Ingrese el nombre de la asignatura', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/asignaturas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: nuevaAsignatura.trim(),
+          establecimiento_id: 1
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        mostrarMensaje('Exito', 'Asignatura agregada correctamente', 'success');
+        setNuevaAsignatura('');
+        setModalAgregarAsignatura(false);
+        cargarAsignaturas();
+      } else {
+        mostrarMensaje('Error', data.error || 'Error al agregar', 'error');
+      }
+    } catch (error) {
+      mostrarMensaje('Error', 'Error de conexion', 'error');
+    }
+  };
+
+  // Eliminar asignatura
+  const eliminarAsignatura = async () => {
+    if (!asignaturaEliminar) {
+      mostrarMensaje('Error', 'Seleccione una asignatura', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/asignaturas/${asignaturaEliminar}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        mostrarMensaje('Exito', 'Asignatura eliminada correctamente', 'success');
+        setAsignaturaEliminar('');
+        setModalEliminarAsignatura(false);
+        cargarAsignaturas();
+      } else {
+        mostrarMensaje('Error', data.error || 'Error al eliminar', 'error');
+      }
+    } catch (error) {
+      mostrarMensaje('Error', 'Error de conexion', 'error');
+    }
+  };
+
+  // Obtener asignaturas que tienen al menos un docente asignado
+  const asignaturasConDocentes = useMemo(() => {
+    const asignaturasIds = new Set();
+    docentesDB.forEach(docente => {
+      (docente.asignaturas || []).forEach(asig => {
+        asignaturasIds.add(asig.id);
+      });
     });
+    return asignaturasDB.filter(asig => asignaturasIds.has(asig.id));
+  }, [docentesDB, asignaturasDB]);
+
+  // Filtrar docentes - filtros independientes o combinados
+  const docentesFiltrados = useMemo(() => {
+    return docentesDB.filter(docente => {
+      // Filtro por docente (si esta seleccionado)
+      const matchDocente = !filtros.docenteId ||
+        docente.id === parseInt(filtros.docenteId);
+
+      // Filtro por asignatura (si esta seleccionada)
+      const matchAsignatura = !filtros.asignaturaId ||
+        (docente.asignaturas || []).some(a => a.id === parseInt(filtros.asignaturaId));
+
+      // Ambos filtros deben cumplirse (si estan activos)
+      return matchDocente && matchAsignatura;
+    });
+  }, [docentesDB, filtros]);
+
+  const getEspecialidadesDocente = (docente) => {
+    if (!docente.asignaturas || docente.asignaturas.length === 0) {
+      return 'Sin especialidades';
+    }
+    return docente.asignaturas.map(a => abreviarNombre(a.nombre)).join(', ');
   };
 
-  const getEspecialidadesDocente = (docenteId) => {
-    const especialidades = docenteEspecialidadesDB[docenteId] || [];
-    return especialidades.map(e => abreviarNombre(e.nombre)).join(', ') || 'Sin especialidades';
-  };
-
-  // Abrevia nombres compuestos: "Educación Física" → "Ed. Fís."
   const abreviarNombre = (nombre) => {
     const palabras = nombre.split(' ');
     if (palabras.length >= 2) {
@@ -71,7 +378,7 @@ function DocentesTab({ mostrarMensaje }) {
 
   return (
     <div className="tab-panel active">
-      {/* Sub-pestañas para móvil */}
+      {/* Sub-pestanas para movil */}
       <div className="sub-tabs-mobile sub-tabs-docentes">
         <button
           type="button"
@@ -135,6 +442,7 @@ function DocentesTab({ mostrarMensaje }) {
                       value={formData.rut}
                       onChange={handleInputChange}
                       placeholder="Ej: 12.345.678-9"
+                      required
                     />
                   </div>
                   <div className="form-group">
@@ -163,23 +471,29 @@ function DocentesTab({ mostrarMensaje }) {
                     </div>
                   </div>
                   <div className="checkbox-group checkbox-4-columnas especialidades-grid">
-                    {asignaturasDB.map(asignatura => (
-                      <div key={asignatura.id} className="checkbox-item">
-                        <input
-                          type="checkbox"
-                          id={`esp-${asignatura.id}`}
-                          checked={formData.especialidades.includes(asignatura.id)}
-                          onChange={() => handleEspecialidadChange(asignatura.id)}
-                        />
-                        <label htmlFor={`esp-${asignatura.id}`}>{abreviarNombre(asignatura.nombre)}</label>
-                      </div>
-                    ))}
+                    {asignaturasDB.length > 0 ? (
+                      asignaturasDB.map(asignatura => (
+                        <div key={asignatura.id} className="checkbox-item">
+                          <input
+                            type="checkbox"
+                            id={`esp-${asignatura.id}`}
+                            checked={formData.especialidades.includes(asignatura.id)}
+                            onChange={() => handleEspecialidadChange(asignatura.id)}
+                          />
+                          <label htmlFor={`esp-${asignatura.id}`}>{abreviarNombre(asignatura.nombre)}</label>
+                        </div>
+                      ))
+                    ) : (
+                      <p style={{ color: '#94a3b8', fontSize: '14px' }}>No hay asignaturas. Agregue una usando el boton +</p>
+                    )}
                   </div>
                 </div>
 
                 <div className="form-actions form-actions-docentes">
-                  <button type="button" className="btn btn-secondary" onClick={limpiarFormulario}>Limpiar</button>
-                  <button type="submit" className="btn btn-primary">Agregar</button>
+                  <button type="button" className="btn btn-secondary" onClick={limpiarFormulario} disabled={cargando}>Limpiar</button>
+                  <button type="submit" className="btn btn-primary" disabled={cargando}>
+                    {cargando ? 'Agregando...' : 'Agregar'}
+                  </button>
                 </div>
               </form>
             </div>
@@ -197,23 +511,33 @@ function DocentesTab({ mostrarMensaje }) {
                 <div className="form-row form-row-filtros">
                   <div className="form-group">
                     <label>Docente</label>
-                    <input
-                      type="text"
+                    <select
                       className="form-control"
-                      placeholder="Buscar docente..."
-                      value={filtros.docente}
-                      onChange={(e) => setFiltros({ ...filtros, docente: e.target.value })}
-                    />
+                      value={filtros.docenteId}
+                      onChange={(e) => setFiltros({ ...filtros, docenteId: e.target.value })}
+                    >
+                      <option value="">Todos los docentes</option>
+                      {docentesDB.map(docente => (
+                        <option key={docente.id} value={docente.id}>
+                          {docente.nombre_completo}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group">
                     <label>Asignatura</label>
-                    <input
-                      type="text"
+                    <select
                       className="form-control"
-                      placeholder="Buscar asignatura..."
-                      value={filtros.asignatura}
-                      onChange={(e) => setFiltros({ ...filtros, asignatura: e.target.value })}
-                    />
+                      value={filtros.asignaturaId}
+                      onChange={(e) => setFiltros({ ...filtros, asignaturaId: e.target.value })}
+                    >
+                      <option value="">Todas las asignaturas</option>
+                      {asignaturasConDocentes.map(asig => (
+                        <option key={asig.id} value={asig.id}>
+                          {asig.nombre}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
@@ -227,11 +551,11 @@ function DocentesTab({ mostrarMensaje }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {getDocentesFiltrados().length > 0 ? (
-                      getDocentesFiltrados().map(docente => (
+                    {docentesFiltrados.length > 0 ? (
+                      docentesFiltrados.map(docente => (
                         <tr key={docente.id}>
                           <td>{docente.nombre_completo}</td>
-                          <td>{getEspecialidadesDocente(docente.id)}</td>
+                          <td>{getEspecialidadesDocente(docente)}</td>
                           <td>
                             <div className="acciones-btns">
                               <button className="btn-icon btn-icon-edit" onClick={() => setModalEditar({ visible: true, docente })} title="Editar">
@@ -240,7 +564,7 @@ function DocentesTab({ mostrarMensaje }) {
                                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                 </svg>
                               </button>
-                              <button className="btn-icon btn-icon-delete" onClick={() => mostrarMensaje('Exito', 'Docente eliminado (demo)', 'success')} title="Eliminar">
+                              <button className="btn-icon btn-icon-delete" onClick={() => eliminarDocente(docente)} title="Eliminar">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <polyline points="3 6 5 6 21 6"></polyline>
                                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -265,54 +589,12 @@ function DocentesTab({ mostrarMensaje }) {
 
       {/* Modal Editar Docente */}
       {modalEditar.visible && (
-        <div className="modal-overlay" onClick={() => setModalEditar({ visible: false, docente: null })}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Editar Docente</h3>
-              <button className="modal-close" onClick={() => setModalEditar({ visible: false, docente: null })}>&times;</button>
-            </div>
-            <div className="modal-body">
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Nombres</label>
-                  <input type="text" className="form-control" defaultValue={modalEditar.docente?.nombres} />
-                </div>
-                <div className="form-group">
-                  <label>Apellidos</label>
-                  <input type="text" className="form-control" defaultValue={modalEditar.docente?.apellidos} />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>RUT</label>
-                  <input type="text" className="form-control" defaultValue={modalEditar.docente?.rut} />
-                </div>
-                <div className="form-group">
-                  <label>Email</label>
-                  <input type="email" className="form-control" defaultValue={modalEditar.docente?.email} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Especialidades</label>
-                <div className="checkbox-group checkbox-4-columnas especialidades-grid">
-                  {asignaturasDB.map(asignatura => (
-                    <div key={asignatura.id} className="checkbox-item">
-                      <input type="checkbox" id={`edit-esp-${asignatura.id}`} />
-                      <label htmlFor={`edit-esp-${asignatura.id}`}>{abreviarNombre(asignatura.nombre)}</label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setModalEditar({ visible: false, docente: null })}>Cancelar</button>
-              <button className="btn btn-primary" onClick={() => {
-                mostrarMensaje('Exito', 'Docente actualizado (demo)', 'success');
-                setModalEditar({ visible: false, docente: null });
-              }}>Guardar Cambios</button>
-            </div>
-          </div>
-        </div>
+        <ModalEditarDocente
+          docente={modalEditar.docente}
+          asignaturas={asignaturasDB}
+          onGuardar={handleGuardarEdicion}
+          onCerrar={() => setModalEditar({ visible: false, docente: null })}
+        />
       )}
 
       {/* Modal Agregar Asignatura */}
@@ -326,15 +608,18 @@ function DocentesTab({ mostrarMensaje }) {
             <div className="modal-body">
               <div className="form-group">
                 <label>Nombre de la Asignatura</label>
-                <input type="text" className="form-control" placeholder="Ej: Filosofia" />
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Ej: Filosofia"
+                  value={nuevaAsignatura}
+                  onChange={(e) => setNuevaAsignatura(e.target.value)}
+                />
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setModalAgregarAsignatura(false)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={() => {
-                mostrarMensaje('Exito', 'Asignatura agregada (demo)', 'success');
-                setModalAgregarAsignatura(false);
-              }}>Agregar</button>
+              <button className="btn btn-primary" onClick={agregarAsignatura}>Agregar</button>
             </div>
           </div>
         </div>
@@ -351,7 +636,11 @@ function DocentesTab({ mostrarMensaje }) {
             <div className="modal-body">
               <div className="form-group">
                 <label>Seleccione la asignatura a eliminar</label>
-                <select className="form-control">
+                <select
+                  className="form-control"
+                  value={asignaturaEliminar}
+                  onChange={(e) => setAsignaturaEliminar(e.target.value)}
+                >
                   <option value="">Seleccione una asignatura...</option>
                   {asignaturasDB.map(asig => (
                     <option key={asig.id} value={asig.id}>{asig.nombre}</option>
@@ -359,15 +648,12 @@ function DocentesTab({ mostrarMensaje }) {
                 </select>
               </div>
               <p style={{ fontSize: '12px', color: '#d97706', marginTop: '10px' }}>
-                <strong>Advertencia:</strong> Solo se pueden eliminar asignaturas que no tengan notas ni asignaciones activas.
+                <strong>Advertencia:</strong> Solo se pueden eliminar asignaturas que no tengan docentes asignados.
               </p>
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setModalEliminarAsignatura(false)}>Cancelar</button>
-              <button className="btn btn-danger" onClick={() => {
-                mostrarMensaje('Exito', 'Asignatura eliminada (demo)', 'success');
-                setModalEliminarAsignatura(false);
-              }}>Eliminar</button>
+              <button className="btn btn-danger" onClick={eliminarAsignatura}>Eliminar</button>
             </div>
           </div>
         </div>

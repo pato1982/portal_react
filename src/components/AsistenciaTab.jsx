@@ -1,7 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { cursosDB, alumnosPorCursoDB } from '../data/demoData';
+import { useDropdown } from '../hooks';
+import { useMensaje } from '../contexts';
+import config from '../config/env';
 
-function AsistenciaTab({ mostrarMensaje }) {
+function AsistenciaTab() {
+  const { mostrarMensaje } = useMensaje();
   const [filtros, setFiltros] = useState({
     curso: '',
     cursoId: null
@@ -9,36 +12,36 @@ function AsistenciaTab({ mostrarMensaje }) {
   // Año escolar: marzo (2) a diciembre (11)
   const [mesSeleccionado, setMesSeleccionado] = useState(2); // Marzo por defecto
   const [mesNombre, setMesNombre] = useState('Marzo');
-  const anioActual = 2024;
-  const [dropdownAbierto, setDropdownAbierto] = useState(null);
+  const anioActual = new Date().getFullYear();
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.custom-select-container')) {
-        setDropdownAbierto(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Estado para almacenar modificaciones de asistencia
-  // Incluye ausencias predefinidas para demostrar el KPI de bajo 85%
-  const [asistenciasModificadas, setAsistenciasModificadas] = useState({
-    // Alumno ID 1 de 1° Basico A en Marzo (mes 2) - ausencias para tener ~82%
-    // Marzo tiene aprox 21 días hábiles, 82% = 17 presentes, 4 ausentes
-    '2-1': { 4: 'ausente', 7: 'ausente', 14: 'ausente', 21: 'ausente' },
-    // Otro alumno con más ausencias para tener ~78%
-    '2-3': { 5: 'ausente', 8: 'ausente', 12: 'ausente', 15: 'ausente', 19: 'ausente' }
+  // Estados para datos de la API
+  const [cursosDB, setCursosDB] = useState([]);
+  const [alumnosDelCurso, setAlumnosDelCurso] = useState([]);
+  const [asistenciaData, setAsistenciaData] = useState({});
+  const [estadisticas, setEstadisticas] = useState({
+    total: 0,
+    presente: 0,
+    ausente: 0,
+    justificado: 0,
+    atrasado: 0,
+    porcentaje_asistencia: '0.0'
   });
+  const [alumnosBajoUmbral, setAlumnosBajoUmbral] = useState([]);
+  const [cargando, setCargando] = useState(false);
+
+  // Hook personalizado para dropdowns
+  const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
   // Estado para el popup de edición
   const [popup, setPopup] = useState({
     visible: false,
     alumno: null,
     diaInfo: null,
+    registroId: null,
     estadoActual: '',
-    estadoNuevo: ''
+    estadoNuevo: '',
+    observacion: '',
+    guardando: false
   });
 
   // Estado para el popup de alumnos bajo 85%
@@ -76,8 +79,8 @@ function AsistenciaTab({ mostrarMensaje }) {
     5: 'Viernes'
   };
 
-  // Feriados Chile 2024 que caen en días de semana (lunes a viernes)
-  const feriadosChile2024 = [
+  // Feriados Chile 2024/2025 que caen en días de semana
+  const feriadosChile = [
     '2-29',  // 29 marzo - Viernes Santo
     '4-1',   // 1 mayo - Día del Trabajo
     '4-21',  // 21 mayo - Glorias Navales
@@ -94,7 +97,7 @@ function AsistenciaTab({ mostrarMensaje }) {
 
   // Verificar si una fecha es feriado
   const esFeriado = (mes, dia) => {
-    return feriadosChile2024.includes(`${mes}-${dia}`);
+    return feriadosChile.includes(`${mes}-${dia}`);
   };
 
   // Iniciales de los días de la semana
@@ -104,6 +107,90 @@ function AsistenciaTab({ mostrarMensaje }) {
     3: 'Mi',
     4: 'J',
     5: 'V'
+  };
+
+  // Cargar cursos al montar
+  useEffect(() => {
+    cargarCursos();
+  }, []);
+
+  // Cargar datos cuando cambia el curso o mes
+  useEffect(() => {
+    if (filtros.cursoId) {
+      cargarAlumnosDelCurso(filtros.cursoId);
+      cargarAsistencia(filtros.cursoId, mesSeleccionado);
+      cargarEstadisticas(filtros.cursoId, mesSeleccionado);
+      cargarAlumnosBajoUmbral(filtros.cursoId);
+    }
+  }, [filtros.cursoId, mesSeleccionado]);
+
+  const cargarCursos = async () => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/cursos`);
+      const data = await response.json();
+      if (data.success) {
+        setCursosDB(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando cursos:', error);
+    }
+  };
+
+  const cargarAlumnosDelCurso = async (cursoId) => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/alumnos/por-curso/${cursoId}`);
+      const data = await response.json();
+      if (data.success) {
+        setAlumnosDelCurso(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando alumnos:', error);
+    }
+  };
+
+  const cargarAsistencia = async (cursoId, mes) => {
+    setCargando(true);
+    try {
+      const response = await fetch(
+        `${config.apiBaseUrl}/asistencia?curso_id=${cursoId}&mes=${mes}&anio=${anioActual}`
+      );
+      const data = await response.json();
+      if (data.success) {
+        setAsistenciaData(data.data || {});
+      }
+    } catch (error) {
+      console.error('Error cargando asistencia:', error);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const cargarEstadisticas = async (cursoId, mes) => {
+    try {
+      const response = await fetch(
+        `${config.apiBaseUrl}/asistencia/estadisticas?curso_id=${cursoId}&mes=${mes}&anio=${anioActual}`
+      );
+      const data = await response.json();
+      if (data.success) {
+        setEstadisticas(data.data);
+      }
+    } catch (error) {
+      console.error('Error cargando estadísticas:', error);
+    }
+  };
+
+  const cargarAlumnosBajoUmbral = async (cursoId) => {
+    try {
+      const response = await fetch(
+        `${config.apiBaseUrl}/asistencia/alumnos-bajo-umbral?curso_id=${cursoId}&anio=${anioActual}`
+      );
+      const data = await response.json();
+      if (data.success) {
+        setAlumnosBajoUmbral(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando alumnos bajo umbral:', error);
+    }
   };
 
   // Generar días del mes seleccionado (excluyendo solo fines de semana)
@@ -129,35 +216,15 @@ function AsistenciaTab({ mostrarMensaje }) {
       }
     }
     return dias;
-  }, [mesSeleccionado]);
+  }, [mesSeleccionado, anioActual]);
 
-  // Generar datos de asistencia demo para cada alumno y día
-  const generarAsistenciaDemo = (alumnoId, dias) => {
-    const asistencia = {};
-    dias.forEach(diaInfo => {
-      const seed = alumnoId * 100 + diaInfo.dia + mesSeleccionado;
-      const random = Math.sin(seed) * 10000;
-      const valor = random - Math.floor(random);
-
-      if (valor < 0.85) {
-        asistencia[diaInfo.dia] = 'presente';
-      } else if (valor < 0.92) {
-        asistencia[diaInfo.dia] = 'ausente';
-      } else if (valor < 0.96) {
-        asistencia[diaInfo.dia] = 'tardanza';
-      } else {
-        asistencia[diaInfo.dia] = 'justificado';
-      }
-    });
-    return asistencia;
-  };
-
-  // Obtener asistencia de un alumno (considerando modificaciones)
-  const getAsistenciaAlumno = (alumnoId) => {
-    const asistenciaBase = generarAsistenciaDemo(alumnoId, diasDelMes);
-    const key = `${mesSeleccionado}-${alumnoId}`;
-    const modificaciones = asistenciasModificadas[key] || {};
-    return { ...asistenciaBase, ...modificaciones };
+  // Obtener asistencia de un alumno para un día específico
+  const getAsistenciaDia = (alumnoId, dia) => {
+    const asistenciaAlumno = asistenciaData[alumnoId];
+    if (asistenciaAlumno && asistenciaAlumno[dia]) {
+      return asistenciaAlumno[dia];
+    }
+    return null;
   };
 
   const handleCursoChange = (cursoId) => {
@@ -169,13 +236,9 @@ function AsistenciaTab({ mostrarMensaje }) {
     });
   };
 
-  const getAlumnosCurso = () => {
-    if (!filtros.curso) return [];
-    return alumnosPorCursoDB[filtros.curso] || [];
-  };
-
   // Formatear nombre
   const formatearNombre = (nombreCompleto) => {
+    if (!nombreCompleto) return '';
     const partes = nombreCompleto.trim().split(' ');
     if (partes.length >= 4) {
       const nombre1 = partes[0];
@@ -193,13 +256,17 @@ function AsistenciaTab({ mostrarMensaje }) {
   };
 
   // Abrir popup para editar asistencia
-  const abrirPopup = (alumno, diaInfo, estadoActual) => {
+  const abrirPopup = (alumno, diaInfo, asistenciaActual) => {
+    const estado = asistenciaActual?.estado || '';
     setPopup({
       visible: true,
       alumno: alumno,
       diaInfo: diaInfo,
-      estadoActual: estadoActual,
-      estadoNuevo: estadoActual
+      registroId: asistenciaActual?.id || null,
+      estadoActual: estado,
+      estadoNuevo: estado,
+      observacion: asistenciaActual?.observacion || '',
+      guardando: false
     });
   };
 
@@ -209,38 +276,93 @@ function AsistenciaTab({ mostrarMensaje }) {
       visible: false,
       alumno: null,
       diaInfo: null,
+      registroId: null,
       estadoActual: '',
-      estadoNuevo: ''
+      estadoNuevo: '',
+      observacion: '',
+      guardando: false
     });
   };
 
   // Guardar cambio de asistencia
-  const guardarAsistencia = () => {
-    if (popup.estadoNuevo !== popup.estadoActual) {
-      const key = `${mesSeleccionado}-${popup.alumno.id}`;
-      setAsistenciasModificadas(prev => ({
-        ...prev,
-        [key]: {
-          ...(prev[key] || {}),
-          [popup.diaInfo.dia]: popup.estadoNuevo
-        }
-      }));
-      mostrarMensaje('Exito', 'Asistencia actualizada correctamente', 'success');
+  const guardarAsistencia = async () => {
+    if (!popup.estadoNuevo) {
+      mostrarMensaje('Error', 'Debe seleccionar un estado', 'error');
+      return;
     }
-    cerrarPopup();
+
+    setPopup(prev => ({ ...prev, guardando: true }));
+
+    try {
+      const fechaFormateada = `${anioActual}-${String(mesSeleccionado + 1).padStart(2, '0')}-${String(popup.diaInfo.dia).padStart(2, '0')}`;
+
+      if (popup.registroId) {
+        // Actualizar registro existente
+        const response = await fetch(`${config.apiBaseUrl}/asistencia/${popup.registroId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            estado: popup.estadoNuevo,
+            observacion: popup.observacion
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          mostrarMensaje('Exito', 'Asistencia actualizada correctamente', 'success');
+        } else {
+          throw new Error(data.error);
+        }
+      } else {
+        // Crear nuevo registro
+        const response = await fetch(`${config.apiBaseUrl}/asistencia`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            alumno_id: popup.alumno.id,
+            curso_id: filtros.cursoId,
+            fecha: fechaFormateada,
+            estado: popup.estadoNuevo,
+            observacion: popup.observacion
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          mostrarMensaje('Exito', 'Asistencia registrada correctamente', 'success');
+        } else {
+          throw new Error(data.error);
+        }
+      }
+
+      // Recargar datos
+      await cargarAsistencia(filtros.cursoId, mesSeleccionado);
+      await cargarEstadisticas(filtros.cursoId, mesSeleccionado);
+      await cargarAlumnosBajoUmbral(filtros.cursoId);
+      cerrarPopup();
+    } catch (error) {
+      console.error('Error guardando asistencia:', error);
+      mostrarMensaje('Error', 'Error al guardar asistencia', 'error');
+      setPopup(prev => ({ ...prev, guardando: false }));
+    }
   };
 
   // Renderizar icono de asistencia
-  const renderIconoAsistencia = (estado) => {
-    switch (estado) {
+  const renderIconoAsistencia = (asistencia) => {
+    if (!asistencia) {
+      return <span className="asistencia-icono asistencia-vacio">-</span>;
+    }
+    switch (asistencia.estado) {
       case 'presente':
         return <span className="asistencia-icono asistencia-presente">✓</span>;
       case 'ausente':
         return <span className="asistencia-icono asistencia-ausente">✗</span>;
-      case 'tardanza':
+      case 'atrasado':
         return <span className="asistencia-icono asistencia-tardanza">T</span>;
       case 'justificado':
-        return <span className="asistencia-icono asistencia-justificado">Just</span>;
+        return <span className="asistencia-icono asistencia-justificado">J</span>;
+      case 'retirado':
+        return <span className="asistencia-icono asistencia-retirado">R</span>;
+      case 'suspendido':
+        return <span className="asistencia-icono asistencia-suspendido">S</span>;
       default:
         return <span className="asistencia-icono asistencia-vacio">-</span>;
     }
@@ -251,70 +373,20 @@ function AsistenciaTab({ mostrarMensaje }) {
     switch (estado) {
       case 'presente': return 'Presente';
       case 'ausente': return 'Ausente';
-      case 'tardanza': return 'Tardanza';
+      case 'atrasado': return 'Atrasado';
       case 'justificado': return 'Justificado';
-      default: return '-';
+      case 'retirado': return 'Retirado';
+      case 'suspendido': return 'Suspendido';
+      default: return 'Sin registro';
     }
   };
 
-  // Calcular estadísticas del mes
-  const getEstadisticasMes = () => {
-    const alumnos = getAlumnosCurso();
-    let presentes = 0, ausentes = 0, tardanzas = 0, justificados = 0;
-    let alumnosBajoUmbral = 0;
-    let listaBajoUmbral = [];
-
-    // Contar días hábiles (sin feriados)
-    const diasHabiles = diasDelMes.filter(d => !d.esFeriado).length;
-
-    alumnos.forEach(alumno => {
-      const asistencia = getAsistenciaAlumno(alumno.id);
-      let presentesAlumno = 0;
-      let totalDiasAlumno = 0;
-
-      Object.entries(asistencia).forEach(([dia, estado]) => {
-        // Solo contar días que no son feriados
-        const diaInfo = diasDelMes.find(d => d.dia === parseInt(dia));
-        if (diaInfo && !diaInfo.esFeriado) {
-          totalDiasAlumno++;
-          if (estado === 'presente') {
-            presentes++;
-            presentesAlumno++;
-          } else if (estado === 'ausente') ausentes++;
-          else if (estado === 'tardanza') {
-            tardanzas++;
-            presentesAlumno++; // Tardanza cuenta como asistencia
-          } else if (estado === 'justificado') justificados++;
-        }
-      });
-
-      // Calcular porcentaje de asistencia del alumno
-      if (totalDiasAlumno > 0) {
-        const porcentajeAsistencia = (presentesAlumno / totalDiasAlumno) * 100;
-        if (porcentajeAsistencia < 85) {
-          alumnosBajoUmbral++;
-          listaBajoUmbral.push({
-            id: alumno.id,
-            nombre: alumno.nombre_completo,
-            porcentaje: porcentajeAsistencia.toFixed(1)
-          });
-        }
-      }
-    });
-
-    const total = presentes + ausentes + tardanzas + justificados;
-    const porcentajeAsistencia = total > 0 ? ((presentes + tardanzas) / total * 100).toFixed(1) : '0.0';
-    return { total, presentes, ausentes, tardanzas, justificados, alumnosBajoUmbral, listaBajoUmbral, porcentajeAsistencia };
-  };
-
-  const stats = filtros.cursoId ? getEstadisticasMes() : { total: 0, presentes: 0, ausentes: 0, tardanzas: 0, justificados: 0, alumnosBajoUmbral: 0, listaBajoUmbral: [], porcentajeAsistencia: '0.0' };
-
   // Abrir popup de alumnos bajo 85%
   const abrirPopupBajoUmbral = () => {
-    if (stats.alumnosBajoUmbral > 0) {
+    if (alumnosBajoUmbral.length > 0) {
       setPopupBajoUmbral({
         visible: true,
-        alumnos: stats.listaBajoUmbral
+        alumnos: alumnosBajoUmbral
       });
     }
   };
@@ -419,10 +491,10 @@ function AsistenciaTab({ mostrarMensaje }) {
               </div>
               <div className="leyenda-item">
                 <span className="asistencia-icono asistencia-tardanza">T</span>
-                <span>Tardanza</span>
+                <span>Atrasado</span>
               </div>
               <div className="leyenda-item">
-                <span className="asistencia-icono asistencia-justificado">Just</span>
+                <span className="asistencia-icono asistencia-justificado">J</span>
                 <span>Justificado</span>
               </div>
             </div>
@@ -432,30 +504,30 @@ function AsistenciaTab({ mostrarMensaje }) {
           {filtros.cursoId && (
             <div className="asistencia-stats">
               <div className="stat-item stat-total">
-                <span className="stat-numero">{stats.total}</span>
+                <span className="stat-numero">{estadisticas.total}</span>
                 <span className="stat-label">Total Registros</span>
               </div>
               <div className="stat-item stat-presentes">
-                <span className="stat-numero">{stats.presentes}</span>
+                <span className="stat-numero">{estadisticas.presente}</span>
                 <span className="stat-label">Presentes</span>
               </div>
               <div className="stat-item stat-porcentaje">
-                <span className="stat-numero">{stats.porcentajeAsistencia}%</span>
+                <span className="stat-numero">{estadisticas.porcentaje_asistencia}%</span>
                 <span className="stat-label">% Asistencia</span>
               </div>
               <div className="stat-item stat-ausentes">
-                <span className="stat-numero">{stats.ausentes}</span>
+                <span className="stat-numero">{estadisticas.ausente}</span>
                 <span className="stat-label">Ausentes</span>
               </div>
               <div className="stat-item stat-justificados">
-                <span className="stat-numero">{stats.justificados}</span>
+                <span className="stat-numero">{estadisticas.justificado}</span>
                 <span className="stat-label">Justificados</span>
               </div>
               <div
-                className={`stat-item stat-bajo-umbral ${stats.alumnosBajoUmbral > 0 ? 'clickable' : ''}`}
+                className={`stat-item stat-bajo-umbral ${alumnosBajoUmbral.length > 0 ? 'clickable' : ''}`}
                 onClick={abrirPopupBajoUmbral}
               >
-                <span className="stat-numero">{stats.alumnosBajoUmbral}</span>
+                <span className="stat-numero">{alumnosBajoUmbral.length}</span>
                 <span className="stat-label">Bajo 85%</span>
               </div>
             </div>
@@ -464,6 +536,11 @@ function AsistenciaTab({ mostrarMensaje }) {
           {/* Tabla de asistencia con scroll */}
           {filtros.cursoId ? (
             <div className="tabla-asistencia-calendario">
+              {cargando && (
+                <div className="loading-overlay">
+                  <span>Cargando...</span>
+                </div>
+              )}
               <div className="tabla-asistencia-wrapper">
                 {/* Columnas fijas (N° y Alumno) */}
                 <div className="columnas-fijas">
@@ -478,8 +555,8 @@ function AsistenciaTab({ mostrarMensaje }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {getAlumnosCurso().length > 0 ? (
-                        getAlumnosCurso().map((alumno, index) => (
+                      {alumnosDelCurso.length > 0 ? (
+                        alumnosDelCurso.map((alumno, index) => (
                           <tr key={alumno.id}>
                             <td className="td-numero">{index + 1}</td>
                             <td className="td-alumno">{formatearNombre(alumno.nombre_completo)}</td>
@@ -518,23 +595,23 @@ function AsistenciaTab({ mostrarMensaje }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {getAlumnosCurso().length > 0 ? (
-                        getAlumnosCurso().map((alumno) => {
-                          const asistenciaAlumno = getAsistenciaAlumno(alumno.id);
-                          return (
-                            <tr key={alumno.id}>
-                              {diasDelMes.map((diaInfo, index) => (
+                      {alumnosDelCurso.length > 0 ? (
+                        alumnosDelCurso.map((alumno) => (
+                          <tr key={alumno.id}>
+                            {diasDelMes.map((diaInfo, index) => {
+                              const asistenciaDia = getAsistenciaDia(alumno.id, diaInfo.dia);
+                              return (
                                 <td
                                   key={diaInfo.dia}
                                   className={`td-dia ${diaInfo.esFeriado ? 'dia-feriado' : 'td-dia-clickable'} ${diaInfo.diaSemana === 1 && index > 0 ? 'inicio-semana' : ''}`}
-                                  onClick={() => !diaInfo.esFeriado && abrirPopup(alumno, diaInfo, asistenciaAlumno[diaInfo.dia])}
+                                  onClick={() => !diaInfo.esFeriado && abrirPopup(alumno, diaInfo, asistenciaDia)}
                                 >
-                                  {diaInfo.esFeriado ? <span className="asistencia-feriado">Fer</span> : renderIconoAsistencia(asistenciaAlumno[diaInfo.dia])}
+                                  {diaInfo.esFeriado ? <span className="asistencia-feriado">Fer</span> : renderIconoAsistencia(asistenciaDia)}
                                 </td>
-                              ))}
-                            </tr>
-                          );
-                        })
+                              );
+                            })}
+                          </tr>
+                        ))
                       ) : (
                         <tr>
                           <td colSpan={diasDelMes.length} className="text-center text-muted">
@@ -576,7 +653,7 @@ function AsistenciaTab({ mostrarMensaje }) {
 
               <div className="popup-estado-actual">
                 <span className="popup-label">Estado actual:</span>
-                {renderIconoAsistencia(popup.estadoActual)}
+                {renderIconoAsistencia({ estado: popup.estadoActual })}
                 <span>{getEtiquetaEstado(popup.estadoActual)}</span>
               </div>
 
@@ -601,29 +678,40 @@ function AsistenciaTab({ mostrarMensaje }) {
                   </button>
                   <button
                     type="button"
-                    className={`btn-estado btn-tardanza ${popup.estadoNuevo === 'tardanza' ? 'activo' : ''}`}
-                    onClick={() => setPopup({ ...popup, estadoNuevo: 'tardanza' })}
+                    className={`btn-estado btn-tardanza ${popup.estadoNuevo === 'atrasado' ? 'activo' : ''}`}
+                    onClick={() => setPopup({ ...popup, estadoNuevo: 'atrasado' })}
                   >
                     <span className="asistencia-icono asistencia-tardanza">T</span>
-                    Tardanza
+                    Atrasado
                   </button>
                   <button
                     type="button"
                     className={`btn-estado btn-justificado ${popup.estadoNuevo === 'justificado' ? 'activo' : ''}`}
                     onClick={() => setPopup({ ...popup, estadoNuevo: 'justificado' })}
                   >
-                    <span className="asistencia-icono asistencia-justificado">Just</span>
+                    <span className="asistencia-icono asistencia-justificado">J</span>
                     Justificado
                   </button>
                 </div>
               </div>
+
+              <div className="popup-observacion">
+                <label className="popup-label">Observación (opcional):</label>
+                <textarea
+                  className="form-control"
+                  rows="2"
+                  value={popup.observacion}
+                  onChange={(e) => setPopup({ ...popup, observacion: e.target.value })}
+                  placeholder="Agregar observación..."
+                />
+              </div>
             </div>
             <div className="popup-footer">
-              <button type="button" className="btn btn-secondary" onClick={cerrarPopup}>
+              <button type="button" className="btn btn-secondary" onClick={cerrarPopup} disabled={popup.guardando}>
                 Cancelar
               </button>
-              <button type="button" className="btn btn-primary" onClick={guardarAsistencia}>
-                Guardar
+              <button type="button" className="btn btn-primary" onClick={guardarAsistencia} disabled={popup.guardando}>
+                {popup.guardando ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
           </div>
@@ -640,13 +728,14 @@ function AsistenciaTab({ mostrarMensaje }) {
             </div>
             <div className="popup-body">
               <div className="popup-curso-info">
-                {filtros.curso} - {nombresMeses[mesSeleccionado]} {anioActual}
+                {filtros.curso} - Año {anioActual}
               </div>
+              <p className="popup-nota">* Calculado sobre todos los meses del año</p>
               <ul className="lista-bajo-umbral">
                 {popupBajoUmbral.alumnos.map((alumno, index) => (
-                  <li key={alumno.id} className="alumno-bajo-umbral">
+                  <li key={alumno.alumno_id} className="alumno-bajo-umbral">
                     <span className="alumno-numero">{index + 1}.</span>
-                    <span className="alumno-nombre">{alumno.nombre}</span>
+                    <span className="alumno-nombre">{alumno.nombre_completo}</span>
                     <span className="alumno-porcentaje">{alumno.porcentaje}%</span>
                   </li>
                 ))}

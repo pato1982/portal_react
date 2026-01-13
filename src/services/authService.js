@@ -1,0 +1,136 @@
+/**
+ * Servicio de Autenticación
+ *
+ * En modo demo usa datos mock locales
+ * En modo producción conecta a la API real
+ */
+
+import config from '../config/env';
+import { getCredencialesDemo, validarLoginDemo } from '../mock/authMockData';
+
+/**
+ * Obtiene las credenciales para auto-llenado (solo en modo demo)
+ * @param {string} tipo - Tipo de usuario: 'administrador' | 'docente' | 'apoderado'
+ * @returns {Object|null} Credenciales {email, password} o null si no disponible
+ */
+export const obtenerCredencialesDemo = (tipo) => {
+  if (!config.isDemoMode()) {
+    return null;
+  }
+  return getCredencialesDemo(tipo);
+};
+
+/**
+ * Valida las credenciales de login
+ * @param {string} email - Email del usuario
+ * @param {string} password - Contraseña del usuario
+ * @param {string} tipo - Tipo de usuario
+ * @returns {Promise<Object>} Resultado de la validación
+ */
+export const login = async (email, password, tipo) => {
+  if (config.isDemoMode()) {
+    // Simular delay de red
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return validarLoginDemo(email, password, tipo);
+  }
+
+  // Modo producción: llamar a la API real
+  try {
+    const response = await fetch(`${config.apiBaseUrl}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password, tipo }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { success: false, error: data.message || 'Error al iniciar sesión' };
+    }
+
+    // Guardar token en localStorage
+    if (data.token) {
+      localStorage.setItem('auth_token', data.token);
+    }
+
+    return { success: true, usuario: data.usuario };
+  } catch (error) {
+    console.error('Error en login:', error);
+    return { success: false, error: 'Error de conexión. Intente nuevamente.' };
+  }
+};
+
+/**
+ * Cierra la sesión del usuario
+ * @returns {Promise<void>}
+ */
+export const logout = async () => {
+  if (config.isDemoMode()) {
+    localStorage.removeItem('auth_token');
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      await fetch(`${config.apiBaseUrl}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+    }
+  } catch (error) {
+    console.error('Error en logout:', error);
+  } finally {
+    localStorage.removeItem('auth_token');
+  }
+};
+
+/**
+ * Verifica si hay una sesión activa
+ * @returns {Promise<Object|null>} Usuario actual o null
+ */
+export const verificarSesion = async () => {
+  if (config.isDemoMode()) {
+    return null; // En modo demo no hay sesión persistente
+  }
+
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return null;
+
+    const response = await fetch(`${config.apiBaseUrl}/auth/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      localStorage.removeItem('auth_token');
+      return null;
+    }
+
+    const data = await response.json();
+    return data.usuario;
+  } catch (error) {
+    console.error('Error verificando sesión:', error);
+    return null;
+  }
+};
+
+/**
+ * Verifica si estamos en modo demo
+ * @returns {boolean}
+ */
+export const esModoDemo = () => config.isDemoMode();
+
+export default {
+  obtenerCredencialesDemo,
+  login,
+  logout,
+  verificarSesion,
+  esModoDemo,
+};

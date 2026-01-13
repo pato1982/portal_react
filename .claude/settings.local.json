@@ -5,7 +5,20 @@
       "WebSearch",
       "Bash(npm run dev:*)",
       "Bash(cat:*)",
-      "Bash(node --version:*)"
+      "Bash(node --version:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
+      "Bash(npm run build:*)",
+      "Bash(/mnt/c/Users/Telqway/Desktop/colegio-react/node_modules/.bin/vite build)",
+      "Bash(node node_modules/vite/bin/vite.js:*)",
+      "Bash(cmd.exe /c \"npm run build\")",
+      "Bash(PATH=\"/mnt/c/Program Files/nodejs:$PATH\" npm run build:*)",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\Telqway\\\\Desktop\\\\colegio-react''; npm run build\")",
+      "Bash(tree:*)",
+      "Bash(command -v:*)",
+      "Bash(npx:*)",
+      "Bash(/mnt/c/Program\\\\ Files/nodejs/node.exe:*)",
+      "Bash(curl:*)"
     ]
   }
 }

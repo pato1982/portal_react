@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { cursosDB } from '../data/demoData';
+import { useResponsive, useDropdown } from '../hooks';
+import { useMensaje, useAuth } from '../contexts';
+import config from '../config/env';
 
-function ComunicadosTab({ mostrarMensaje }) {
+function ComunicadosTab() {
+  const { mostrarMensaje } = useMensaje();
+  const { usuario } = useAuth();
   const [formData, setFormData] = useState({
     tipoComunicado: '',
     tipoComunicadoNombre: '',
@@ -11,24 +15,14 @@ function ComunicadosTab({ mostrarMensaje }) {
     titulo: '',
     mensaje: ''
   });
-  const [dropdownAbierto, setDropdownAbierto] = useState(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 699);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 699);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Estado para cursos desde la API
+  const [cursosDB, setCursosDB] = useState([]);
+  const [enviando, setEnviando] = useState(false);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.custom-select-container')) {
-        setDropdownAbierto(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  // Hooks personalizados
+  const { isMobile } = useResponsive();
+  const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
   const tiposComunicado = [
     { id: 'informativo', nombre: 'Informativo' },
@@ -42,6 +36,23 @@ function ComunicadosTab({ mostrarMensaje }) {
     { id: 'especificos', nombre: 'Cursos Especificos' }
   ];
 
+  // Cargar cursos al montar
+  useEffect(() => {
+    cargarCursos();
+  }, []);
+
+  const cargarCursos = async () => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/cursos`);
+      const data = await response.json();
+      if (data.success) {
+        setCursosDB(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando cursos:', error);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -54,13 +65,60 @@ function ComunicadosTab({ mostrarMensaje }) {
     setFormData({ ...formData, cursosSeleccionados: nuevosSeleccionados });
   };
 
-  const enviarComunicado = () => {
-    if (!formData.titulo || !formData.mensaje) {
-      mostrarMensaje('Error', 'Por favor complete todos los campos', 'error');
+  const enviarComunicado = async () => {
+    // Validaciones
+    if (!formData.tipoComunicado) {
+      mostrarMensaje('Error', 'Seleccione el tipo de comunicado', 'error');
       return;
     }
-    mostrarMensaje('Exito', 'Comunicado enviado correctamente (demo)', 'success');
-    limpiarFormulario();
+    if (!formData.modoCurso) {
+      mostrarMensaje('Error', 'Seleccione a quién va dirigido', 'error');
+      return;
+    }
+    if (formData.modoCurso === 'especificos' && formData.cursosSeleccionados.length === 0) {
+      mostrarMensaje('Error', 'Seleccione al menos un curso', 'error');
+      return;
+    }
+    if (!formData.titulo.trim()) {
+      mostrarMensaje('Error', 'Ingrese el título del comunicado', 'error');
+      return;
+    }
+    if (!formData.mensaje.trim()) {
+      mostrarMensaje('Error', 'Ingrese el mensaje del comunicado', 'error');
+      return;
+    }
+
+    setEnviando(true);
+
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/comunicados`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo: formData.titulo.trim(),
+          mensaje: formData.mensaje.trim(),
+          tipo: formData.tipoComunicado,
+          para_todos_cursos: formData.modoCurso === 'todos',
+          cursos_ids: formData.modoCurso === 'especificos' ? formData.cursosSeleccionados : [],
+          para_apoderados: true,
+          remitente_id: usuario?.id || 1
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        mostrarMensaje('Exito', 'Comunicado enviado correctamente', 'success');
+        limpiarFormulario();
+      } else {
+        mostrarMensaje('Error', data.error || 'Error al enviar comunicado', 'error');
+      }
+    } catch (error) {
+      console.error('Error enviando comunicado:', error);
+      mostrarMensaje('Error', 'Error de conexión al enviar comunicado', 'error');
+    } finally {
+      setEnviando(false);
+    }
   };
 
   const limpiarFormulario = () => {
@@ -128,7 +186,7 @@ function ComunicadosTab({ mostrarMensaje }) {
                       className="form-control"
                       name="tipoComunicado"
                       value={formData.tipoComunicado}
-                      onChange={handleInputChange}
+                      onChange={(e) => setFormData({ ...formData, tipoComunicado: e.target.value })}
                     >
                       <option value="">Seleccionar...</option>
                       {tiposComunicado.map(tipo => (
@@ -179,7 +237,7 @@ function ComunicadosTab({ mostrarMensaje }) {
                       className="form-control"
                       name="modoCurso"
                       value={formData.modoCurso}
-                      onChange={handleInputChange}
+                      onChange={(e) => setFormData({ ...formData, modoCurso: e.target.value, cursosSeleccionados: [] })}
                     >
                       <option value="">Seleccionar...</option>
                       {modosCurso.map(modo => (
@@ -241,8 +299,22 @@ function ComunicadosTab({ mostrarMensaje }) {
                 ></textarea>
               </div>
               <div className="form-actions form-actions-comunicados">
-                <button type="button" className="btn btn-secondary" onClick={limpiarFormulario}>Limpiar</button>
-                <button type="button" className="btn btn-primary" onClick={enviarComunicado}>Enviar</button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={limpiarFormulario}
+                  disabled={enviando}
+                >
+                  Limpiar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={enviarComunicado}
+                  disabled={enviando}
+                >
+                  {enviando ? 'Enviando...' : 'Enviar'}
+                </button>
               </div>
             </div>
           </div>

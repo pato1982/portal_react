@@ -1,116 +1,170 @@
-import React, { useState, useEffect } from 'react';
-import { cursosDB, asignaturasDB, trimestresDB, alumnosPorCursoDB } from '../data/demoData';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useMensaje } from '../contexts';
+import config from '../config/env';
 
-function NotasPorCursoTab({ mostrarMensaje }) {
+function NotasPorCursoTab() {
+  const { mostrarMensaje } = useMensaje();
+
+  // Filtros
   const [filtros, setFiltros] = useState({
-    curso: '',
-    cursoId: null,
-    asignatura: '',
-    asignaturaId: null,
-    trimestre: '',
-    trimestreId: null
+    cursoId: '',
+    asignaturaId: '',
+    trimestre: ''
   });
-  const [showTabla, setShowTabla] = useState(false);
-  const [dropdownAbierto, setDropdownAbierto] = useState(null);
 
+  // Datos de la BD
+  const [cursosDB, setCursosDB] = useState([]);
+  const [asignaturasDB, setAsignaturasDB] = useState([]);
+  const [alumnosConNotas, setAlumnosConNotas] = useState([]);
+  const [trimestresActivos, setTrimestresActivos] = useState([]);
+  const [cargando, setCargando] = useState(false);
+
+  // Trimestres disponibles
+  const trimestres = [
+    { id: 1, nombre: 'Trimestre 1' },
+    { id: 2, nombre: 'Trimestre 2' },
+    { id: 3, nombre: 'Trimestre 3' }
+  ];
+
+  // Cargar cursos al montar
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.custom-select-container')) {
-        setDropdownAbierto(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    cargarCursos();
   }, []);
 
-  const handleCursoChange = (cursoId) => {
-    const curso = cursosDB.find(c => c.id === parseInt(cursoId));
-    setFiltros({
-      ...filtros,
-      curso: curso?.nombre || '',
-      cursoId: cursoId ? parseInt(cursoId) : null,
-      asignatura: '',
-      asignaturaId: null,
-      trimestre: '',
-      trimestreId: null
-    });
-    setShowTabla(false);
-  };
-
-  const handleAsignaturaChange = (asignaturaId) => {
-    const asignatura = asignaturasDB.find(a => a.id === parseInt(asignaturaId));
-    setFiltros({
-      ...filtros,
-      asignatura: asignatura?.nombre || '',
-      asignaturaId: asignaturaId ? parseInt(asignaturaId) : null,
-      trimestre: '',
-      trimestreId: null
-    });
-    setShowTabla(false);
-  };
-
-  const handleTrimestreChange = (trimestreId) => {
-    if (trimestreId === 'todas') {
-      setFiltros({
-        ...filtros,
-        trimestre: 'Todas',
-        trimestreId: 'todas'
-      });
-      setShowTabla(true);
+  // Cargar asignaturas cuando cambia el curso
+  useEffect(() => {
+    if (filtros.cursoId) {
+      cargarAsignaturasPorCurso(filtros.cursoId);
     } else {
-      const trimestre = trimestresDB.find(t => t.id === parseInt(trimestreId));
-      setFiltros({
-        ...filtros,
-        trimestre: trimestre?.nombre || '',
-        trimestreId: trimestreId ? parseInt(trimestreId) : null
-      });
-      if (trimestreId) {
-        setShowTabla(true);
+      setAsignaturasDB([]);
+      setFiltros(prev => ({ ...prev, asignaturaId: '', trimestre: '' }));
+    }
+  }, [filtros.cursoId]);
+
+  // Cargar notas cuando cambia asignatura o trimestre
+  useEffect(() => {
+    if (filtros.cursoId && filtros.asignaturaId && filtros.trimestre) {
+      cargarNotas();
+    } else {
+      setAlumnosConNotas([]);
+      setTrimestresActivos([]);
+    }
+  }, [filtros.cursoId, filtros.asignaturaId, filtros.trimestre]);
+
+  const cargarCursos = async () => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/cursos`);
+      const data = await response.json();
+      if (data.success) {
+        setCursosDB(data.data || []);
       }
+    } catch (error) {
+      console.error('Error cargando cursos:', error);
     }
   };
 
-  const getAlumnosCurso = () => {
-    if (!filtros.curso) return [];
-    return alumnosPorCursoDB[filtros.curso] || [];
+  const cargarAsignaturasPorCurso = async (cursoId) => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/asignaturas/por-curso/${cursoId}`);
+      const data = await response.json();
+      if (data.success) {
+        setAsignaturasDB(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando asignaturas del curso:', error);
+      setAsignaturasDB([]);
+    }
   };
 
-  // Generar notas aleatorias para demo (8 notas)
-  const generarNotasDemo = () => {
-    return Array.from({ length: 8 }, () => (Math.random() * 3 + 4).toFixed(1));
+  const cargarNotas = async () => {
+    setCargando(true);
+    try {
+      const params = new URLSearchParams({
+        curso_id: filtros.cursoId,
+        asignatura_id: filtros.asignaturaId,
+        trimestre: filtros.trimestre
+      });
+
+      const response = await fetch(`${config.apiBaseUrl}/notas/por-curso?${params}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setAlumnosConNotas(data.data || []);
+        setTrimestresActivos(data.trimestres || []);
+      }
+    } catch (error) {
+      console.error('Error cargando notas:', error);
+      mostrarMensaje('Error', 'Error al cargar notas', 'error');
+    } finally {
+      setCargando(false);
+    }
   };
 
-  // Generar notas para todos los trimestres (8 notas por trimestre)
-  const generarNotasTodasDemo = () => {
-    return trimestresDB.map(trim => ({
-      trimestre: trim.nombre,
-      notas: Array.from({ length: 8 }, () => (Math.random() * 3 + 4).toFixed(1))
-    }));
+  // Handlers de filtros
+  const handleCursoChange = (e) => {
+    setFiltros({
+      cursoId: e.target.value,
+      asignaturaId: '',
+      trimestre: ''
+    });
   };
 
-  // Calcular promedio de un array de notas
+  const handleAsignaturaChange = (e) => {
+    setFiltros({
+      ...filtros,
+      asignaturaId: e.target.value,
+      trimestre: ''
+    });
+  };
+
+  const handleTrimestreChange = (e) => {
+    setFiltros({
+      ...filtros,
+      trimestre: e.target.value
+    });
+  };
+
+  // Calcular promedio de notas
   const calcularPromedio = (notas) => {
-    const suma = notas.reduce((a, b) => a + parseFloat(b), 0);
-    return (suma / notas.length).toFixed(1);
+    if (!notas || notas.length === 0) return null;
+    const notasValidas = notas.filter(n => n.nota !== null && n.nota !== undefined);
+    if (notasValidas.length === 0) return null;
+    const suma = notasValidas.reduce((acc, n) => acc + parseFloat(n.nota), 0);
+    return (suma / notasValidas.length).toFixed(1);
   };
 
-  // Abreviar nombre: "Juan Pablo Gonzalez Perez" → "Juan P. Gonzalez P."
+  // Abreviar nombre de alumno
   const abreviarNombreAlumno = (nombreCompleto) => {
     const partes = nombreCompleto.trim().split(' ');
     if (partes.length >= 4) {
-      // Nombre1 Nombre2 Apellido1 Apellido2 → Nombre1 N. Apellido1 A.
       const nombre1 = partes[0];
       const nombre2Inicial = partes[1].charAt(0) + '.';
       const apellido1 = partes[2];
       const apellido2Inicial = partes[3].charAt(0) + '.';
       return `${nombre1} ${nombre2Inicial} ${apellido1} ${apellido2Inicial}`;
     } else if (partes.length === 3) {
-      // Nombre Apellido1 Apellido2 → Nombre Apellido1 A.
       const apellido2Inicial = partes[2].charAt(0) + '.';
       return `${partes[0]} ${partes[1]} ${apellido2Inicial}`;
     }
     return nombreCompleto;
   };
+
+  // Verificar si hay datos para mostrar
+  const hayDatos = filtros.cursoId && filtros.asignaturaId && filtros.trimestre;
+  const mostrarTodas = filtros.trimestre === 'todas';
+
+  // Obtener el número máximo de notas por trimestre (para columnas)
+  const maxNotasPorTrimestre = useMemo(() => {
+    if (!alumnosConNotas.length) return 8;
+    let max = 0;
+    alumnosConNotas.forEach(alumno => {
+      trimestresActivos.forEach(trim => {
+        const cantidadNotas = alumno.notas[trim]?.length || 0;
+        if (cantidadNotas > max) max = cantidadNotas;
+      });
+    });
+    return Math.max(max, 8); // Mínimo 8 columnas
+  }, [alumnosConNotas, trimestresActivos]);
 
   return (
     <div className="tab-panel active">
@@ -119,195 +173,141 @@ function NotasPorCursoTab({ mostrarMensaje }) {
           <h3>Notas por Curso y Asignatura</h3>
         </div>
         <div className="card-body">
-          <div className="filtros-notas-curso filtros-notas-inline">
+          <div className="form-row form-row-filtros filtros-notas-inline">
             <div className="form-group">
               <label>Curso</label>
-              <div className="custom-select-container">
-                <div
-                  className="custom-select-trigger"
-                  onClick={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
-                >
-                  <span>{filtros.curso || 'Seleccionar...'}</span>
-                  <span className="custom-select-arrow">{dropdownAbierto === 'curso' ? '▲' : '▼'}</span>
-                </div>
-                {dropdownAbierto === 'curso' && (
-                  <div className="custom-select-options custom-select-scroll">
-                    <div
-                      className="custom-select-option"
-                      onClick={() => {
-                        handleCursoChange('');
-                        setDropdownAbierto(null);
-                      }}
-                    >
-                      Seleccionar...
-                    </div>
-                    {cursosDB.map(curso => (
-                      <div
-                        key={curso.id}
-                        className={`custom-select-option ${filtros.cursoId === curso.id ? 'selected' : ''}`}
-                        onClick={() => {
-                          handleCursoChange(curso.id);
-                          setDropdownAbierto(null);
-                        }}
-                      >
-                        {curso.nombre}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <select
+                className="form-control"
+                value={filtros.cursoId}
+                onChange={handleCursoChange}
+              >
+                <option value="">Todos los cursos</option>
+                {cursosDB.map(curso => (
+                  <option key={curso.id} value={curso.id}>
+                    {curso.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
+
             <div className="form-group">
-                <label>Asignatura</label>
-                <div className="custom-select-container">
-                  <div
-                    className="custom-select-trigger"
-                    onClick={() => setDropdownAbierto(dropdownAbierto === 'asignatura' ? null : 'asignatura')}
-                  >
-                    <span>{filtros.asignatura || 'Seleccionar...'}</span>
-                    <span className="custom-select-arrow">{dropdownAbierto === 'asignatura' ? '▲' : '▼'}</span>
-                  </div>
-                  {dropdownAbierto === 'asignatura' && (
-                    <div className="custom-select-options custom-select-scroll">
-                      <div
-                        className="custom-select-option"
-                        onClick={() => {
-                          handleAsignaturaChange('');
-                          setDropdownAbierto(null);
-                        }}
-                      >
-                        Seleccionar...
-                      </div>
-                      {asignaturasDB.map(asig => (
-                        <div
-                          key={asig.id}
-                          className={`custom-select-option ${filtros.asignaturaId === asig.id ? 'selected' : ''}`}
-                          onClick={() => {
-                            handleAsignaturaChange(asig.id);
-                            setDropdownAbierto(null);
-                          }}
-                        >
-                          {asig.nombre}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <label>Asignatura</label>
+              <select
+                className="form-control"
+                value={filtros.asignaturaId}
+                onChange={handleAsignaturaChange}
+                disabled={!filtros.cursoId}
+              >
+                <option value="">Todas las asignaturas</option>
+                {asignaturasDB.map(asig => (
+                  <option key={asig.id} value={asig.id}>
+                    {asig.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="form-group">
-                <label>Trimestre</label>
-                <div className="custom-select-container">
-                  <div
-                    className="custom-select-trigger"
-                    onClick={() => setDropdownAbierto(dropdownAbierto === 'trimestre' ? null : 'trimestre')}
-                  >
-                    <span>{filtros.trimestre || 'Seleccionar...'}</span>
-                    <span className="custom-select-arrow">{dropdownAbierto === 'trimestre' ? '▲' : '▼'}</span>
-                  </div>
-                  {dropdownAbierto === 'trimestre' && (
-                    <div className="custom-select-options custom-select-scroll">
-                      <div
-                        className="custom-select-option"
-                        onClick={() => {
-                          handleTrimestreChange('');
-                          setDropdownAbierto(null);
-                        }}
-                      >
-                        Seleccionar...
-                      </div>
-                      <div
-                        className={`custom-select-option ${filtros.trimestreId === 'todas' ? 'selected' : ''}`}
-                        onClick={() => {
-                          handleTrimestreChange('todas');
-                          setDropdownAbierto(null);
-                        }}
-                      >
-                        Todas
-                      </div>
-                      {trimestresDB.map(trim => (
-                        <div
-                          key={trim.id}
-                          className={`custom-select-option ${filtros.trimestreId === trim.id ? 'selected' : ''}`}
-                          onClick={() => {
-                            handleTrimestreChange(trim.id);
-                            setDropdownAbierto(null);
-                          }}
-                        >
-                          {trim.nombre}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <label>Trimestre</label>
+              <select
+                className="form-control"
+                value={filtros.trimestre}
+                onChange={handleTrimestreChange}
+                disabled={!filtros.asignaturaId}
+              >
+                <option value="">Todos los trimestres</option>
+                <option value="todas">Todas (Ver todos)</option>
+                {trimestres.map(trim => (
+                  <option key={trim.id} value={trim.id}>
+                    {trim.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {showTabla ? (
+          {cargando ? (
+            <div className="text-center text-muted" style={{ padding: '40px' }}>
+              Cargando notas...
+            </div>
+          ) : hayDatos ? (
             <div className="tabla-notas-curso-container">
               <div className="table-responsive table-scroll">
-                {filtros.trimestreId === 'todas' ? (
+                {mostrarTodas ? (
                   /* Tabla con TODAS las notas de todos los trimestres */
                   <table className="data-table tabla-notas-amplia">
                     <thead>
                       <tr>
                         <th rowSpan="2" className="th-nombre">Alumno</th>
-                        {trimestresDB.map(trim => (
-                          <th key={trim.id} colSpan="9" className="th-trimestre">
-                            {trim.nombre.replace('Trimestre ', 'T')}
+                        {trimestres.map(trim => (
+                          <th key={trim.id} colSpan={maxNotasPorTrimestre + 1} className="th-trimestre">
+                            T{trim.id}
                           </th>
                         ))}
                         <th rowSpan="2" className="th-promedio-final">P.F.</th>
                       </tr>
                       <tr>
-                        {trimestresDB.map(trim => (
-                          <React.Fragment key={`notas-${trim.id}`}>
-                            <th className="th-nota">1</th>
-                            <th className="th-nota">2</th>
-                            <th className="th-nota">3</th>
-                            <th className="th-nota">4</th>
-                            <th className="th-nota">5</th>
-                            <th className="th-nota">6</th>
-                            <th className="th-nota">7</th>
-                            <th className="th-nota">8</th>
+                        {trimestres.map(trim => (
+                          <React.Fragment key={`notas-header-${trim.id}`}>
+                            {Array.from({ length: maxNotasPorTrimestre }, (_, i) => (
+                              <th key={`h-${trim.id}-${i}`} className="th-nota">{i + 1}</th>
+                            ))}
                             <th className="th-prom-trim">P</th>
                           </React.Fragment>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {getAlumnosCurso().length > 0 ? (
-                        getAlumnosCurso().map(alumno => {
-                          const notasTrimestres = generarNotasTodasDemo();
-                          const promediosTrimestre = notasTrimestres.map(t => calcularPromedio(t.notas));
-                          const promedioFinal = calcularPromedio(promediosTrimestre);
+                      {alumnosConNotas.length > 0 ? (
+                        alumnosConNotas.map(alumno => {
+                          const promediosTrimestre = trimestres.map(trim =>
+                            calcularPromedio(alumno.notas[trim.id] || [])
+                          );
+                          const promediosValidos = promediosTrimestre.filter(p => p !== null);
+                          const promedioFinal = promediosValidos.length > 0
+                            ? (promediosValidos.reduce((a, b) => a + parseFloat(b), 0) / promediosValidos.length).toFixed(1)
+                            : null;
+
                           return (
                             <tr key={alumno.id}>
                               <td className="celda-nombre">{abreviarNombreAlumno(alumno.nombre_completo)}</td>
-                              {notasTrimestres.map((trim, trimIdx) => (
-                                <React.Fragment key={`trim-${trimIdx}`}>
-                                  {trim.notas.map((nota, notaIdx) => (
-                                    <td key={notaIdx} className="celda-nota">
-                                      <input
-                                        type="text"
-                                        className="nota-input-mini"
-                                        defaultValue={nota}
-                                      />
+                              {trimestres.map((trim, trimIdx) => {
+                                const notasTrim = alumno.notas[trim.id] || [];
+                                const promTrim = promediosTrimestre[trimIdx];
+
+                                return (
+                                  <React.Fragment key={`notas-${alumno.id}-${trim.id}`}>
+                                    {Array.from({ length: maxNotasPorTrimestre }, (_, i) => {
+                                      const notaObj = notasTrim.find(n => n.numero === i + 1);
+                                      return (
+                                        <td key={`n-${trim.id}-${i}`} className="celda-nota">
+                                          {notaObj ? (
+                                            <span className={`nota-valor ${parseFloat(notaObj.nota) >= 4.0 ? 'nota-aprobada' : 'nota-reprobada'}`}>
+                                              {parseFloat(notaObj.nota).toFixed(1)}
+                                            </span>
+                                          ) : (
+                                            <span className="nota-vacia">-</span>
+                                          )}
+                                        </td>
+                                      );
+                                    })}
+                                    <td className={`celda-promedio-trim ${promTrim ? (parseFloat(promTrim) >= 4.0 ? 'promedio-aprobado' : 'promedio-reprobado') : ''}`}>
+                                      {promTrim || '-'}
                                     </td>
-                                  ))}
-                                  <td className={`celda-promedio-trim ${parseFloat(promediosTrimestre[trimIdx]) >= 4.0 ? 'promedio-aprobado' : 'promedio-reprobado'}`}>
-                                    {promediosTrimestre[trimIdx]}
-                                  </td>
-                                </React.Fragment>
-                              ))}
-                              <td className={`celda-promedio-final ${parseFloat(promedioFinal) >= 4.0 ? 'promedio-aprobado' : 'promedio-reprobado'}`}>
-                                {promedioFinal}
+                                  </React.Fragment>
+                                );
+                              })}
+                              <td className={`celda-promedio-final ${promedioFinal ? (parseFloat(promedioFinal) >= 4.0 ? 'promedio-aprobado' : 'promedio-reprobado') : ''}`}>
+                                {promedioFinal || '-'}
                               </td>
                             </tr>
                           );
                         })
                       ) : (
                         <tr>
-                          <td colSpan={2 + (trimestresDB.length * 9)} className="text-center text-muted">No hay alumnos en este curso</td>
+                          <td colSpan={2 + (trimestres.length * (maxNotasPorTrimestre + 1))} className="text-center text-muted">
+                            No hay alumnos en este curso
+                          </td>
                         </tr>
                       )}
                     </tbody>
@@ -318,53 +318,78 @@ function NotasPorCursoTab({ mostrarMensaje }) {
                     <thead>
                       <tr>
                         <th className="th-nombre">Alumno</th>
-                        <th className="th-nota">1</th>
-                        <th className="th-nota">2</th>
-                        <th className="th-nota">3</th>
-                        <th className="th-nota">4</th>
-                        <th className="th-nota">5</th>
-                        <th className="th-nota">6</th>
-                        <th className="th-nota">7</th>
-                        <th className="th-nota">8</th>
+                        {Array.from({ length: maxNotasPorTrimestre }, (_, i) => (
+                          <th key={`h-${i}`} className="th-nota">{i + 1}</th>
+                        ))}
                         <th className="th-promedio-final">Prom.</th>
+                        <th className="th-estado">Estado</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {getAlumnosCurso().length > 0 ? (
-                        getAlumnosCurso().map(alumno => {
-                          const notas = generarNotasDemo();
-                          const promedio = calcularPromedio(notas);
+                      {alumnosConNotas.length > 0 ? (
+                        alumnosConNotas.map(alumno => {
+                          const trimestreActual = parseInt(filtros.trimestre);
+                          const notasTrim = alumno.notas[trimestreActual] || [];
+                          const promedio = calcularPromedio(notasTrim);
+                          const aprobado = promedio && parseFloat(promedio) >= 4.0;
+
                           return (
                             <tr key={alumno.id}>
                               <td className="celda-nombre">{abreviarNombreAlumno(alumno.nombre_completo)}</td>
-                              {notas.map((nota, idx) => (
-                                <td key={idx} className="celda-nota">
-                                  <input
-                                    type="text"
-                                    className="nota-input-mini"
-                                    defaultValue={nota}
-                                  />
-                                </td>
-                              ))}
-                              <td className={`celda-promedio-final ${parseFloat(promedio) >= 4.0 ? 'promedio-aprobado' : 'promedio-reprobado'}`}>
-                                {promedio}
+                              {Array.from({ length: maxNotasPorTrimestre }, (_, i) => {
+                                const notaObj = notasTrim.find(n => n.numero === i + 1);
+                                return (
+                                  <td key={`n-${i}`} className="celda-nota">
+                                    {notaObj ? (
+                                      <span className={`nota-valor ${parseFloat(notaObj.nota) >= 4.0 ? 'nota-aprobada' : 'nota-reprobada'}`}>
+                                        {parseFloat(notaObj.nota).toFixed(1)}
+                                      </span>
+                                    ) : (
+                                      <span className="nota-vacia">-</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                              <td className={`celda-promedio-final ${promedio ? (aprobado ? 'promedio-aprobado' : 'promedio-reprobado') : ''}`}>
+                                {promedio || '-'}
+                              </td>
+                              <td className={`celda-estado ${promedio ? (aprobado ? 'estado-aprobado' : 'estado-reprobado') : ''}`}>
+                                {promedio ? (aprobado ? 'Aprobado' : 'Reprobado') : '-'}
                               </td>
                             </tr>
                           );
                         })
                       ) : (
                         <tr>
-                          <td colSpan="10" className="text-center text-muted">No hay alumnos en este curso</td>
+                          <td colSpan={maxNotasPorTrimestre + 3} className="text-center text-muted">
+                            No hay alumnos en este curso
+                          </td>
                         </tr>
                       )}
                     </tbody>
                   </table>
                 )}
               </div>
+
+              {/* Leyenda */}
+              <div className="leyenda-notas" style={{ marginTop: '15px', fontSize: '0.85rem' }}>
+                <span style={{ marginRight: '20px' }}>
+                  <span className="promedio-aprobado" style={{ padding: '2px 8px', borderRadius: '3px' }}>Aprobado</span>
+                  <span style={{ marginLeft: '5px' }}>(Nota &gt;= 4.0)</span>
+                </span>
+                <span>
+                  <span className="promedio-reprobado" style={{ padding: '2px 8px', borderRadius: '3px' }}>Reprobado</span>
+                  <span style={{ marginLeft: '5px' }}>(Nota &lt; 4.0)</span>
+                </span>
+              </div>
             </div>
           ) : (
             <div className="text-center text-muted" style={{ padding: '40px' }}>
-              Seleccione un curso para comenzar
+              {!filtros.cursoId
+                ? 'Seleccione un curso para comenzar'
+                : !filtros.asignaturaId
+                  ? 'Seleccione una asignatura'
+                  : 'Seleccione un trimestre para ver las notas'}
             </div>
           )}
         </div>

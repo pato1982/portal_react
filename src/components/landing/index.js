@@ -1,0 +1,14 @@
+export { default as Navbar } from './Navbar';
+export { default as HeroSection } from './HeroSection';
+export { default as FeatureCard } from './FeatureCard';
+export { default as PlanCard } from './PlanCard';
+export { default as KPISection } from './KPISection';
+export { default as BeneficiosSection } from './BeneficiosSection';
+export { default as CTASection } from './CTASection';
+export { default as LandingFooter } from './LandingFooter';
+export { default as ModalTerminos } from './ModalTerminos';
+export { default as ModalPrivacidad } from './ModalPrivacidad';
+export { default as ModalPlan } from './ModalPlan';
+export { default as ModalContacto } from './ModalContacto';
+export { default as FloatingContactButton } from './FloatingContactButton';
+export * from './icons';

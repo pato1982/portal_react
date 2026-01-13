@@ -4449,6 +4449,55 @@ select.form-control {
     color: #b91c1c !important;
 }
 
+/* Colores de notas individuales */
+.nota-aprobada {
+    color: #166534;
+    font-weight: 500;
+}
+
+.nota-reprobada {
+    color: #b91c1c;
+    font-weight: 500;
+}
+
+.nota-vacia {
+    color: #9ca3af;
+}
+
+.nota-valor {
+    display: inline-block;
+    min-width: 28px;
+    text-align: center;
+}
+
+/* Estados de aprobado/reprobado en columna */
+.estado-aprobado {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+    font-weight: 600;
+    text-align: center;
+}
+
+.estado-reprobado {
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
+    font-weight: 600;
+    text-align: center;
+}
+
+.th-estado {
+    background-color: #0d1f33;
+    color: #fff;
+    font-size: 10px;
+    min-width: 70px;
+    text-align: center;
+}
+
+.celda-estado {
+    text-align: center;
+    font-size: 11px;
+}
+
 /* Encabezados de tabla de notas */
 .th-nombre {
     text-align: left !important;

@@ -1,17 +1,14 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useResponsive } from '../../hooks';
 
 function ComunicadosTab({ comunicados, onMarcarLeido }) {
   const [comunicadoExpandido, setComunicadoExpandido] = useState(null);
   const [filtroFechaDesde, setFiltroFechaDesde] = useState('');
   const [filtroFechaHasta, setFiltroFechaHasta] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('');
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 699);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 699);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Hook personalizado
+  const { isMobile } = useResponsive();
 
   const tiposComunicado = {
     reunion: { label: 'Reunion', color: '#8b5cf6' },

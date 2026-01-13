@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from './components/Header';
 import TabsNav from './components/TabsNav';
 import AlumnosTab from './components/AlumnosTab';
@@ -9,12 +9,13 @@ import AsistenciaTab from './components/AsistenciaTab';
 import ComunicadosTab from './components/ComunicadosTab';
 import EstadisticasTab from './components/EstadisticasTab';
 import ChatFlotante from './components/ChatFlotante';
-import ModalMensaje from './components/ModalMensaje';
 import DocentePage from './components/docente/DocentePage';
 import ApoderadoPage from './components/apoderado/ApoderadoPage';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import RegistroPage from './components/RegistroPage';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import { PageErrorFallback, SectionErrorFallback } from './components/common/ErrorFallback';
 import { usuarioDemo } from './data/demoData';
 import './styles/docente.css';
 import './styles/apoderado.css';
@@ -23,36 +24,35 @@ import './styles/registro.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState('alumnos');
-  const [modalMensaje, setModalMensaje] = useState({ visible: false, titulo: '', texto: '', tipo: '' });
-  const [vistaActual, setVistaActual] = useState('landing'); // 'landing', 'loginPage', 'seleccion-rol', 'registro', 'admin', 'docente' o 'apoderado'
-  const [tipoUsuarioRegistro, setTipoUsuarioRegistro] = useState(null); // 'admin', 'docente', 'apoderado'
-
-  const mostrarMensaje = (titulo, texto, tipo = 'info') => {
-    setModalMensaje({ visible: true, titulo, texto, tipo });
-  };
-
-  const cerrarModalMensaje = () => {
-    setModalMensaje({ ...modalMensaje, visible: false });
-  };
+  const [vistaActual, setVistaActual] = useState('landing'); // 'landing', 'loginPage', 'seleccion-rol', 'registro', 'administrador', 'docente' o 'apoderado'
+  const [tipoUsuarioRegistro, setTipoUsuarioRegistro] = useState(null); // 'administrador', 'docente', 'apoderado'
 
   const renderTabContent = () => {
+    // Cada tab se envuelve con ErrorBoundary para que un error en uno
+    // no afecte a los demás ni crashee toda la aplicación
+    const TabWrapper = ({ children }) => (
+      <ErrorBoundary FallbackComponent={SectionErrorFallback} key={activeTab}>
+        {children}
+      </ErrorBoundary>
+    );
+
     switch (activeTab) {
       case 'alumnos':
-        return <AlumnosTab mostrarMensaje={mostrarMensaje} />;
+        return <TabWrapper><AlumnosTab /></TabWrapper>;
       case 'docentes':
-        return <DocentesTab mostrarMensaje={mostrarMensaje} />;
+        return <TabWrapper><DocentesTab /></TabWrapper>;
       case 'asignacion-cursos':
-        return <AsignacionesTab mostrarMensaje={mostrarMensaje} />;
+        return <TabWrapper><AsignacionesTab /></TabWrapper>;
       case 'notas-por-curso':
-        return <NotasPorCursoTab mostrarMensaje={mostrarMensaje} />;
+        return <TabWrapper><NotasPorCursoTab /></TabWrapper>;
       case 'asistencia':
-        return <AsistenciaTab mostrarMensaje={mostrarMensaje} />;
+        return <TabWrapper><AsistenciaTab /></TabWrapper>;
       case 'comunicados':
-        return <ComunicadosTab mostrarMensaje={mostrarMensaje} />;
+        return <TabWrapper><ComunicadosTab /></TabWrapper>;
       case 'estadisticas':
-        return <EstadisticasTab />;
+        return <TabWrapper><EstadisticasTab /></TabWrapper>;
       default:
-        return <AlumnosTab mostrarMensaje={mostrarMensaje} />;
+        return <TabWrapper><AlumnosTab /></TabWrapper>;
     }
   };
 
@@ -70,24 +70,30 @@ function App() {
 
   // Landing page
   if (vistaActual === 'landing') {
-    return <LandingPage onIrALogin={irALoginPage} onIrARegistro={irASeleccionRol} />;
+    return (
+      <ErrorBoundary FallbackComponent={PageErrorFallback}>
+        <LandingPage onIrALogin={irALoginPage} onIrARegistro={irASeleccionRol} />
+      </ErrorBoundary>
+    );
   }
 
   // Pagina de Login
   if (vistaActual === 'loginPage') {
     return (
-      <LoginPage
-        onVolver={() => setVistaActual('landing')}
-        onLoginExitoso={(tipo) => {
-          if (tipo === 'admin') {
-            setVistaActual('admin');
-          } else if (tipo === 'docente') {
-            setVistaActual('docente');
-          } else if (tipo === 'apoderado') {
-            setVistaActual('apoderado');
-          }
-        }}
-      />
+      <ErrorBoundary FallbackComponent={PageErrorFallback}>
+        <LoginPage
+          onVolver={() => setVistaActual('landing')}
+          onLoginExitoso={(tipo) => {
+            if (tipo === 'administrador') {
+              setVistaActual('administrador');
+            } else if (tipo === 'docente') {
+              setVistaActual('docente');
+            } else if (tipo === 'apoderado') {
+              setVistaActual('apoderado');
+            }
+          }}
+        />
+      </ErrorBoundary>
     );
   }
 
@@ -104,7 +110,7 @@ function App() {
             <p>Registrate segun tu perfil y comienza a gestionar la informacion academica</p>
           </div>
           <div className="login-options">
-            <button className="login-option admin" onClick={() => { setTipoUsuarioRegistro('admin'); setVistaActual('registro'); }}>
+            <button className="login-option admin" onClick={() => { setTipoUsuarioRegistro('administrador'); setVistaActual('registro'); }}>
               <div className="login-option-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -167,22 +173,32 @@ function App() {
   // Pagina de Registro
   if (vistaActual === 'registro') {
     return (
-      <RegistroPage
-        tipoUsuario={tipoUsuarioRegistro}
-        onVolver={() => setVistaActual('seleccion-rol')}
-        onRegistroExitoso={() => setVistaActual('landing')}
-      />
+      <ErrorBoundary FallbackComponent={PageErrorFallback}>
+        <RegistroPage
+          tipoUsuario={tipoUsuarioRegistro}
+          onVolver={() => setVistaActual('seleccion-rol')}
+          onRegistroExitoso={() => setVistaActual('landing')}
+        />
+      </ErrorBoundary>
     );
   }
 
   // Vista de docente
   if (vistaActual === 'docente') {
-    return <DocentePage onCambiarVista={cerrarSesion} />;
+    return (
+      <ErrorBoundary FallbackComponent={PageErrorFallback}>
+        <DocentePage onCambiarVista={cerrarSesion} />
+      </ErrorBoundary>
+    );
   }
 
   // Vista de apoderado
   if (vistaActual === 'apoderado') {
-    return <ApoderadoPage onCambiarVista={cerrarSesion} />;
+    return (
+      <ErrorBoundary FallbackComponent={PageErrorFallback}>
+        <ApoderadoPage onCambiarVista={cerrarSesion} />
+      </ErrorBoundary>
+    );
   }
 
   // Vista de administrador
@@ -211,16 +227,10 @@ function App() {
         <p className="footer-creditos">Sistema escolar desarrollado por <span className="ch-naranja">CH</span>system</p>
       </footer>
 
-      <ChatFlotante />
-
-      {modalMensaje.visible && (
-        <ModalMensaje
-          titulo={modalMensaje.titulo}
-          texto={modalMensaje.texto}
-          tipo={modalMensaje.tipo}
-          onClose={cerrarModalMensaje}
-        />
-      )}
+      {/* El chat flotante tiene su propio ErrorBoundary - si falla, simplemente no se muestra */}
+      <ErrorBoundary fallback={null}>
+        <ChatFlotante />
+      </ErrorBoundary>
     </div>
   );
 }

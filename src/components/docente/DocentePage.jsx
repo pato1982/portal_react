@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AsistenciaTab from './AsistenciaTab';
 import AgregarNotaTab from './AgregarNotaTab';
 import ModificarNotaTab from './ModificarNotaTab';
@@ -8,6 +8,8 @@ import ProgresoTab from './ProgresoTab';
 function DocentePage({ onCambiarVista }) {
   const [tabActual, setTabActual] = useState('asistencia');
   const [currentDate, setCurrentDate] = useState('');
+  const [establecimientoDropdownAbierto, setEstablecimientoDropdownAbierto] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const updateDate = () => {
@@ -18,58 +20,41 @@ function DocentePage({ onCambiarVista }) {
     updateDate();
   }, []);
 
-  // Datos del docente (demo)
+  // Cerrar dropdown al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setEstablecimientoDropdownAbierto(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Sin establecimientos asignados
+  const establecimientosDocente = [];
+
+  const [establecimientoActual, setEstablecimientoActual] = useState(establecimientosDocente[0] || { id: 0, nombre: 'Sin establecimiento', comuna: '' });
+
+  // Datos base del docente (estructura mínima para la sesión demo)
   const docenteActual = {
     id: 1,
-    nombres: 'Maria',
-    apellidos: 'Gonzalez',
-    iniciales: 'MG'
+    nombres: 'Docente',
+    apellidos: 'Demo',
+    iniciales: 'DD'
   };
 
-  // Cursos asignados al docente (demo)
-  const cursosDocente = [
-    { id: 1, nombre: '1° Basico A' },
-    { id: 2, nombre: '2° Basico A' },
-    { id: 5, nombre: '1° Medio A' }
-  ];
+  // Sin cursos asignados
+  const cursosDocente = [];
 
-  // Asignaciones del docente (curso-asignatura)
-  const asignacionesDocente = [
-    { curso_id: 1, asignatura_id: 1, curso_nombre: '1° Basico A', asignatura_nombre: 'Matematicas' },
-    { curso_id: 1, asignatura_id: 2, curso_nombre: '1° Basico A', asignatura_nombre: 'Lenguaje' },
-    { curso_id: 2, asignatura_id: 1, curso_nombre: '2° Basico A', asignatura_nombre: 'Matematicas' },
-    { curso_id: 5, asignatura_id: 1, curso_nombre: '1° Medio A', asignatura_nombre: 'Matematicas' }
-  ];
+  // Sin asignaciones
+  const asignacionesDocente = [];
 
-  // Alumnos demo por curso
-  const alumnosPorCurso = {
-    1: [
-      { id: 1, nombres: 'Juan Pablo', apellidos: 'Perez Soto', rut: '21.234.567-8' },
-      { id: 2, nombres: 'Maria Jose', apellidos: 'Lopez Vera', rut: '21.345.678-9' },
-      { id: 3, nombres: 'Pedro Antonio', apellidos: 'Martinez Riquelme', rut: '21.456.789-0' },
-      { id: 4, nombres: 'Ana Carolina', apellidos: 'Garcia Fuentes', rut: '21.567.890-1' },
-      { id: 5, nombres: 'Carlos Andres', apellidos: 'Rodriguez Meza', rut: '21.678.901-2' }
-    ],
-    2: [
-      { id: 6, nombres: 'Sofia Alejandra', apellidos: 'Hernandez Pino', rut: '21.789.012-3' },
-      { id: 7, nombres: 'Diego Ignacio', apellidos: 'Sanchez Bravo', rut: '21.890.123-4' },
-      { id: 8, nombres: 'Valentina Paz', apellidos: 'Torres Leiva', rut: '21.901.234-5' },
-      { id: 9, nombres: 'Matias Felipe', apellidos: 'Flores Campos', rut: '22.012.345-6' }
-    ],
-    5: [
-      { id: 10, nombres: 'Camila Fernanda', apellidos: 'Rojas Silva', rut: '20.123.456-7' },
-      { id: 11, nombres: 'Benjamin Alonso', apellidos: 'Diaz Ortiz', rut: '20.234.567-8' },
-      { id: 12, nombres: 'Isidora Belen', apellidos: 'Morales Vega', rut: '20.345.678-9' },
-      { id: 13, nombres: 'Sebastian Nicolas', apellidos: 'Munoz Tapia', rut: '20.456.789-0' },
-      { id: 14, nombres: 'Antonella Victoria', apellidos: 'Castro Nunez', rut: '20.567.890-1' }
-    ]
-  };
+  // Sin alumnos
+  const alumnosPorCurso = {};
 
-  const [notasRegistradas, setNotasRegistradas] = useState([
-    { id: 1, alumno_id: 1, alumno_nombre: 'Juan Pablo Perez Soto', curso_id: 1, curso_nombre: '1° Basico A', asignatura_id: 1, asignatura_nombre: 'Matematicas', nota: 6.5, trimestre: 1, fecha: '2024-03-15', comentario: '' },
-    { id: 2, alumno_id: 1, alumno_nombre: 'Juan Pablo Perez Soto', curso_id: 1, curso_nombre: '1° Basico A', asignatura_id: 1, asignatura_nombre: 'Matematicas', nota: 6.2, trimestre: 1, fecha: '2024-04-10', comentario: '' },
-    { id: 3, alumno_id: 1, alumno_nombre: 'Juan Pablo Perez Soto', curso_id: 1, curso_nombre: '1° Basico A', asignatura_id: 1, asignatura_nombre: 'Matematicas', nota: 6.8, trimestre: 1, fecha: '2024-05-08', comentario: 'Excelente progreso' }
-  ]);
+  // Sin notas registradas
+  const [notasRegistradas, setNotasRegistradas] = useState([]);
 
   const tabs = [
     { id: 'asistencia', label: 'Asistencia' },
@@ -105,6 +90,53 @@ function DocentePage({ onCambiarVista }) {
             </div>
           </div>
           <div className="header-info">
+            {/* Selector de Establecimiento */}
+            <div className="establecimiento-selector" ref={dropdownRef}>
+              <button
+                className="establecimiento-btn"
+                onClick={() => establecimientosDocente.length > 1 && setEstablecimientoDropdownAbierto(!establecimientoDropdownAbierto)}
+                style={{ cursor: establecimientosDocente.length > 1 ? 'pointer' : 'default' }}
+              >
+                <span className="establecimiento-nombre">{establecimientoActual.nombre}</span>
+                {establecimientosDocente.length > 1 && (
+                  <svg
+                    className={`establecimiento-arrow ${establecimientoDropdownAbierto ? 'rotated' : ''}`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                )}
+              </button>
+              {establecimientoDropdownAbierto && establecimientosDocente.length > 1 && (
+                <div className="establecimiento-dropdown">
+                  {establecimientosDocente
+                    .filter(est => est.id !== establecimientoActual.id)
+                    .map(est => (
+                      <button
+                        key={est.id}
+                        className="establecimiento-option"
+                        onClick={() => {
+                          setEstablecimientoActual(est);
+                          setEstablecimientoDropdownAbierto(false);
+                        }}
+                      >
+                        <span className="est-nombre">{est.nombre}</span>
+                        <span className="est-comuna">{est.comuna}</span>
+                      </button>
+                    ))
+                  }
+                </div>
+              )}
+            </div>
+            <span className="header-separator">|</span>
             <span className="user-info">{docenteActual.nombres} {docenteActual.apellidos}</span>
             <span className="current-date">{currentDate}</span>
             <button className="btn-logout" onClick={onCambiarVista} title="Cerrar Sesion">

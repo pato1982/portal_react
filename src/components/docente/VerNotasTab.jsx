@@ -1,15 +1,35 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useResponsive, useDropdown } from '../../hooks';
-import { SelectNativo, SelectMovil, AutocompleteAlumno, getNotaClass } from './shared';
+import { SelectNativo, SelectMovil, AutocompleteAlumno } from './shared';
+import config from '../../config/env';
 
-// Renderizar celdas de notas para un trimestre
+// Función para obtener clase de nota según valor
+const getNotaClass = (nota) => {
+  if (nota === null || nota === undefined) return '';
+  return nota >= 4.0 ? 'nota-aprobada' : 'nota-reprobada';
+};
+
+// Renderizar celdas de notas para un trimestre (8 notas máximo)
 const renderNotasCeldas = (notas) => {
   const celdas = [];
   for (let i = 0; i < 8; i++) {
-    const nota = notas[i];
+    const notaObj = notas[i];
+    let valor = '-';
+    let clase = '';
+
+    if (notaObj) {
+      if (notaObj.es_pendiente) {
+        valor = 'P';
+        clase = 'nota-pendiente';
+      } else if (notaObj.nota !== null) {
+        valor = notaObj.nota.toFixed(1);
+        clase = getNotaClass(notaObj.nota);
+      }
+    }
+
     celdas.push(
-      <td key={i} className={nota !== undefined ? getNotaClass(nota) : ''}>
-        {nota !== undefined ? (nota !== null ? nota.toFixed(1) : 'P') : '-'}
+      <td key={i} className={clase}>
+        {valor}
       </td>
     );
   }
@@ -26,71 +46,108 @@ const NotasHeaders = () => (
   </>
 );
 
-function VerNotasTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas }) {
+function VerNotasTab({ docenteId, establecimientoId }) {
+  // Estados para datos de API
+  const [cursos, setCursos] = useState([]);
+  const [asignaturas, setAsignaturas] = useState([]);
+  const [alumnos, setAlumnos] = useState([]);
+  const [datosNotas, setDatosNotas] = useState([]);
+
+  // Estados de filtros
   const [cursoSeleccionado, setCursoSeleccionado] = useState('');
   const [cursoNombre, setCursoNombre] = useState('');
   const [asignaturaSeleccionada, setAsignaturaSeleccionada] = useState('');
   const [asignaturaNombre, setAsignaturaNombre] = useState('');
   const [filtroAlumno, setFiltroAlumno] = useState('');
   const [filtroAlumnoId, setFiltroAlumnoId] = useState('');
+
+  // Estados de carga
+  const [cargandoCursos, setCargandoCursos] = useState(true);
+  const [cargandoAsignaturas, setCargandoAsignaturas] = useState(false);
+  const [cargandoAlumnos, setCargandoAlumnos] = useState(false);
+  const [consultando, setConsultando] = useState(false);
   const [consultado, setConsultado] = useState(false);
 
   const { isMobile } = useResponsive();
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
-  const asignaturasDisponibles = useMemo(() => {
-    if (!cursoSeleccionado) return [];
-    return asignaciones
-      .filter(a => a.curso_id === parseInt(cursoSeleccionado))
-      .map(a => ({ id: a.asignatura_id, nombre: a.asignatura_nombre }));
-  }, [cursoSeleccionado, asignaciones]);
+  // Cargar cursos del docente
+  useEffect(() => {
+    const cargarCursos = async () => {
+      if (!docenteId || !establecimientoId) {
+        setCargandoCursos(false);
+        return;
+      }
 
-  const alumnosDelCurso = useMemo(() => {
-    if (!cursoSeleccionado) return [];
-    return alumnosPorCurso[cursoSeleccionado] || [];
-  }, [cursoSeleccionado, alumnosPorCurso]);
-
-  const datosTabla = useMemo(() => {
-    if (!consultado || !cursoSeleccionado || !asignaturaSeleccionada) return [];
-
-    const alumnos = alumnosPorCurso[cursoSeleccionado] || [];
-    const cursoId = parseInt(cursoSeleccionado);
-    const asignaturaId = parseInt(asignaturaSeleccionada);
-
-    return alumnos.map(alumno => {
-      const notasAlumno = notasRegistradas.filter(n =>
-        n.alumno_id === alumno.id && n.curso_id === cursoId && n.asignatura_id === asignaturaId
-      );
-
-      const notasPorTrimestre = { 1: [], 2: [], 3: [] };
-      notasAlumno.forEach(nota => {
-        if (notasPorTrimestre[nota.trimestre] && notasPorTrimestre[nota.trimestre].length < 8) {
-          notasPorTrimestre[nota.trimestre].push(nota.nota);
+      try {
+        const response = await fetch(
+          `${config.apiBaseUrl}/docente/${docenteId}/cursos?establecimiento_id=${establecimientoId}`
+        );
+        const data = await response.json();
+        if (data.success) {
+          setCursos(data.data);
         }
-      });
+      } catch (error) {
+        console.error('Error al cargar cursos:', error);
+      } finally {
+        setCargandoCursos(false);
+      }
+    };
 
-      const calcularPromedio = (notas) => {
-        const notasValidas = notas.filter(n => n !== null);
-        return notasValidas.length === 0 ? null : notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length;
-      };
+    cargarCursos();
+  }, [docenteId, establecimientoId]);
 
-      const promedioT1 = calcularPromedio(notasPorTrimestre[1]);
-      const promedioT2 = calcularPromedio(notasPorTrimestre[2]);
-      const promedioT3 = calcularPromedio(notasPorTrimestre[3]);
-      const promediosTrimestre = [promedioT1, promedioT2, promedioT3].filter(p => p !== null);
-      const promedioFinal = promediosTrimestre.length > 0
-        ? promediosTrimestre.reduce((a, b) => a + b, 0) / promediosTrimestre.length : null;
+  // Cargar asignaturas cuando se selecciona curso
+  useEffect(() => {
+    const cargarAsignaturas = async () => {
+      if (!cursoSeleccionado || !docenteId || !establecimientoId) {
+        setAsignaturas([]);
+        return;
+      }
 
-      return {
-        alumno,
-        notasT1: notasPorTrimestre[1],
-        notasT2: notasPorTrimestre[2],
-        notasT3: notasPorTrimestre[3],
-        promedioT1, promedioT2, promedioT3, promedioFinal,
-        estado: promedioFinal !== null ? (promedioFinal >= 4.0 ? 'Aprobado' : 'Reprobado') : '-'
-      };
-    }).filter(row => !filtroAlumnoId || row.alumno.id === parseInt(filtroAlumnoId));
-  }, [consultado, cursoSeleccionado, asignaturaSeleccionada, alumnosPorCurso, notasRegistradas, filtroAlumnoId]);
+      setCargandoAsignaturas(true);
+      try {
+        const response = await fetch(
+          `${config.apiBaseUrl}/docente/${docenteId}/asignaturas-por-curso/${cursoSeleccionado}?establecimiento_id=${establecimientoId}`
+        );
+        const data = await response.json();
+        if (data.success) {
+          setAsignaturas(data.data);
+        }
+      } catch (error) {
+        console.error('Error al cargar asignaturas:', error);
+      } finally {
+        setCargandoAsignaturas(false);
+      }
+    };
+
+    cargarAsignaturas();
+  }, [cursoSeleccionado, docenteId, establecimientoId]);
+
+  // Cargar alumnos cuando se selecciona curso
+  useEffect(() => {
+    const cargarAlumnos = async () => {
+      if (!cursoSeleccionado) {
+        setAlumnos([]);
+        return;
+      }
+
+      setCargandoAlumnos(true);
+      try {
+        const response = await fetch(`${config.apiBaseUrl}/curso/${cursoSeleccionado}/alumnos`);
+        const data = await response.json();
+        if (data.success) {
+          setAlumnos(data.data);
+        }
+      } catch (error) {
+        console.error('Error al cargar alumnos:', error);
+      } finally {
+        setCargandoAlumnos(false);
+      }
+    };
+
+    cargarAlumnos();
+  }, [cursoSeleccionado]);
 
   const handleCursoChange = (cursoId, nombre = '') => {
     setCursoSeleccionado(cursoId);
@@ -100,24 +157,48 @@ function VerNotasTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas }
     setFiltroAlumno('');
     setFiltroAlumnoId('');
     setConsultado(false);
+    setDatosNotas([]);
   };
 
   const handleSeleccionarAlumno = (alumno) => {
     if (alumno) {
       setFiltroAlumnoId(alumno.id);
-      setFiltroAlumno(`${alumno.nombres} ${alumno.apellidos}`);
+      setFiltroAlumno(`${alumno.apellidos}, ${alumno.nombres}`);
     } else {
       setFiltroAlumnoId('');
       setFiltroAlumno('');
     }
   };
 
-  const consultar = () => {
+  const consultar = async () => {
     if (!cursoSeleccionado || !asignaturaSeleccionada) {
       alert('Seleccione curso y asignatura');
       return;
     }
-    setConsultado(true);
+
+    setConsultando(true);
+    try {
+      let url = `${config.apiBaseUrl}/docente/${docenteId}/notas/por-asignatura?establecimiento_id=${establecimientoId}&curso_id=${cursoSeleccionado}&asignatura_id=${asignaturaSeleccionada}`;
+
+      if (filtroAlumnoId) {
+        url += `&alumno_id=${filtroAlumnoId}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setDatosNotas(data.data);
+      } else {
+        alert(data.error || 'Error al consultar notas');
+      }
+    } catch (error) {
+      console.error('Error al consultar notas:', error);
+      alert('Error al consultar notas');
+    } finally {
+      setConsultando(false);
+      setConsultado(true);
+    }
   };
 
   const limpiarFiltros = () => {
@@ -128,13 +209,55 @@ function VerNotasTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas }
     setFiltroAlumno('');
     setFiltroAlumnoId('');
     setConsultado(false);
+    setDatosNotas([]);
   };
 
-  const formatearNota = (nota) => (nota === null || nota === undefined) ? '-' : nota.toFixed(1);
+  // Calcular promedios y datos de tabla
+  const datosTabla = useMemo(() => {
+    return datosNotas.map(alumno => {
+      // Calcular promedio de un trimestre
+      const calcularPromedio = (notas) => {
+        const notasValidas = notas
+          .filter(n => !n.es_pendiente && n.nota !== null)
+          .map(n => n.nota);
+        if (notasValidas.length === 0) return null;
+        return notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length;
+      };
 
-  const formatearNombreAlumno = (alumno) => {
-    const nombresArr = alumno.nombres.split(' ');
-    const apellidosArr = alumno.apellidos.split(' ');
+      const promedioT1 = calcularPromedio(alumno.notas_t1);
+      const promedioT2 = calcularPromedio(alumno.notas_t2);
+      const promedioT3 = calcularPromedio(alumno.notas_t3);
+
+      // Calcular promedio final
+      const promediosTrimestre = [promedioT1, promedioT2, promedioT3].filter(p => p !== null);
+      const promedioFinal = promediosTrimestre.length > 0
+        ? promediosTrimestre.reduce((a, b) => a + b, 0) / promediosTrimestre.length
+        : null;
+
+      // Estado de aprobación
+      const estado = promedioFinal !== null
+        ? (promedioFinal >= 4.0 ? 'Aprobado' : 'Reprobado')
+        : '-';
+
+      return {
+        ...alumno,
+        promedioT1,
+        promedioT2,
+        promedioT3,
+        promedioFinal,
+        estado
+      };
+    });
+  }, [datosNotas]);
+
+  const formatearNota = (nota) => {
+    if (nota === null || nota === undefined) return '-';
+    return nota.toFixed(1);
+  };
+
+  const formatearNombreAlumno = (nombres, apellidos) => {
+    const nombresArr = nombres.split(' ');
+    const apellidosArr = apellidos.split(' ');
     const primerApellido = apellidosArr[0] || '';
     const segundoApellido = apellidosArr[1] || '';
     const inicialPrimerNombre = nombresArr[0] ? `${nombresArr[0].charAt(0)}.` : '';
@@ -149,81 +272,99 @@ function VerNotasTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas }
           {isMobile ? (
             <>
               <div className="form-row-movil">
-                <SelectMovil
-                  label="Curso"
-                  value={cursoSeleccionado}
-                  valueName={cursoNombre}
-                  onChange={handleCursoChange}
-                  options={cursos}
-                  placeholder="Seleccionar..."
-                  isOpen={dropdownAbierto === 'curso'}
-                  onToggle={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
-                  onClose={() => setDropdownAbierto(null)}
-                />
+                {cargandoCursos ? (
+                  <div className="form-group">
+                    <label>Curso</label>
+                    <div style={{ padding: '8px', color: '#64748b' }}>Cargando...</div>
+                  </div>
+                ) : (
+                  <SelectMovil
+                    label="Curso"
+                    value={cursoSeleccionado}
+                    valueName={cursoNombre}
+                    onChange={handleCursoChange}
+                    options={cursos}
+                    placeholder="Seleccionar..."
+                    isOpen={dropdownAbierto === 'curso'}
+                    onToggle={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
+                    onClose={() => setDropdownAbierto(null)}
+                  />
+                )}
                 <SelectMovil
                   label="Asignatura"
                   value={asignaturaSeleccionada}
                   valueName={asignaturaNombre}
                   onChange={(id, nombre) => { setAsignaturaSeleccionada(id); setAsignaturaNombre(nombre); }}
-                  options={asignaturasDisponibles}
-                  placeholder={cursoSeleccionado ? 'Seleccionar...' : 'Seleccione curso'}
-                  disabled={!cursoSeleccionado}
+                  options={asignaturas}
+                  placeholder={cargandoAsignaturas ? 'Cargando...' : (cursoSeleccionado ? 'Seleccionar...' : 'Seleccione curso')}
+                  disabled={!cursoSeleccionado || cargandoAsignaturas}
                   isOpen={dropdownAbierto === 'asignatura'}
                   onToggle={() => setDropdownAbierto(dropdownAbierto === 'asignatura' ? null : 'asignatura')}
                   onClose={() => setDropdownAbierto(null)}
                 />
               </div>
               <AutocompleteAlumno
-                alumnos={alumnosDelCurso}
+                alumnos={alumnos}
                 alumnoSeleccionado={filtroAlumnoId}
                 busqueda={filtroAlumno}
                 onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
                 onSeleccionar={handleSeleccionarAlumno}
-                disabled={!cursoSeleccionado}
-                placeholder="Todos"
+                disabled={!cursoSeleccionado || cargandoAlumnos}
+                placeholder={cargandoAlumnos ? 'Cargando...' : 'Todos'}
                 onDropdownOpen={() => setDropdownAbierto(null)}
               />
               <div className="form-actions form-actions-movil">
                 <button className="btn btn-secondary" onClick={limpiarFiltros}>Limpiar</button>
-                <button className="btn btn-primary" onClick={consultar}>Consultar</button>
+                <button className="btn btn-primary" onClick={consultar} disabled={consultando || !cursoSeleccionado || !asignaturaSeleccionada}>
+                  {consultando ? 'Consultando...' : 'Consultar'}
+                </button>
               </div>
             </>
           ) : (
             <div className="docente-filtros-row" style={{ gridTemplateColumns: '1fr 1fr 1fr auto' }}>
-              <SelectNativo
-                label="Curso"
-                value={cursoSeleccionado}
-                onChange={(e) => {
-                  const curso = cursos.find(c => c.id.toString() === e.target.value);
-                  handleCursoChange(e.target.value, curso?.nombre || '');
-                }}
-                options={cursos}
-                placeholder="Seleccionar"
-              />
+              {cargandoCursos ? (
+                <div className="form-group">
+                  <label>Curso</label>
+                  <div style={{ padding: '8px', color: '#64748b' }}>Cargando cursos...</div>
+                </div>
+              ) : (
+                <SelectNativo
+                  label="Curso"
+                  value={cursoSeleccionado}
+                  onChange={(e) => {
+                    const curso = cursos.find(c => c.id.toString() === e.target.value);
+                    handleCursoChange(e.target.value, curso?.nombre || '');
+                  }}
+                  options={cursos}
+                  placeholder="Seleccionar"
+                />
+              )}
               <SelectNativo
                 label="Asignatura"
                 value={asignaturaSeleccionada}
                 onChange={(e) => {
-                  const asig = asignaturasDisponibles.find(a => a.id.toString() === e.target.value);
+                  const asig = asignaturas.find(a => a.id.toString() === e.target.value);
                   setAsignaturaSeleccionada(e.target.value);
                   setAsignaturaNombre(asig?.nombre || '');
                 }}
-                options={asignaturasDisponibles}
-                placeholder={cursoSeleccionado ? 'Seleccionar' : 'Primero seleccione un curso'}
-                disabled={!cursoSeleccionado}
+                options={asignaturas}
+                placeholder={cargandoAsignaturas ? 'Cargando...' : (cursoSeleccionado ? 'Seleccionar' : 'Primero seleccione curso')}
+                disabled={!cursoSeleccionado || cargandoAsignaturas}
               />
               <AutocompleteAlumno
-                alumnos={alumnosDelCurso}
+                alumnos={alumnos}
                 alumnoSeleccionado={filtroAlumnoId}
                 busqueda={filtroAlumno}
                 onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
                 onSeleccionar={handleSeleccionarAlumno}
-                disabled={!cursoSeleccionado}
-                placeholder={cursoSeleccionado ? "Todos los alumnos" : "Primero seleccione un curso"}
+                disabled={!cursoSeleccionado || cargandoAlumnos}
+                placeholder={cargandoAlumnos ? 'Cargando...' : (cursoSeleccionado ? 'Todos los alumnos' : 'Primero seleccione curso')}
               />
               <div className="docente-filtros-actions">
                 <button className="btn btn-secondary" onClick={limpiarFiltros}>Limpiar</button>
-                <button className="btn btn-primary" onClick={consultar}>Consultar</button>
+                <button className="btn btn-primary" onClick={consultar} disabled={consultando || !cursoSeleccionado || !asignaturaSeleccionada}>
+                  {consultando ? 'Consultando...' : 'Consultar'}
+                </button>
               </div>
             </div>
           )}
@@ -231,7 +372,9 @@ function VerNotasTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas }
       </div>
 
       <div className="card" style={{ marginTop: '20px' }}>
-        <div className="card-header"><h3>Calificaciones del Curso</h3></div>
+        <div className="card-header">
+          <h3>Calificaciones del Curso {consultado && asignaturaNombre && `- ${asignaturaNombre}`}</h3>
+        </div>
         <div className="card-body">
           <div className="docente-tabla-trimestres-container">
             <table className="docente-tabla docente-tabla-trimestres">
@@ -252,19 +395,26 @@ function VerNotasTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas }
                 </tr>
               </thead>
               <tbody>
-                {datosTabla.length > 0 ? (
+                {consultando ? (
+                  <tr>
+                    <td colSpan="31" className="text-center text-muted">Consultando...</td>
+                  </tr>
+                ) : datosTabla.length > 0 ? (
                   datosTabla.map((row, index) => (
-                    <tr key={row.alumno.id}>
+                    <tr key={row.alumno_id}>
                       <td>{index + 1}</td>
-                      <td className="td-alumno">{formatearNombreAlumno(row.alumno)}</td>
-                      {renderNotasCeldas(row.notasT1)}
+                      <td className="td-alumno">{formatearNombreAlumno(row.alumno_nombres, row.alumno_apellidos)}</td>
+                      {renderNotasCeldas(row.notas_t1)}
                       <td className={`td-prom ${getNotaClass(row.promedioT1)}`}>{formatearNota(row.promedioT1)}</td>
-                      {renderNotasCeldas(row.notasT2)}
+                      {renderNotasCeldas(row.notas_t2)}
                       <td className={`td-prom ${getNotaClass(row.promedioT2)}`}>{formatearNota(row.promedioT2)}</td>
-                      {renderNotasCeldas(row.notasT3)}
+                      {renderNotasCeldas(row.notas_t3)}
                       <td className={`td-prom ${getNotaClass(row.promedioT3)}`}>{formatearNota(row.promedioT3)}</td>
                       <td className={`td-final ${getNotaClass(row.promedioFinal)}`}>{formatearNota(row.promedioFinal)}</td>
-                      <td className={row.estado === 'Aprobado' ? 'estado-aprobado' : row.estado === 'Reprobado' ? 'estado-reprobado' : ''} style={{ textAlign: 'center', fontSize: '10px', fontWeight: '600' }}>
+                      <td
+                        className={row.estado === 'Aprobado' ? 'estado-aprobado' : row.estado === 'Reprobado' ? 'estado-reprobado' : ''}
+                        style={{ textAlign: 'center', fontSize: '10px', fontWeight: '600' }}
+                      >
                         {row.estado === 'Aprobado' ? 'APR' : row.estado === 'Reprobado' ? 'REP' : '-'}
                       </td>
                     </tr>
@@ -272,7 +422,7 @@ function VerNotasTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas }
                 ) : (
                   <tr>
                     <td colSpan="31" className="text-center text-muted">
-                      {consultado ? 'No hay datos para mostrar' : 'Seleccione curso y asignatura'}
+                      {consultado ? 'No hay datos para mostrar' : 'Seleccione curso y asignatura, luego presione Consultar'}
                     </td>
                   </tr>
                 )}

@@ -1146,6 +1146,699 @@ app.delete('/api/docentes/:id', async (req, res) => {
     }
 });
 
+// GET /api/docente/:docenteId/establecimientos - Obtener establecimientos del docente
+app.get('/api/docente/:docenteId/establecimientos', async (req, res) => {
+    const { docenteId } = req.params;
+
+    try {
+        const [establecimientos] = await pool.query(`
+            SELECT
+                e.id,
+                e.nombre,
+                e.comuna,
+                e.ciudad,
+                e.region,
+                de.cargo,
+                de.es_profesor_jefe,
+                de.fecha_ingreso
+            FROM tb_docente_establecimiento de
+            JOIN tb_establecimientos e ON de.establecimiento_id = e.id
+            WHERE de.docente_id = ? AND de.activo = 1 AND e.activo = 1
+            ORDER BY de.fecha_ingreso DESC
+        `, [docenteId]);
+
+        res.json({ success: true, data: establecimientos });
+    } catch (error) {
+        console.error('Error al obtener establecimientos del docente:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener establecimientos' });
+    }
+});
+
+// GET /api/docente/:docenteId/cursos - Obtener cursos asignados al docente
+app.get('/api/docente/:docenteId/cursos', async (req, res) => {
+    const { docenteId } = req.params;
+    const { establecimiento_id } = req.query;
+    const anio = new Date().getFullYear();
+
+    try {
+        const [cursos] = await pool.query(`
+            SELECT DISTINCT
+                c.id,
+                c.nombre,
+                c.codigo,
+                c.nivel,
+                c.grado,
+                c.letra
+            FROM tb_asignaciones a
+            JOIN tb_cursos c ON a.curso_id = c.id
+            WHERE a.docente_id = ?
+            AND a.establecimiento_id = ?
+            AND a.anio_academico = ?
+            AND a.activo = 1
+            AND c.activo = 1
+            ORDER BY c.grado, c.letra, c.nombre
+        `, [docenteId, establecimiento_id, anio]);
+
+        res.json({ success: true, data: cursos });
+    } catch (error) {
+        console.error('Error al obtener cursos del docente:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener cursos' });
+    }
+});
+
+// GET /api/docente/:docenteId/asignaturas-por-curso/:cursoId - Asignaturas que el docente imparte en un curso
+app.get('/api/docente/:docenteId/asignaturas-por-curso/:cursoId', async (req, res) => {
+    const { docenteId, cursoId } = req.params;
+    const { establecimiento_id } = req.query;
+    const anio = new Date().getFullYear();
+
+    try {
+        const [asignaturas] = await pool.query(`
+            SELECT DISTINCT
+                asig.id,
+                asig.nombre,
+                asig.codigo
+            FROM tb_asignaciones a
+            JOIN tb_asignaturas asig ON a.asignatura_id = asig.id
+            WHERE a.docente_id = ?
+            AND a.curso_id = ?
+            AND a.establecimiento_id = ?
+            AND a.anio_academico = ?
+            AND a.activo = 1
+            AND asig.activo = 1
+            ORDER BY asig.nombre ASC
+        `, [docenteId, cursoId, establecimiento_id, anio]);
+
+        res.json({ success: true, data: asignaturas });
+    } catch (error) {
+        console.error('Error al obtener asignaturas del docente:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener asignaturas' });
+    }
+});
+
+// GET /api/tipos-evaluacion - Obtener tipos de evaluación del establecimiento
+app.get('/api/tipos-evaluacion', async (req, res) => {
+    const { establecimiento_id = 1 } = req.query;
+
+    try {
+        const [tipos] = await pool.query(`
+            SELECT
+                id,
+                nombre,
+                abreviatura,
+                ponderacion_default,
+                es_sumativa
+            FROM tb_tipos_evaluacion
+            WHERE establecimiento_id = ? AND activo = 1
+            ORDER BY orden ASC, nombre ASC
+        `, [establecimiento_id]);
+
+        res.json({ success: true, data: tipos });
+    } catch (error) {
+        console.error('Error al obtener tipos de evaluación:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener tipos de evaluación' });
+    }
+});
+
+// POST /api/notas/registrar - Registrar una nueva nota
+app.post('/api/notas/registrar', async (req, res) => {
+    const {
+        establecimiento_id,
+        alumno_id,
+        asignatura_id,
+        curso_id,
+        docente_id,
+        tipo_evaluacion_id,
+        trimestre,
+        nota,
+        es_pendiente,
+        fecha_evaluacion,
+        descripcion,
+        comentario
+    } = req.body;
+
+    if (!establecimiento_id || !alumno_id || !asignatura_id || !curso_id || !trimestre) {
+        return res.status(400).json({
+            success: false,
+            error: 'Faltan datos requeridos'
+        });
+    }
+
+    if (!es_pendiente && (nota === null || nota === undefined || nota === '')) {
+        return res.status(400).json({
+            success: false,
+            error: 'Debe ingresar una nota o marcar como pendiente'
+        });
+    }
+
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const anio = fecha_evaluacion ? new Date(fecha_evaluacion).getFullYear() : new Date().getFullYear();
+
+        // Obtener el siguiente número de evaluación para este alumno/asignatura/trimestre
+        const [maxEval] = await connection.query(`
+            SELECT COALESCE(MAX(numero_evaluacion), 0) + 1 as siguiente
+            FROM tb_notas
+            WHERE alumno_id = ?
+            AND asignatura_id = ?
+            AND curso_id = ?
+            AND trimestre = ?
+            AND anio_academico = ?
+            AND activo = 1
+        `, [alumno_id, asignatura_id, curso_id, trimestre, anio]);
+
+        const numeroEvaluacion = maxEval[0].siguiente;
+
+        // Insertar la nota
+        const [result] = await connection.query(`
+            INSERT INTO tb_notas (
+                establecimiento_id, alumno_id, asignatura_id, curso_id, docente_id,
+                tipo_evaluacion_id, anio_academico, trimestre, numero_evaluacion,
+                nota, es_pendiente, fecha_evaluacion, descripcion, comentario
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            establecimiento_id,
+            alumno_id,
+            asignatura_id,
+            curso_id,
+            docente_id || null,
+            tipo_evaluacion_id || null,
+            anio,
+            trimestre,
+            numeroEvaluacion,
+            es_pendiente ? null : nota,
+            es_pendiente ? 1 : 0,
+            fecha_evaluacion || null,
+            descripcion || null,
+            comentario || null
+        ]);
+
+        await connection.commit();
+
+        res.json({
+            success: true,
+            message: 'Nota registrada correctamente',
+            data: { id: result.insertId, numero_evaluacion: numeroEvaluacion }
+        });
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error al registrar nota:', error);
+        res.status(500).json({ success: false, error: 'Error al registrar nota' });
+    } finally {
+        connection.release();
+    }
+});
+
+// GET /api/docente/:docenteId/notas-recientes - Obtener últimas notas registradas por el docente
+app.get('/api/docente/:docenteId/notas-recientes', async (req, res) => {
+    const { docenteId } = req.params;
+    const { establecimiento_id, curso_id, alumno_id, limit = 30 } = req.query;
+
+    try {
+        let query = `
+            SELECT
+                n.id,
+                n.alumno_id,
+                n.curso_id,
+                n.asignatura_id,
+                n.trimestre,
+                n.nota,
+                n.es_pendiente,
+                n.fecha_evaluacion,
+                n.descripcion,
+                n.fecha_creacion,
+                a.nombres as alumno_nombres,
+                a.apellidos as alumno_apellidos,
+                c.nombre as curso_nombre,
+                asig.nombre as asignatura_nombre,
+                te.nombre as tipo_evaluacion_nombre,
+                te.abreviatura as tipo_evaluacion_abrev
+            FROM tb_notas n
+            JOIN tb_alumnos a ON n.alumno_id = a.id
+            JOIN tb_cursos c ON n.curso_id = c.id
+            JOIN tb_asignaturas asig ON n.asignatura_id = asig.id
+            LEFT JOIN tb_tipos_evaluacion te ON n.tipo_evaluacion_id = te.id
+            WHERE n.docente_id = ?
+            AND n.establecimiento_id = ?
+            AND n.activo = 1
+        `;
+
+        const params = [docenteId, establecimiento_id];
+
+        if (curso_id) {
+            query += ` AND n.curso_id = ?`;
+            params.push(curso_id);
+        }
+
+        if (alumno_id) {
+            query += ` AND n.alumno_id = ?`;
+            params.push(alumno_id);
+        }
+
+        query += ` ORDER BY n.fecha_creacion DESC, n.id DESC LIMIT ?`;
+        params.push(parseInt(limit));
+
+        const [notas] = await pool.query(query, params);
+
+        res.json({ success: true, data: notas });
+    } catch (error) {
+        console.error('Error al obtener notas recientes:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener notas recientes' });
+    }
+});
+
+// GET /api/docente/:docenteId/fechas-con-notas - Obtener fechas donde el docente ha registrado notas
+app.get('/api/docente/:docenteId/fechas-con-notas', async (req, res) => {
+    const { docenteId } = req.params;
+    const { establecimiento_id, curso_id } = req.query;
+
+    try {
+        let query = `
+            SELECT DISTINCT DATE(fecha_evaluacion) as fecha
+            FROM tb_notas
+            WHERE docente_id = ?
+            AND establecimiento_id = ?
+            AND activo = 1
+            AND fecha_evaluacion IS NOT NULL
+        `;
+        const params = [docenteId, establecimiento_id];
+
+        if (curso_id) {
+            query += ` AND curso_id = ?`;
+            params.push(curso_id);
+        }
+
+        query += ` ORDER BY fecha DESC`;
+
+        const [fechas] = await pool.query(query, params);
+
+        // Retornar array de fechas en formato YYYY-MM-DD
+        const fechasArray = fechas.map(f => f.fecha.toISOString().split('T')[0]);
+
+        res.json({ success: true, data: fechasArray });
+    } catch (error) {
+        console.error('Error al obtener fechas con notas:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener fechas' });
+    }
+});
+
+// GET /api/docente/:docenteId/notas/buscar - Buscar notas del docente con filtros
+app.get('/api/docente/:docenteId/notas/buscar', async (req, res) => {
+    const { docenteId } = req.params;
+    const { establecimiento_id, curso_id, asignatura_id, alumno_id, fecha } = req.query;
+
+    if (!curso_id) {
+        return res.status(400).json({
+            success: false,
+            error: 'Debe seleccionar un curso'
+        });
+    }
+
+    try {
+        let query = `
+            SELECT
+                n.id,
+                n.alumno_id,
+                n.curso_id,
+                n.asignatura_id,
+                n.trimestre,
+                n.numero_evaluacion,
+                n.nota,
+                n.es_pendiente,
+                n.fecha_evaluacion,
+                n.comentario,
+                n.fecha_creacion,
+                a.nombres as alumno_nombres,
+                a.apellidos as alumno_apellidos,
+                c.nombre as curso_nombre,
+                asig.nombre as asignatura_nombre,
+                te.nombre as tipo_evaluacion_nombre
+            FROM tb_notas n
+            JOIN tb_alumnos a ON n.alumno_id = a.id
+            JOIN tb_cursos c ON n.curso_id = c.id
+            JOIN tb_asignaturas asig ON n.asignatura_id = asig.id
+            LEFT JOIN tb_tipos_evaluacion te ON n.tipo_evaluacion_id = te.id
+            WHERE n.docente_id = ?
+            AND n.establecimiento_id = ?
+            AND n.curso_id = ?
+            AND n.activo = 1
+        `;
+
+        const params = [docenteId, establecimiento_id, curso_id];
+
+        if (asignatura_id) {
+            query += ` AND n.asignatura_id = ?`;
+            params.push(asignatura_id);
+        }
+
+        if (alumno_id) {
+            query += ` AND n.alumno_id = ?`;
+            params.push(alumno_id);
+        }
+
+        if (fecha) {
+            query += ` AND DATE(n.fecha_evaluacion) = ?`;
+            params.push(fecha);
+        }
+
+        query += ` ORDER BY n.fecha_evaluacion DESC, a.apellidos ASC, a.nombres ASC`;
+
+        const [notas] = await pool.query(query, params);
+
+        res.json({ success: true, data: notas });
+    } catch (error) {
+        console.error('Error al buscar notas:', error);
+        res.status(500).json({ success: false, error: 'Error al buscar notas' });
+    }
+});
+
+// PUT /api/notas/:notaId - Actualizar una nota
+app.put('/api/notas/:notaId', async (req, res) => {
+    const { notaId } = req.params;
+    const { nota, trimestre, fecha_evaluacion, comentario, es_pendiente } = req.body;
+
+    try {
+        // Verificar que la nota existe
+        const [notaExistente] = await pool.query(
+            'SELECT id FROM tb_notas WHERE id = ? AND activo = 1',
+            [notaId]
+        );
+
+        if (notaExistente.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Nota no encontrada'
+            });
+        }
+
+        // Validar nota si no es pendiente
+        if (!es_pendiente && nota !== null && nota !== undefined) {
+            const notaNum = parseFloat(nota);
+            if (notaNum < 1.0 || notaNum > 7.0) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'La nota debe estar entre 1.0 y 7.0'
+                });
+            }
+        }
+
+        // Actualizar la nota
+        await pool.query(`
+            UPDATE tb_notas
+            SET nota = ?,
+                trimestre = ?,
+                fecha_evaluacion = ?,
+                comentario = ?,
+                es_pendiente = ?,
+                fecha_modificacion = NOW()
+            WHERE id = ?
+        `, [
+            es_pendiente ? null : nota,
+            trimestre,
+            fecha_evaluacion || null,
+            comentario || null,
+            es_pendiente ? 1 : 0,
+            notaId
+        ]);
+
+        res.json({
+            success: true,
+            message: 'Nota actualizada correctamente'
+        });
+    } catch (error) {
+        console.error('Error al actualizar nota:', error);
+        res.status(500).json({ success: false, error: 'Error al actualizar nota' });
+    }
+});
+
+// DELETE /api/notas/:notaId - Eliminar una nota (soft delete)
+app.delete('/api/notas/:notaId', async (req, res) => {
+    const { notaId } = req.params;
+
+    try {
+        // Verificar que la nota existe
+        const [notaExistente] = await pool.query(
+            'SELECT id FROM tb_notas WHERE id = ? AND activo = 1',
+            [notaId]
+        );
+
+        if (notaExistente.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Nota no encontrada'
+            });
+        }
+
+        // Soft delete - marcar como inactivo
+        await pool.query(`
+            UPDATE tb_notas
+            SET activo = 0,
+                fecha_modificacion = NOW()
+            WHERE id = ?
+        `, [notaId]);
+
+        res.json({
+            success: true,
+            message: 'Nota eliminada correctamente'
+        });
+    } catch (error) {
+        console.error('Error al eliminar nota:', error);
+        res.status(500).json({ success: false, error: 'Error al eliminar nota' });
+    }
+});
+
+// GET /api/docente/:docenteId/notas/por-asignatura - Obtener notas de una asignatura para un curso
+app.get('/api/docente/:docenteId/notas/por-asignatura', async (req, res) => {
+    const { docenteId } = req.params;
+    const { establecimiento_id, curso_id, asignatura_id, alumno_id } = req.query;
+
+    if (!curso_id || !asignatura_id) {
+        return res.status(400).json({
+            success: false,
+            error: 'Debe especificar curso y asignatura'
+        });
+    }
+
+    try {
+        // Primero obtener todos los alumnos del curso ordenados alfabéticamente
+        let alumnosQuery = `
+            SELECT DISTINCT
+                a.id as alumno_id,
+                a.nombres as alumno_nombres,
+                a.apellidos as alumno_apellidos
+            FROM tb_alumnos a
+            JOIN tb_alumno_establecimiento ae ON a.id = ae.alumno_id
+            WHERE ae.curso_id = ?
+            AND ae.activo = 1
+            AND a.activo = 1
+        `;
+        const alumnosParams = [curso_id];
+
+        if (alumno_id) {
+            alumnosQuery += ` AND a.id = ?`;
+            alumnosParams.push(alumno_id);
+        }
+
+        alumnosQuery += ` ORDER BY a.apellidos ASC, a.nombres ASC`;
+
+        const [alumnos] = await pool.query(alumnosQuery, alumnosParams);
+
+        // Luego obtener todas las notas de esos alumnos en la asignatura
+        const alumnoIds = alumnos.map(a => a.alumno_id);
+
+        let notas = [];
+        if (alumnoIds.length > 0) {
+            const [notasResult] = await pool.query(`
+                SELECT
+                    n.alumno_id,
+                    n.trimestre,
+                    n.numero_evaluacion,
+                    n.nota,
+                    n.es_pendiente
+                FROM tb_notas n
+                WHERE n.docente_id = ?
+                AND n.establecimiento_id = ?
+                AND n.curso_id = ?
+                AND n.asignatura_id = ?
+                AND n.alumno_id IN (?)
+                AND n.activo = 1
+                ORDER BY n.alumno_id, n.trimestre, n.numero_evaluacion
+            `, [docenteId, establecimiento_id, curso_id, asignatura_id, alumnoIds]);
+            notas = notasResult;
+        }
+
+        // Estructurar datos: cada alumno con sus notas organizadas por trimestre
+        const resultado = alumnos.map(alumno => {
+            const notasAlumno = notas.filter(n => n.alumno_id === alumno.alumno_id);
+
+            // Organizar notas por trimestre
+            const notasPorTrimestre = {
+                1: [],
+                2: [],
+                3: []
+            };
+
+            notasAlumno.forEach(nota => {
+                if (notasPorTrimestre[nota.trimestre]) {
+                    notasPorTrimestre[nota.trimestre].push({
+                        numero: nota.numero_evaluacion,
+                        nota: nota.nota,
+                        es_pendiente: nota.es_pendiente
+                    });
+                }
+            });
+
+            // Ordenar notas dentro de cada trimestre por numero_evaluacion
+            Object.keys(notasPorTrimestre).forEach(trim => {
+                notasPorTrimestre[trim].sort((a, b) => a.numero - b.numero);
+            });
+
+            return {
+                alumno_id: alumno.alumno_id,
+                alumno_nombres: alumno.alumno_nombres,
+                alumno_apellidos: alumno.alumno_apellidos,
+                notas_t1: notasPorTrimestre[1],
+                notas_t2: notasPorTrimestre[2],
+                notas_t3: notasPorTrimestre[3]
+            };
+        });
+
+        res.json({ success: true, data: resultado });
+    } catch (error) {
+        console.error('Error al obtener notas por asignatura:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener notas' });
+    }
+});
+
+// GET /api/curso/:cursoId/alumnos - Obtener alumnos de un curso
+app.get('/api/curso/:cursoId/alumnos', async (req, res) => {
+    const { cursoId } = req.params;
+
+    try {
+        const [alumnos] = await pool.query(`
+            SELECT
+                a.id,
+                a.rut,
+                a.nombres,
+                a.apellidos,
+                ae.numero_lista
+            FROM tb_alumnos a
+            JOIN tb_alumno_establecimiento ae ON a.id = ae.alumno_id
+            WHERE ae.curso_id = ? AND ae.activo = 1 AND a.activo = 1
+            ORDER BY a.apellidos ASC, a.nombres ASC
+        `, [cursoId]);
+
+        res.json({ success: true, data: alumnos });
+    } catch (error) {
+        console.error('Error al obtener alumnos del curso:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener alumnos' });
+    }
+});
+
+// GET /api/asistencia/verificar/:cursoId/:fecha - Verificar si existe asistencia registrada
+app.get('/api/asistencia/verificar/:cursoId/:fecha', async (req, res) => {
+    const { cursoId, fecha } = req.params;
+
+    try {
+        const [registros] = await pool.query(`
+            SELECT
+                a.id,
+                a.alumno_id,
+                a.estado,
+                a.observacion
+            FROM tb_asistencia a
+            WHERE a.curso_id = ? AND a.fecha = ? AND a.activo = 1
+        `, [cursoId, fecha]);
+
+        const existe = registros.length > 0;
+        const asistenciaMap = {};
+        registros.forEach(r => {
+            // Mapear 'atrasado' de la BD a 'tardio' para el frontend
+            let estado = r.estado;
+            if (estado === 'atrasado') estado = 'tardio';
+            asistenciaMap[r.alumno_id] = {
+                estado,
+                observacion: r.observacion
+            };
+        });
+
+        res.json({ success: true, existe, data: asistenciaMap });
+    } catch (error) {
+        console.error('Error al verificar asistencia:', error);
+        res.status(500).json({ success: false, error: 'Error al verificar asistencia' });
+    }
+});
+
+// POST /api/asistencia/registrar - Registrar asistencia de un curso
+app.post('/api/asistencia/registrar', async (req, res) => {
+    const {
+        establecimiento_id,
+        curso_id,
+        fecha,
+        asistencia,
+        registrado_por,
+        docente_id
+    } = req.body;
+
+    if (!establecimiento_id || !curso_id || !fecha || !asistencia) {
+        return res.status(400).json({
+            success: false,
+            error: 'Faltan datos requeridos'
+        });
+    }
+
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        const anio = new Date(fecha).getFullYear();
+        const mes = new Date(fecha).getMonth() + 1;
+        const trimestre = mes <= 4 ? 1 : mes <= 8 ? 2 : 3;
+
+        // Eliminar asistencia existente para esa fecha y curso (si existe)
+        await connection.query(`
+            DELETE FROM tb_asistencia
+            WHERE curso_id = ? AND fecha = ?
+        `, [curso_id, fecha]);
+
+        // Insertar nueva asistencia
+        for (const [alumnoId, datos] of Object.entries(asistencia)) {
+            // Mapear 'tardio' del frontend a 'atrasado' de la BD
+            let estadoDB = datos.estado;
+            if (estadoDB === 'tardio') estadoDB = 'atrasado';
+
+            await connection.query(`
+                INSERT INTO tb_asistencia
+                (establecimiento_id, alumno_id, curso_id, fecha, anio_academico, trimestre, estado, observacion, registrado_por)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                establecimiento_id,
+                alumnoId,
+                curso_id,
+                fecha,
+                anio,
+                trimestre,
+                estadoDB,
+                datos.observacion || null,
+                registrado_por || null
+            ]);
+        }
+
+        await connection.commit();
+        res.json({ success: true, message: 'Asistencia registrada correctamente' });
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error al registrar asistencia:', error);
+        res.status(500).json({ success: false, error: 'Error al registrar asistencia' });
+    } finally {
+        connection.release();
+    }
+});
+
 // ============================================
 // RUTAS DE ASIGNACIONES (Docente-Curso-Asignatura)
 // ============================================
@@ -1418,7 +2111,7 @@ app.get('/api/alumnos/por-curso/:cursoId', async (req, res) => {
             AND ae.anio_academico = ?
             AND ae.activo = 1
             AND a.activo = 1
-            ORDER BY ae.numero_lista, a.apellidos, a.nombres
+            ORDER BY a.apellidos ASC, a.nombres ASC
         `, [cursoId, establecimiento_id, anio]);
 
         res.json({ success: true, data: alumnos });
@@ -1463,7 +2156,7 @@ app.get('/api/notas/por-curso', async (req, res) => {
             AND ae.anio_academico = ?
             AND ae.activo = 1
             AND a.activo = 1
-            ORDER BY ae.numero_lista, a.apellidos, a.nombres
+            ORDER BY a.apellidos ASC, a.nombres ASC
         `, [curso_id, establecimiento_id, anio]);
 
         // Construir query de notas según filtros
@@ -3201,6 +3894,231 @@ app.get('/api/estadisticas/asistencia/ranking', async (req, res) => {
     } catch (error) {
         console.error('Error al obtener ranking de asistencia:', error);
         res.status(500).json({ success: false, error: 'Error al obtener ranking de asistencia' });
+    }
+});
+
+// ============================================
+// ENDPOINTS PROGRESO DOCENTE
+// ============================================
+
+// GET /api/docente/:docenteId/progreso/estadisticas - Obtener estadísticas de progreso para análisis
+app.get('/api/docente/:docenteId/progreso/estadisticas', async (req, res) => {
+    const { docenteId } = req.params;
+    const { establecimiento_id, curso_id, asignatura_id, trimestre } = req.query;
+
+    if (!curso_id || !asignatura_id || !establecimiento_id) {
+        return res.status(400).json({
+            success: false,
+            error: 'Debe especificar establecimiento, curso y asignatura'
+        });
+    }
+
+    try {
+        const anioActual = new Date().getFullYear();
+
+        // 1. Obtener todos los alumnos del curso
+        const [alumnosCurso] = await pool.query(`
+            SELECT DISTINCT
+                a.id as alumno_id,
+                a.nombres,
+                a.apellidos
+            FROM tb_alumnos a
+            JOIN tb_alumno_establecimiento ae ON a.id = ae.alumno_id
+            WHERE ae.curso_id = ?
+            AND ae.establecimiento_id = ?
+            AND ae.activo = 1
+            AND a.activo = 1
+            ORDER BY a.apellidos ASC, a.nombres ASC
+        `, [curso_id, establecimiento_id]);
+
+        const totalAlumnos = alumnosCurso.length;
+
+        if (totalAlumnos === 0) {
+            return res.json({
+                success: true,
+                data: {
+                    kpis: {
+                        totalAlumnos: 0, alumnosConNotas: 0, aprobados: 0, reprobados: 0,
+                        porcentajeAprobados: 0, porcentajeReprobados: 0,
+                        promedioCurso: 0, notaMaxima: 0, notaMinima: 0
+                    },
+                    distribucion: { insuficiente: 0, suficiente: 0, bueno: 0, excelente: 0 },
+                    promediosPorTrimestre: { 1: 0, 2: 0, 3: 0 },
+                    top5: [],
+                    alumnosAtencion: []
+                }
+            });
+        }
+
+        const alumnoIds = alumnosCurso.map(a => a.alumno_id);
+
+        // 2. Obtener todas las notas de esos alumnos en la asignatura
+        let notasQuery = `
+            SELECT
+                n.alumno_id,
+                n.trimestre,
+                n.nota
+            FROM tb_notas n
+            WHERE n.docente_id = ?
+            AND n.establecimiento_id = ?
+            AND n.curso_id = ?
+            AND n.asignatura_id = ?
+            AND n.alumno_id IN (?)
+            AND n.activo = 1
+            AND n.nota IS NOT NULL
+            AND n.anio_academico = ?
+        `;
+        const notasParams = [docenteId, establecimiento_id, curso_id, asignatura_id, alumnoIds, anioActual];
+
+        // Si se especifica trimestre, filtrar
+        if (trimestre && trimestre !== '') {
+            notasQuery += ` AND n.trimestre = ?`;
+            notasParams.push(parseInt(trimestre));
+        }
+
+        const [todasLasNotas] = await pool.query(notasQuery, notasParams);
+
+        // 3. Calcular promedio por alumno
+        const promediosPorAlumno = alumnosCurso.map(alumno => {
+            const notasAlumno = todasLasNotas.filter(n => n.alumno_id === alumno.alumno_id);
+            if (notasAlumno.length === 0) {
+                return { ...alumno, promedio: null, notas: [], cantidadNotas: 0 };
+            }
+            const suma = notasAlumno.reduce((acc, n) => acc + parseFloat(n.nota), 0);
+            const promedio = suma / notasAlumno.length;
+            const notasRojas = notasAlumno.filter(n => parseFloat(n.nota) < 4.0).length;
+            return {
+                ...alumno,
+                promedio: promedio,
+                notas: notasAlumno,
+                cantidadNotas: notasAlumno.length,
+                notasRojas: notasRojas
+            };
+        });
+
+        // Filtrar solo alumnos con notas
+        const alumnosConNotas = promediosPorAlumno.filter(p => p.promedio !== null);
+        const cantidadConNotas = alumnosConNotas.length;
+
+        if (cantidadConNotas === 0) {
+            return res.json({
+                success: true,
+                data: {
+                    kpis: {
+                        totalAlumnos, alumnosConNotas: 0, aprobados: 0, reprobados: 0,
+                        porcentajeAprobados: 0, porcentajeReprobados: 0,
+                        promedioCurso: 0, notaMaxima: 0, notaMinima: 0
+                    },
+                    distribucion: { insuficiente: 0, suficiente: 0, bueno: 0, excelente: 0 },
+                    promediosPorTrimestre: { 1: 0, 2: 0, 3: 0 },
+                    top5: [],
+                    alumnosAtencion: []
+                }
+            });
+        }
+
+        // 4. Calcular KPIs
+        const promedios = alumnosConNotas.map(a => a.promedio);
+        const aprobados = alumnosConNotas.filter(a => a.promedio >= 4.0).length;
+        const reprobados = cantidadConNotas - aprobados;
+        const promedioCurso = promedios.reduce((a, b) => a + b, 0) / promedios.length;
+        const notaMaxima = Math.max(...promedios);
+        const notaMinima = Math.min(...promedios);
+        const porcentajeAprobados = Math.round((aprobados / cantidadConNotas) * 100);
+        const porcentajeReprobados = Math.round((reprobados / cantidadConNotas) * 100);
+
+        // 5. Calcular distribución por rangos
+        const distribucion = {
+            insuficiente: alumnosConNotas.filter(a => a.promedio < 4.0).length,
+            suficiente: alumnosConNotas.filter(a => a.promedio >= 4.0 && a.promedio < 5.0).length,
+            bueno: alumnosConNotas.filter(a => a.promedio >= 5.0 && a.promedio < 6.0).length,
+            excelente: alumnosConNotas.filter(a => a.promedio >= 6.0).length
+        };
+
+        // 6. Calcular promedios por trimestre (solo si no se filtró por trimestre específico)
+        let promediosPorTrimestre = { 1: 0, 2: 0, 3: 0 };
+        if (!trimestre || trimestre === '') {
+            for (let t = 1; t <= 3; t++) {
+                const notasTrimestre = todasLasNotas.filter(n => n.trimestre === t);
+                if (notasTrimestre.length > 0) {
+                    const suma = notasTrimestre.reduce((acc, n) => acc + parseFloat(n.nota), 0);
+                    promediosPorTrimestre[t] = parseFloat((suma / notasTrimestre.length).toFixed(1));
+                }
+            }
+        } else {
+            // Si se filtró por trimestre, solo ese trimestre tendrá valor
+            const t = parseInt(trimestre);
+            if (todasLasNotas.length > 0) {
+                const suma = todasLasNotas.reduce((acc, n) => acc + parseFloat(n.nota), 0);
+                promediosPorTrimestre[t] = parseFloat((suma / todasLasNotas.length).toFixed(1));
+            }
+        }
+
+        // 7. Top 5 mejores promedios
+        const top5 = [...alumnosConNotas]
+            .sort((a, b) => b.promedio - a.promedio)
+            .slice(0, 5)
+            .map(a => ({
+                nombre: `${a.apellidos.split(' ')[0]}, ${a.nombres.split(' ')[0]}`,
+                promedio: parseFloat(a.promedio.toFixed(1))
+            }));
+
+        // 8. Alumnos que requieren atención (promedio < 4.0)
+        const alumnosAtencion = alumnosConNotas
+            .filter(a => a.promedio < 4.0)
+            .sort((a, b) => a.promedio - b.promedio)
+            .map(a => {
+                // Calcular tendencia basada en sus notas
+                let tendencia = 'estable';
+                if (a.notas.length >= 2) {
+                    const notasOrdenadas = [...a.notas].sort((x, y) => {
+                        if (x.trimestre !== y.trimestre) return x.trimestre - y.trimestre;
+                        return 0;
+                    });
+                    const mitad = Math.floor(notasOrdenadas.length / 2);
+                    const primerasMitad = notasOrdenadas.slice(0, mitad);
+                    const segundaMitad = notasOrdenadas.slice(mitad);
+
+                    const promPrimera = primerasMitad.reduce((acc, n) => acc + parseFloat(n.nota), 0) / primerasMitad.length;
+                    const promSegunda = segundaMitad.reduce((acc, n) => acc + parseFloat(n.nota), 0) / segundaMitad.length;
+
+                    if (promSegunda > promPrimera + 0.3) tendencia = 'mejorando';
+                    else if (promSegunda < promPrimera - 0.3) tendencia = 'empeorando';
+                }
+
+                return {
+                    alumno_id: a.alumno_id,
+                    nombre: `${a.apellidos}, ${a.nombres}`,
+                    promedio: parseFloat(a.promedio.toFixed(1)),
+                    notasRojas: a.notasRojas,
+                    tendencia: tendencia
+                };
+            });
+
+        res.json({
+            success: true,
+            data: {
+                kpis: {
+                    totalAlumnos,
+                    alumnosConNotas: cantidadConNotas,
+                    aprobados,
+                    reprobados,
+                    porcentajeAprobados,
+                    porcentajeReprobados,
+                    promedioCurso: parseFloat(promedioCurso.toFixed(1)),
+                    notaMaxima: parseFloat(notaMaxima.toFixed(1)),
+                    notaMinima: parseFloat(notaMinima.toFixed(1))
+                },
+                distribucion,
+                promediosPorTrimestre,
+                top5,
+                alumnosAtencion
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al obtener estadísticas de progreso:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener estadísticas de progreso' });
     }
 });
 

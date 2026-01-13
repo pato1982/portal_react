@@ -1,16 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import es from 'date-fns/locale/es';
+import 'react-datepicker/dist/react-datepicker.css';
 import { useResponsive, useDropdown } from '../../hooks';
-import {
-  SelectNativo,
-  SelectMovil,
-  AutocompleteAlumno,
-  formatearFecha,
-  getNotaClass,
-  formatearNombreCompleto
-} from './shared';
+import { SelectNativo, SelectMovil, AutocompleteAlumno } from './shared';
+import config from '../../config/env';
+
+// Registrar locale español
+registerLocale('es', es);
 
 // Modal de edicion
-const ModalEditar = ({ nota, editNota, setEditNota, editTrimestre, setEditTrimestre, editFecha, setEditFecha, editComentario, setEditComentario, onGuardar, onCerrar }) => (
+const ModalEditar = ({ nota, editNota, setEditNota, editTrimestre, setEditTrimestre, editFecha, setEditFecha, editComentario, setEditComentario, editPendiente, setEditPendiente, onGuardar, onCerrar, guardando }) => (
   <div className="modal-overlay" onClick={onCerrar}>
     <div className="modal" onClick={(e) => e.stopPropagation()}>
       <div className="modal-header">
@@ -20,21 +20,31 @@ const ModalEditar = ({ nota, editNota, setEditNota, editTrimestre, setEditTrimes
       <form onSubmit={onGuardar}>
         <div className="modal-body">
           <div className="docente-modal-info">
-            <div className="docente-info-item"><label>Alumno</label><span>{nota?.alumno_nombre}</span></div>
+            <div className="docente-info-item"><label>Alumno</label><span>{nota?.alumno_apellidos}, {nota?.alumno_nombres}</span></div>
             <div className="docente-info-item"><label>Curso</label><span>{nota?.curso_nombre}</span></div>
             <div className="docente-info-item"><label>Asignatura</label><span>{nota?.asignatura_nombre}</span></div>
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label>Nota</label>
-              <input type="number" className="form-control" min="1.0" max="7.0" step="0.1" value={editNota} onChange={(e) => setEditNota(e.target.value)} />
+              <label>Nota (1.0 - 7.0)</label>
+              <input
+                type="number"
+                className="form-control"
+                min="1.0"
+                max="7.0"
+                step="0.1"
+                value={editNota}
+                onChange={(e) => setEditNota(e.target.value)}
+                disabled={editPendiente}
+                required={!editPendiente}
+              />
             </div>
             <div className="form-group">
               <label>Trimestre</label>
               <select className="form-control" value={editTrimestre} onChange={(e) => setEditTrimestre(e.target.value)}>
-                <option value="1">Primer Trimestre</option>
-                <option value="2">Segundo Trimestre</option>
-                <option value="3">Tercer Trimestre</option>
+                <option value="1">1er Trimestre</option>
+                <option value="2">2do Trimestre</option>
+                <option value="3">3er Trimestre</option>
               </select>
             </div>
           </div>
@@ -42,14 +52,29 @@ const ModalEditar = ({ nota, editNota, setEditNota, editTrimestre, setEditTrimes
             <label>Fecha</label>
             <input type="date" className="form-control" value={editFecha} onChange={(e) => setEditFecha(e.target.value)} />
           </div>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={editPendiente}
+                onChange={(e) => {
+                  setEditPendiente(e.target.checked);
+                  if (e.target.checked) setEditNota('');
+                }}
+              />
+              <span style={{ fontSize: '13px', color: '#475569' }}>Nota pendiente</span>
+            </label>
+          </div>
           <div className="form-group">
             <label>Comentario</label>
-            <textarea className="form-control" rows="3" value={editComentario} onChange={(e) => setEditComentario(e.target.value)}></textarea>
+            <textarea className="form-control" rows="3" value={editComentario} onChange={(e) => setEditComentario(e.target.value)} placeholder="Observaciones opcionales..."></textarea>
           </div>
         </div>
         <div className="modal-footer">
-          <button type="button" className="btn btn-secondary" onClick={onCerrar}>Cancelar</button>
-          <button type="submit" className="btn btn-primary">Guardar Cambios</button>
+          <button type="button" className="btn btn-secondary" onClick={onCerrar} disabled={guardando}>Cancelar</button>
+          <button type="submit" className="btn btn-primary" disabled={guardando}>
+            {guardando ? 'Guardando...' : 'Guardar Cambios'}
+          </button>
         </div>
       </form>
     </div>
@@ -57,7 +82,7 @@ const ModalEditar = ({ nota, editNota, setEditNota, editTrimestre, setEditTrimes
 );
 
 // Modal de confirmacion eliminar
-const ModalEliminar = ({ nota, onConfirmar, onCerrar }) => (
+const ModalEliminar = ({ nota, onConfirmar, onCerrar, eliminando }) => (
   <div className="modal-overlay" onClick={onCerrar}>
     <div className="modal" onClick={(e) => e.stopPropagation()}>
       <div className="modal-header" style={{ background: '#fef2f2' }}>
@@ -73,26 +98,43 @@ const ModalEliminar = ({ nota, onConfirmar, onCerrar }) => (
           </svg>
           <div>
             <h4>Confirmar eliminacion</h4>
-            <p>Esta a punto de eliminar la nota de <strong>{nota?.alumno_nombre}</strong>. Esta accion no se puede deshacer.</p>
+            <p>Esta a punto de eliminar la nota de <strong>{nota?.alumno_apellidos}, {nota?.alumno_nombres}</strong> en <strong>{nota?.asignatura_nombre}</strong>. Esta accion no se puede deshacer.</p>
           </div>
         </div>
       </div>
       <div className="modal-footer">
-        <button className="btn btn-secondary" onClick={onCerrar}>Cancelar</button>
-        <button className="btn btn-danger" onClick={onConfirmar}>Eliminar Nota</button>
+        <button className="btn btn-secondary" onClick={onCerrar} disabled={eliminando}>Cancelar</button>
+        <button className="btn btn-danger" onClick={onConfirmar} disabled={eliminando}>
+          {eliminando ? 'Eliminando...' : 'Eliminar Nota'}
+        </button>
       </div>
     </div>
   </div>
 );
 
-function ModificarNotaTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas, onEditarNota, onEliminarNota }) {
+function ModificarNotaTab({ docenteId, establecimientoId }) {
+  // Estados para datos de API
+  const [cursos, setCursos] = useState([]);
+  const [asignaturas, setAsignaturas] = useState([]);
+  const [alumnos, setAlumnos] = useState([]);
+  const [fechasConNotas, setFechasConNotas] = useState([]);
+  const [resultados, setResultados] = useState([]);
+
+  // Estados de filtros
   const [filtroCurso, setFiltroCurso] = useState('');
   const [filtroCursoNombre, setFiltroCursoNombre] = useState('');
   const [filtroAsignatura, setFiltroAsignatura] = useState('');
   const [filtroAsignaturaNombre, setFiltroAsignaturaNombre] = useState('');
   const [filtroAlumno, setFiltroAlumno] = useState('');
   const [filtroAlumnoId, setFiltroAlumnoId] = useState('');
-  const [filtroFecha, setFiltroFecha] = useState('');
+  const [filtroFecha, setFiltroFecha] = useState(null);
+
+  // Estados de carga
+  const [cargandoCursos, setCargandoCursos] = useState(true);
+  const [cargandoAsignaturas, setCargandoAsignaturas] = useState(false);
+  const [cargandoAlumnos, setCargandoAlumnos] = useState(false);
+  const [cargandoFechas, setCargandoFechas] = useState(false);
+  const [buscando, setBuscando] = useState(false);
   const [buscado, setBuscado] = useState(false);
 
   // Estados modales
@@ -102,29 +144,122 @@ function ModificarNotaTab({ cursos, asignaciones, alumnosPorCurso, notasRegistra
   const [editTrimestre, setEditTrimestre] = useState('');
   const [editFecha, setEditFecha] = useState('');
   const [editComentario, setEditComentario] = useState('');
+  const [editPendiente, setEditPendiente] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+
   const [modalEliminar, setModalEliminar] = useState(false);
   const [notaEliminar, setNotaEliminar] = useState(null);
+  const [eliminando, setEliminando] = useState(false);
 
   const { isMobile } = useResponsive();
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
-  const asignaturasDisponibles = useMemo(() => {
-    if (!filtroCurso) return [];
-    return asignaciones.filter(a => a.curso_id === parseInt(filtroCurso)).map(a => ({ id: a.asignatura_id, nombre: a.asignatura_nombre }));
-  }, [filtroCurso, asignaciones]);
+  // Cargar cursos del docente
+  useEffect(() => {
+    const cargarCursos = async () => {
+      if (!docenteId || !establecimientoId) {
+        setCargandoCursos(false);
+        return;
+      }
 
-  const alumnosDelCurso = useMemo(() => filtroCurso ? (alumnosPorCurso[filtroCurso] || []) : [], [filtroCurso, alumnosPorCurso]);
+      try {
+        const response = await fetch(
+          `${config.apiBaseUrl}/docente/${docenteId}/cursos?establecimiento_id=${establecimientoId}`
+        );
+        const data = await response.json();
+        if (data.success) {
+          setCursos(data.data);
+        }
+      } catch (error) {
+        console.error('Error al cargar cursos:', error);
+      } finally {
+        setCargandoCursos(false);
+      }
+    };
 
-  const resultadosBusqueda = useMemo(() => {
-    if (!buscado) return [];
-    let resultados = [...notasRegistradas];
-    if (filtroCurso) resultados = resultados.filter(n => n.curso_id === parseInt(filtroCurso));
-    if (filtroAsignatura) resultados = resultados.filter(n => n.asignatura_id === parseInt(filtroAsignatura));
-    if (filtroAlumnoId) resultados = resultados.filter(n => n.alumno_id === filtroAlumnoId);
-    else if (filtroAlumno) resultados = resultados.filter(n => n.alumno_nombre.toLowerCase().includes(filtroAlumno.toLowerCase()));
-    if (filtroFecha) resultados = resultados.filter(n => n.fecha === filtroFecha);
-    return resultados;
-  }, [notasRegistradas, filtroCurso, filtroAsignatura, filtroAlumno, filtroAlumnoId, filtroFecha, buscado]);
+    cargarCursos();
+  }, [docenteId, establecimientoId]);
+
+  // Cargar asignaturas cuando se selecciona curso
+  useEffect(() => {
+    const cargarAsignaturas = async () => {
+      if (!filtroCurso || !docenteId || !establecimientoId) {
+        setAsignaturas([]);
+        return;
+      }
+
+      setCargandoAsignaturas(true);
+      try {
+        const response = await fetch(
+          `${config.apiBaseUrl}/docente/${docenteId}/asignaturas-por-curso/${filtroCurso}?establecimiento_id=${establecimientoId}`
+        );
+        const data = await response.json();
+        if (data.success) {
+          setAsignaturas(data.data);
+        }
+      } catch (error) {
+        console.error('Error al cargar asignaturas:', error);
+      } finally {
+        setCargandoAsignaturas(false);
+      }
+    };
+
+    cargarAsignaturas();
+  }, [filtroCurso, docenteId, establecimientoId]);
+
+  // Cargar alumnos cuando se selecciona curso
+  useEffect(() => {
+    const cargarAlumnos = async () => {
+      if (!filtroCurso) {
+        setAlumnos([]);
+        return;
+      }
+
+      setCargandoAlumnos(true);
+      try {
+        const response = await fetch(`${config.apiBaseUrl}/curso/${filtroCurso}/alumnos`);
+        const data = await response.json();
+        if (data.success) {
+          setAlumnos(data.data);
+        }
+      } catch (error) {
+        console.error('Error al cargar alumnos:', error);
+      } finally {
+        setCargandoAlumnos(false);
+      }
+    };
+
+    cargarAlumnos();
+  }, [filtroCurso]);
+
+  // Cargar fechas con notas cuando se selecciona curso
+  useEffect(() => {
+    const cargarFechasConNotas = async () => {
+      if (!filtroCurso || !docenteId || !establecimientoId) {
+        setFechasConNotas([]);
+        return;
+      }
+
+      setCargandoFechas(true);
+      try {
+        const response = await fetch(
+          `${config.apiBaseUrl}/docente/${docenteId}/fechas-con-notas?establecimiento_id=${establecimientoId}&curso_id=${filtroCurso}`
+        );
+        const data = await response.json();
+        if (data.success) {
+          // Convertir strings a objetos Date
+          const fechas = data.data.map(f => new Date(f + 'T00:00:00'));
+          setFechasConNotas(fechas);
+        }
+      } catch (error) {
+        console.error('Error al cargar fechas con notas:', error);
+      } finally {
+        setCargandoFechas(false);
+      }
+    };
+
+    cargarFechasConNotas();
+  }, [filtroCurso, docenteId, establecimientoId]);
 
   const handleCursoChange = (cursoId, nombre = '') => {
     setFiltroCurso(cursoId);
@@ -133,11 +268,14 @@ function ModificarNotaTab({ cursos, asignaciones, alumnosPorCurso, notasRegistra
     setFiltroAsignaturaNombre('');
     setFiltroAlumno('');
     setFiltroAlumnoId('');
+    setFiltroFecha(null);
+    setBuscado(false);
+    setResultados([]);
   };
 
   const handleSeleccionarAlumno = (alumno) => {
     if (alumno) {
-      setFiltroAlumno(`${alumno.nombres} ${alumno.apellidos}`);
+      setFiltroAlumno(`${alumno.apellidos}, ${alumno.nombres}`);
       setFiltroAlumnoId(alumno.id);
     } else {
       setFiltroAlumno('');
@@ -152,72 +290,320 @@ function ModificarNotaTab({ cursos, asignaciones, alumnosPorCurso, notasRegistra
     setFiltroAsignaturaNombre('');
     setFiltroAlumno('');
     setFiltroAlumnoId('');
-    setFiltroFecha('');
+    setFiltroFecha(null);
     setBuscado(false);
+    setResultados([]);
+  };
+
+  const buscarNotas = async () => {
+    if (!filtroCurso) {
+      alert('Debe seleccionar un curso');
+      return;
+    }
+
+    setBuscando(true);
+    try {
+      let url = `${config.apiBaseUrl}/docente/${docenteId}/notas/buscar?establecimiento_id=${establecimientoId}&curso_id=${filtroCurso}`;
+
+      if (filtroAsignatura) url += `&asignatura_id=${filtroAsignatura}`;
+      if (filtroAlumnoId) url += `&alumno_id=${filtroAlumnoId}`;
+      if (filtroFecha) {
+        const fechaStr = filtroFecha.toISOString().split('T')[0];
+        url += `&fecha=${fechaStr}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setResultados(data.data);
+      } else {
+        alert(data.error || 'Error al buscar notas');
+      }
+    } catch (error) {
+      console.error('Error al buscar notas:', error);
+      alert('Error al buscar notas');
+    } finally {
+      setBuscando(false);
+      setBuscado(true);
+    }
   };
 
   const abrirModalEditar = (nota) => {
     setNotaEditando(nota);
     setEditNota(nota.nota !== null ? nota.nota.toString() : '');
     setEditTrimestre(nota.trimestre.toString());
-    setEditFecha(nota.fecha);
+    setEditFecha(nota.fecha_evaluacion ? nota.fecha_evaluacion.split('T')[0] : '');
     setEditComentario(nota.comentario || '');
+    setEditPendiente(nota.es_pendiente === 1);
     setModalEditar(true);
   };
 
-  const guardarEdicion = (e) => {
+  const guardarEdicion = async (e) => {
     e.preventDefault();
-    onEditarNota(notaEditando.id, {
-      nota: editNota ? parseFloat(editNota) : null,
-      trimestre: parseInt(editTrimestre),
-      fecha: editFecha,
-      comentario: editComentario
-    });
-    setModalEditar(false);
-    alert('Nota actualizada exitosamente');
+
+    if (!editPendiente && !editNota) {
+      alert('Debe ingresar una nota o marcar como pendiente');
+      return;
+    }
+
+    if (!editPendiente && (parseFloat(editNota) < 1.0 || parseFloat(editNota) > 7.0)) {
+      alert('La nota debe estar entre 1.0 y 7.0');
+      return;
+    }
+
+    setGuardando(true);
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/notas/${notaEditando.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nota: editPendiente ? null : parseFloat(editNota),
+          trimestre: parseInt(editTrimestre),
+          fecha_evaluacion: editFecha || null,
+          comentario: editComentario || null,
+          es_pendiente: editPendiente
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Nota actualizada exitosamente');
+        setModalEditar(false);
+        // Recargar resultados
+        buscarNotas();
+      } else {
+        alert(data.error || 'Error al actualizar nota');
+      }
+    } catch (error) {
+      console.error('Error al actualizar nota:', error);
+      alert('Error al actualizar nota');
+    } finally {
+      setGuardando(false);
+    }
   };
 
-  const confirmarEliminar = () => {
-    onEliminarNota(notaEliminar.id);
-    setModalEliminar(false);
-    alert('Nota eliminada exitosamente');
+  const confirmarEliminar = async () => {
+    setEliminando(true);
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/notas/${notaEliminar.id}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Nota eliminada exitosamente');
+        setModalEliminar(false);
+        // Recargar resultados
+        buscarNotas();
+      } else {
+        alert(data.error || 'Error al eliminar nota');
+      }
+    } catch (error) {
+      console.error('Error al eliminar nota:', error);
+      alert('Error al eliminar nota');
+    } finally {
+      setEliminando(false);
+    }
   };
+
+  const formatearFecha = (fecha) => {
+    if (!fecha) return '-';
+    const date = new Date(fecha);
+    return date.toLocaleDateString('es-CL');
+  };
+
+  const getNotaClass = (nota, esPendiente) => {
+    if (esPendiente) return 'nota-pendiente';
+    if (nota === null) return '';
+    return nota >= 4.0 ? 'nota-aprobada' : 'nota-reprobada';
+  };
+
+  // Función para resaltar fechas con notas en el calendario
+  const highlightDatesWithNotes = (date) => {
+    const isHighlighted = fechasConNotas.some(
+      f => f.toDateString() === date.toDateString()
+    );
+    return isHighlighted ? 'fecha-con-notas' : 'fecha-sin-notas';
+  };
+
+  // Componente DatePicker personalizado
+  const DatePickerCustom = () => (
+    <div className="form-group">
+      <label>Fecha</label>
+      <DatePicker
+        selected={filtroFecha}
+        onChange={(date) => setFiltroFecha(date)}
+        dateFormat="dd/MM/yyyy"
+        locale="es"
+        placeholderText={filtroCurso ? "Seleccionar fecha" : "Primero seleccione curso"}
+        disabled={!filtroCurso || cargandoFechas}
+        isClearable
+        className="form-control"
+        dayClassName={highlightDatesWithNotes}
+        showMonthDropdown
+        showYearDropdown
+        dropdownMode="select"
+      />
+      {filtroCurso && fechasConNotas.length > 0 && (
+        <small style={{ color: '#64748b', fontSize: '11px', marginTop: '4px', display: 'block' }}>
+          Fechas resaltadas tienen notas registradas
+        </small>
+      )}
+    </div>
+  );
 
   return (
     <div className="tab-panel active">
+      {/* Estilos para el calendario */}
+      <style>{`
+        .fecha-con-notas {
+          background-color: #3b82f6 !important;
+          color: white !important;
+          border-radius: 50%;
+          font-weight: 600;
+        }
+        .fecha-con-notas:hover {
+          background-color: #2563eb !important;
+        }
+        .fecha-sin-notas {
+          color: #cbd5e1 !important;
+        }
+        .fecha-sin-notas:hover {
+          background-color: #f1f5f9 !important;
+          color: #64748b !important;
+        }
+        .react-datepicker__day--selected {
+          background-color: #1e40af !important;
+        }
+        .react-datepicker__day--today {
+          font-weight: bold;
+          border: 2px solid #3b82f6;
+        }
+        .react-datepicker {
+          font-family: inherit;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .react-datepicker__header {
+          background-color: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .react-datepicker__current-month {
+          color: #1e293b;
+          font-weight: 600;
+        }
+        .react-datepicker__day-name {
+          color: #64748b;
+        }
+      `}</style>
+
       <div className="card">
         <div className="card-header"><h3>Buscar Nota</h3></div>
         <div className="card-body">
           {isMobile ? (
             <>
               <div className="form-row-movil">
-                <SelectMovil label="Curso" value={filtroCurso} valueName={filtroCursoNombre} onChange={handleCursoChange} options={cursos} placeholder="Seleccionar..." isOpen={dropdownAbierto === 'curso'} onToggle={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')} onClose={() => setDropdownAbierto(null)} />
-                <SelectMovil label="Asignatura" value={filtroAsignatura} valueName={filtroAsignaturaNombre} onChange={(id, nombre) => { setFiltroAsignatura(id); setFiltroAsignaturaNombre(nombre); }} options={asignaturasDisponibles} placeholder="Todas" disabled={!filtroCurso} isOpen={dropdownAbierto === 'asignatura'} onToggle={() => setDropdownAbierto(dropdownAbierto === 'asignatura' ? null : 'asignatura')} onClose={() => setDropdownAbierto(null)} />
+                {cargandoCursos ? (
+                  <div className="form-group">
+                    <label>Curso</label>
+                    <div style={{ padding: '8px', color: '#64748b' }}>Cargando...</div>
+                  </div>
+                ) : (
+                  <SelectMovil
+                    label="Curso"
+                    value={filtroCurso}
+                    valueName={filtroCursoNombre}
+                    onChange={handleCursoChange}
+                    options={cursos}
+                    placeholder="Seleccionar..."
+                    isOpen={dropdownAbierto === 'curso'}
+                    onToggle={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
+                    onClose={() => setDropdownAbierto(null)}
+                  />
+                )}
+                <SelectMovil
+                  label="Asignatura"
+                  value={filtroAsignatura}
+                  valueName={filtroAsignaturaNombre}
+                  onChange={(id, nombre) => { setFiltroAsignatura(id); setFiltroAsignaturaNombre(nombre); }}
+                  options={asignaturas}
+                  placeholder={cargandoAsignaturas ? 'Cargando...' : 'Todas'}
+                  disabled={!filtroCurso || cargandoAsignaturas}
+                  isOpen={dropdownAbierto === 'asignatura'}
+                  onToggle={() => setDropdownAbierto(dropdownAbierto === 'asignatura' ? null : 'asignatura')}
+                  onClose={() => setDropdownAbierto(null)}
+                />
               </div>
               <div className="form-row-movil">
-                <AutocompleteAlumno alumnos={alumnosDelCurso} alumnoSeleccionado={filtroAlumnoId} busqueda={filtroAlumno} onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }} onSeleccionar={handleSeleccionarAlumno} disabled={!filtroCurso} placeholder="Todos" onDropdownOpen={() => setDropdownAbierto(null)} />
-                <div className="form-group">
-                  <label>Fecha</label>
-                  <input type="date" className="form-control" value={filtroFecha} onChange={(e) => setFiltroFecha(e.target.value)} />
-                </div>
+                <AutocompleteAlumno
+                  alumnos={alumnos}
+                  alumnoSeleccionado={filtroAlumnoId}
+                  busqueda={filtroAlumno}
+                  onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
+                  onSeleccionar={handleSeleccionarAlumno}
+                  disabled={!filtroCurso || cargandoAlumnos}
+                  placeholder={cargandoAlumnos ? 'Cargando...' : 'Todos'}
+                  onDropdownOpen={() => setDropdownAbierto(null)}
+                />
+                <DatePickerCustom />
               </div>
               <div className="form-actions form-actions-movil">
                 <button type="button" className="btn btn-secondary" onClick={limpiarBusqueda}>Limpiar</button>
-                <button type="button" className="btn btn-primary" onClick={() => setBuscado(true)}>Buscar</button>
+                <button type="button" className="btn btn-primary" onClick={buscarNotas} disabled={buscando || !filtroCurso}>
+                  {buscando ? 'Buscando...' : 'Buscar'}
+                </button>
               </div>
             </>
           ) : (
             <div className="docente-filtros-row" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr auto' }}>
-              <SelectNativo label="Curso" value={filtroCurso} onChange={(e) => { const curso = cursos.find(c => c.id.toString() === e.target.value); handleCursoChange(e.target.value, curso?.nombre || ''); }} options={cursos} placeholder="Seleccionar curso" />
-              <SelectNativo label="Asignatura" value={filtroAsignatura} onChange={(e) => { const asig = asignaturasDisponibles.find(a => a.id.toString() === e.target.value); setFiltroAsignatura(e.target.value); setFiltroAsignaturaNombre(asig?.nombre || ''); }} options={asignaturasDisponibles} placeholder={filtroCurso ? 'Todas las asignaturas' : 'Primero seleccione curso'} disabled={!filtroCurso} />
-              <AutocompleteAlumno alumnos={alumnosDelCurso} alumnoSeleccionado={filtroAlumnoId} busqueda={filtroAlumno} onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }} onSeleccionar={handleSeleccionarAlumno} disabled={!filtroCurso} placeholder={filtroCurso ? "Todos los alumnos" : "Primero seleccione curso"} />
-              <div className="form-group">
-                <label>Fecha</label>
-                <input type="date" className="form-control" value={filtroFecha} onChange={(e) => setFiltroFecha(e.target.value)} />
-              </div>
+              {cargandoCursos ? (
+                <div className="form-group">
+                  <label>Curso</label>
+                  <div style={{ padding: '8px', color: '#64748b' }}>Cargando cursos...</div>
+                </div>
+              ) : (
+                <SelectNativo
+                  label="Curso"
+                  value={filtroCurso}
+                  onChange={(e) => {
+                    const curso = cursos.find(c => c.id.toString() === e.target.value);
+                    handleCursoChange(e.target.value, curso?.nombre || '');
+                  }}
+                  options={cursos}
+                  placeholder="Seleccionar curso"
+                />
+              )}
+              <SelectNativo
+                label="Asignatura"
+                value={filtroAsignatura}
+                onChange={(e) => {
+                  const asig = asignaturas.find(a => a.id.toString() === e.target.value);
+                  setFiltroAsignatura(e.target.value);
+                  setFiltroAsignaturaNombre(asig?.nombre || '');
+                }}
+                options={asignaturas}
+                placeholder={cargandoAsignaturas ? 'Cargando...' : (filtroCurso ? 'Todas las asignaturas' : 'Primero seleccione curso')}
+                disabled={!filtroCurso || cargandoAsignaturas}
+              />
+              <AutocompleteAlumno
+                alumnos={alumnos}
+                alumnoSeleccionado={filtroAlumnoId}
+                busqueda={filtroAlumno}
+                onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
+                onSeleccionar={handleSeleccionarAlumno}
+                disabled={!filtroCurso || cargandoAlumnos}
+                placeholder={cargandoAlumnos ? 'Cargando...' : (filtroCurso ? 'Todos los alumnos' : 'Primero seleccione curso')}
+              />
+              <DatePickerCustom />
               <div className="docente-filtros-actions">
                 <button type="button" className="btn btn-secondary" onClick={limpiarBusqueda}>Limpiar</button>
-                <button type="button" className="btn btn-primary" onClick={() => setBuscado(true)}>Buscar</button>
+                <button type="button" className="btn btn-primary" onClick={buscarNotas} disabled={buscando || !filtroCurso}>
+                  {buscando ? 'Buscando...' : 'Buscar'}
+                </button>
               </div>
             </div>
           )}
@@ -225,28 +611,39 @@ function ModificarNotaTab({ cursos, asignaciones, alumnosPorCurso, notasRegistra
       </div>
 
       <div className="card" style={{ marginTop: '20px' }}>
-        <div className="card-header"><h3>Resultados</h3></div>
+        <div className="card-header">
+          <h3>Resultados {buscado && `(${resultados.length})`}</h3>
+        </div>
         <div className="card-body">
           <div className="table-responsive table-scroll">
             <table className={`data-table ${isMobile ? 'tabla-compacta-movil' : ''}`}>
               <thead>
                 <tr>
                   <th>Alumno</th>
-                  <th>Asignatura</th>
+                  {!isMobile && <th>Asignatura</th>}
                   <th>Nota</th>
-                  <th>Trimestre</th>
+                  <th>Trim.</th>
                   <th>Fecha</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {resultadosBusqueda.length > 0 ? resultadosBusqueda.map(nota => (
+                {buscando ? (
+                  <tr><td colSpan={isMobile ? 5 : 6} className="text-center text-muted">Buscando...</td></tr>
+                ) : resultados.length > 0 ? resultados.map(nota => (
                   <tr key={nota.id}>
-                    <td>{formatearNombreCompleto(nota.alumno_nombre)}</td>
-                    <td>{nota.asignatura_nombre}</td>
-                    <td><span className={`docente-nota-badge ${getNotaClass(nota.nota)}`}>{nota.nota !== null ? nota.nota.toFixed(1) : 'P'}</span></td>
-                    <td>{nota.trimestre}</td>
-                    <td>{formatearFecha(nota.fecha)}</td>
+                    <td>
+                      {nota.alumno_apellidos}, {isMobile ? nota.alumno_nombres?.split(' ')[0] : nota.alumno_nombres}
+                      {isMobile && <div style={{ fontSize: '11px', color: '#64748b' }}>{nota.asignatura_nombre}</div>}
+                    </td>
+                    {!isMobile && <td>{nota.asignatura_nombre}</td>}
+                    <td>
+                      <span className={`docente-nota-badge ${getNotaClass(nota.nota, nota.es_pendiente)}`}>
+                        {nota.es_pendiente ? 'Pend.' : (nota.nota !== null ? nota.nota.toFixed(1) : '-')}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>{nota.trimestre}°</td>
+                    <td>{formatearFecha(nota.fecha_evaluacion)}</td>
                     <td>
                       <div className="acciones-btns">
                         <button className="btn-icon btn-icon-edit" onClick={() => abrirModalEditar(nota)} title="Editar">
@@ -265,7 +662,11 @@ function ModificarNotaTab({ cursos, asignaciones, alumnosPorCurso, notasRegistra
                     </td>
                   </tr>
                 )) : (
-                  <tr><td colSpan="6" className="text-center text-muted">{buscado ? 'No se encontraron notas' : 'Realice una busqueda'}</td></tr>
+                  <tr>
+                    <td colSpan={isMobile ? 5 : 6} className="text-center text-muted">
+                      {buscado ? 'No se encontraron notas con los filtros seleccionados' : 'Seleccione un curso y presione Buscar'}
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -273,8 +674,32 @@ function ModificarNotaTab({ cursos, asignaciones, alumnosPorCurso, notasRegistra
         </div>
       </div>
 
-      {modalEditar && <ModalEditar nota={notaEditando} editNota={editNota} setEditNota={setEditNota} editTrimestre={editTrimestre} setEditTrimestre={setEditTrimestre} editFecha={editFecha} setEditFecha={setEditFecha} editComentario={editComentario} setEditComentario={setEditComentario} onGuardar={guardarEdicion} onCerrar={() => setModalEditar(false)} />}
-      {modalEliminar && <ModalEliminar nota={notaEliminar} onConfirmar={confirmarEliminar} onCerrar={() => setModalEliminar(false)} />}
+      {modalEditar && (
+        <ModalEditar
+          nota={notaEditando}
+          editNota={editNota}
+          setEditNota={setEditNota}
+          editTrimestre={editTrimestre}
+          setEditTrimestre={setEditTrimestre}
+          editFecha={editFecha}
+          setEditFecha={setEditFecha}
+          editComentario={editComentario}
+          setEditComentario={setEditComentario}
+          editPendiente={editPendiente}
+          setEditPendiente={setEditPendiente}
+          onGuardar={guardarEdicion}
+          onCerrar={() => setModalEditar(false)}
+          guardando={guardando}
+        />
+      )}
+      {modalEliminar && (
+        <ModalEliminar
+          nota={notaEliminar}
+          onConfirmar={confirmarEliminar}
+          onCerrar={() => setModalEliminar(false)}
+          eliminando={eliminando}
+        />
+      )}
     </div>
   );
 }

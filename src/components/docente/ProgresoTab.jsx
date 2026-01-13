@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { useResponsive, useDropdown } from '../../hooks';
 import {
   DocenteKPICard,
-  FiltrosDocente,
   baseChartOptions,
   lineChartOptions,
   horizontalBarOptions,
@@ -12,203 +11,349 @@ import {
   chartColors,
   formatearNombreCompleto
 } from './shared';
+import config from '../../config/env';
 
-function ProgresoTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas }) {
+function ProgresoTab({ docenteId, establecimientoId }) {
+  // Estados para filtros
+  const [cursos, setCursos] = useState([]);
+  const [asignaturas, setAsignaturas] = useState([]);
   const [cursoSeleccionado, setCursoSeleccionado] = useState('');
   const [cursoNombre, setCursoNombre] = useState('');
   const [asignaturaSeleccionada, setAsignaturaSeleccionada] = useState('');
   const [asignaturaNombre, setAsignaturaNombre] = useState('');
   const [trimestreSeleccionado, setTrimestreSeleccionado] = useState('');
-  const [trimestreNombre, setTrimestreNombre] = useState('');
-  const [analizado, setAnalizado] = useState(false);
+
+  // Estados para datos
+  const [estadisticas, setEstadisticas] = useState(null);
+  const [cargandoCursos, setCargandoCursos] = useState(true);
+  const [cargandoEstadisticas, setCargandoEstadisticas] = useState(false);
+  const [error, setError] = useState('');
 
   const { isMobile } = useResponsive();
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
-  const asignaturasDisponibles = useMemo(() => {
-    if (!cursoSeleccionado) return [];
-    return asignaciones
-      .filter(a => a.curso_id === parseInt(cursoSeleccionado))
-      .map(a => ({ id: a.asignatura_id, nombre: a.asignatura_nombre }));
-  }, [cursoSeleccionado, asignaciones]);
+  const trimestres = [
+    { id: '', nombre: 'Todos los trimestres' },
+    { id: '1', nombre: '1er Trimestre' },
+    { id: '2', nombre: '2do Trimestre' },
+    { id: '3', nombre: '3er Trimestre' }
+  ];
 
-  const estadisticas = useMemo(() => {
-    if (!analizado || !cursoSeleccionado || !asignaturaSeleccionada) return null;
-
-    const alumnos = alumnosPorCurso[cursoSeleccionado] || [];
-    const cursoId = parseInt(cursoSeleccionado);
-    const asignaturaId = parseInt(asignaturaSeleccionada);
-    const trimestre = trimestreSeleccionado ? parseInt(trimestreSeleccionado) : null;
-
-    let notasFiltradas = notasRegistradas.filter(n =>
-      n.curso_id === cursoId && n.asignatura_id === asignaturaId && n.nota !== null
-    );
-    if (trimestre) notasFiltradas = notasFiltradas.filter(n => n.trimestre === trimestre);
-
-    const promediosPorAlumno = alumnos.map(alumno => {
-      const notasAlumno = notasFiltradas.filter(n => n.alumno_id === alumno.id);
-      if (notasAlumno.length === 0) return { alumno, promedio: null, notas: [] };
-      const promedio = notasAlumno.reduce((a, b) => a + b.nota, 0) / notasAlumno.length;
-      return { alumno, promedio, notas: notasAlumno };
-    }).filter(p => p.promedio !== null);
-
-    if (promediosPorAlumno.length === 0) {
-      return {
-        totalAlumnos: alumnos.length, alumnosConNotas: 0, aprobados: 0, reprobados: 0,
-        promedioCurso: 0, notaMaxima: 0, notaMinima: 0, porcentajeAprobados: 0, porcentajeReprobados: 0,
-        distribucion: { excelente: 0, bueno: 0, suficiente: 0, insuficiente: 0 },
-        alumnosAtencion: [], top5: [], promediosPorTrimestre: { 1: 0, 2: 0, 3: 0 }
-      };
-    }
-
-    const promedios = promediosPorAlumno.map(p => p.promedio);
-    const aprobados = promediosPorAlumno.filter(p => p.promedio >= 4.0).length;
-    const reprobados = promediosPorAlumno.length - aprobados;
-    const promedioCurso = promedios.reduce((a, b) => a + b, 0) / promedios.length;
-
-    const distribucion = {
-      excelente: promediosPorAlumno.filter(p => p.promedio >= 6.0).length,
-      bueno: promediosPorAlumno.filter(p => p.promedio >= 5.0 && p.promedio < 6.0).length,
-      suficiente: promediosPorAlumno.filter(p => p.promedio >= 4.0 && p.promedio < 5.0).length,
-      insuficiente: promediosPorAlumno.filter(p => p.promedio < 4.0).length
-    };
-
-    const alumnosAtencion = promediosPorAlumno
-      .filter(p => p.promedio < 4.0)
-      .sort((a, b) => a.promedio - b.promedio)
-      .map(p => ({
-        nombre: `${p.alumno.nombres} ${p.alumno.apellidos}`,
-        promedio: p.promedio,
-        notasRojas: p.notas.filter(n => n.nota < 4.0).length,
-        tendencia: 'estable'
-      }));
-
-    const top5 = [...promediosPorAlumno]
-      .sort((a, b) => b.promedio - a.promedio)
-      .slice(0, 5)
-      .map(p => ({
-        nombre: `${p.alumno.apellidos.split(' ')[0]}, ${p.alumno.nombres.split(' ')[0]}`,
-        promedio: p.promedio
-      }));
-
-    const promediosPorTrimestre = { 1: 0, 2: 0, 3: 0 };
-    [1, 2, 3].forEach(trim => {
-      const notasTrim = notasRegistradas.filter(n =>
-        n.curso_id === cursoId && n.asignatura_id === asignaturaId && n.trimestre === trim && n.nota !== null
-      );
-      if (notasTrim.length > 0) {
-        promediosPorTrimestre[trim] = notasTrim.reduce((a, b) => a + b.nota, 0) / notasTrim.length;
+  // Cargar cursos y asignaturas del docente
+  useEffect(() => {
+    const cargarCursosAsignaturas = async () => {
+      if (!docenteId || !establecimientoId) {
+        setCargandoCursos(false);
+        return;
       }
-    });
 
-    return {
-      totalAlumnos: alumnos.length, alumnosConNotas: promediosPorAlumno.length, aprobados, reprobados,
-      promedioCurso, notaMaxima: Math.max(...promedios), notaMinima: Math.min(...promedios),
-      porcentajeAprobados: Math.round((aprobados / promediosPorAlumno.length) * 100),
-      porcentajeReprobados: Math.round((reprobados / promediosPorAlumno.length) * 100),
-      distribucion, alumnosAtencion, top5, promediosPorTrimestre
+      setCargandoCursos(true);
+      try {
+        const response = await fetch(
+          `${config.apiBaseUrl}/docente/${docenteId}/cursos-asignaturas?establecimiento_id=${establecimientoId}`
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          setCursos(data.data.cursos || []);
+          // Las asignaturas se filtrarán cuando se seleccione un curso
+        } else {
+          setError('Error al cargar cursos');
+        }
+      } catch (err) {
+        console.error('Error al cargar cursos:', err);
+        setError('Error de conexion');
+      } finally {
+        setCargandoCursos(false);
+      }
     };
-  }, [analizado, cursoSeleccionado, asignaturaSeleccionada, trimestreSeleccionado, alumnosPorCurso, notasRegistradas]);
 
-  const handleCursoChange = (cursoId, nombre) => {
+    cargarCursosAsignaturas();
+  }, [docenteId, establecimientoId]);
+
+  // Cargar asignaturas cuando cambia el curso
+  useEffect(() => {
+    const cargarAsignaturas = async () => {
+      if (!cursoSeleccionado || !docenteId || !establecimientoId) {
+        setAsignaturas([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${config.apiBaseUrl}/docente/${docenteId}/cursos-asignaturas?establecimiento_id=${establecimientoId}`
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          const asignaturasDelCurso = data.data.asignaturas.filter(
+            a => a.curso_id === parseInt(cursoSeleccionado)
+          );
+          setAsignaturas(asignaturasDelCurso);
+        }
+      } catch (err) {
+        console.error('Error al cargar asignaturas:', err);
+      }
+    };
+
+    cargarAsignaturas();
+  }, [cursoSeleccionado, docenteId, establecimientoId]);
+
+  const handleCursoChange = (e) => {
+    const cursoId = e.target.value;
+    const curso = cursos.find(c => c.id === parseInt(cursoId));
     setCursoSeleccionado(cursoId);
-    setCursoNombre(nombre);
+    setCursoNombre(curso ? curso.nombre : '');
     setAsignaturaSeleccionada('');
     setAsignaturaNombre('');
-    setAnalizado(false);
+    setEstadisticas(null);
   };
 
-  const analizarProgreso = () => {
+  const handleAsignaturaChange = (e) => {
+    const asignaturaId = e.target.value;
+    const asignatura = asignaturas.find(a => a.asignatura_id === parseInt(asignaturaId));
+    setAsignaturaSeleccionada(asignaturaId);
+    setAsignaturaNombre(asignatura ? asignatura.asignatura_nombre : '');
+  };
+
+  const handleTrimestreChange = (e) => {
+    setTrimestreSeleccionado(e.target.value);
+  };
+
+  const analizarProgreso = async () => {
     if (!cursoSeleccionado || !asignaturaSeleccionada) {
-      alert('Seleccione curso y asignatura');
+      setError('Seleccione curso y asignatura');
       return;
     }
-    setAnalizado(true);
+
+    setError('');
+    setCargandoEstadisticas(true);
+
+    try {
+      let url = `${config.apiBaseUrl}/docente/${docenteId}/progreso/estadisticas?establecimiento_id=${establecimientoId}&curso_id=${cursoSeleccionado}&asignatura_id=${asignaturaSeleccionada}`;
+
+      if (trimestreSeleccionado) {
+        url += `&trimestre=${trimestreSeleccionado}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setEstadisticas(data.data);
+      } else {
+        setError(data.error || 'Error al obtener estadisticas');
+      }
+    } catch (err) {
+      console.error('Error al analizar progreso:', err);
+      setError('Error de conexion');
+    } finally {
+      setCargandoEstadisticas(false);
+    }
   };
 
   // Datos para graficos
-  const chartDistribucion = {
+  const chartDistribucion = useMemo(() => ({
     labels: ['1.0-3.9', '4.0-4.9', '5.0-5.9', '6.0-7.0'],
     datasets: [{
       data: estadisticas ? [
-        estadisticas.distribucion.insuficiente, estadisticas.distribucion.suficiente,
-        estadisticas.distribucion.bueno, estadisticas.distribucion.excelente
+        estadisticas.distribucion.insuficiente,
+        estadisticas.distribucion.suficiente,
+        estadisticas.distribucion.bueno,
+        estadisticas.distribucion.excelente
       ] : [0, 0, 0, 0],
       backgroundColor: chartColors.distribucion,
       borderRadius: 4
     }]
-  };
+  }), [estadisticas]);
 
-  const chartTrimestre = {
+  const chartTrimestre = useMemo(() => ({
     labels: ['Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
     datasets: [{
       label: 'Promedio',
       data: estadisticas ? [
-        null, null, estadisticas.promediosPorTrimestre[1],
-        null, null, estadisticas.promediosPorTrimestre[2],
-        null, null, null, estadisticas.promediosPorTrimestre[3]
+        null, null, estadisticas.promediosPorTrimestre[1] || null,
+        null, null, estadisticas.promediosPorTrimestre[2] || null,
+        null, null, null, estadisticas.promediosPorTrimestre[3] || null
       ] : [null, null, 0, null, null, 0, null, null, null, 0],
       borderColor: chartColors.primary,
       backgroundColor: chartColors.primaryLight,
-      fill: true, tension: 0.4, spanGaps: true, pointRadius: 6, pointBackgroundColor: chartColors.primary
+      fill: true,
+      tension: 0.4,
+      spanGaps: true,
+      pointRadius: 6,
+      pointBackgroundColor: chartColors.primary
     }]
-  };
+  }), [estadisticas]);
 
-  const chartAprobacion = {
+  const chartAprobacion = useMemo(() => ({
     labels: ['Aprobados', 'Necesitan Apoyo'],
     datasets: [{
-      data: estadisticas ? [estadisticas.aprobados, estadisticas.reprobados] : [0, 0],
+      data: estadisticas ? [estadisticas.kpis.aprobados, estadisticas.kpis.reprobados] : [0, 0],
       backgroundColor: chartColors.aprobacion,
       borderWidth: 0
     }]
-  };
+  }), [estadisticas]);
 
-  const chartTop5 = {
+  const chartTop5 = useMemo(() => ({
     labels: estadisticas?.top5.map(a => a.nombre) || [],
     datasets: [{
       data: estadisticas?.top5.map(a => a.promedio) || [],
       backgroundColor: chartColors.top5,
       borderRadius: 4
     }]
-  };
+  }), [estadisticas]);
+
+  if (cargandoCursos) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p>Cargando datos...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="tab-panel active">
       <div className="card">
         <div className="card-header"><h3>Parametros de Analisis</h3></div>
         <div className="card-body">
-          <FiltrosDocente
-            isMobile={isMobile}
-            cursos={cursos}
-            asignaturas={asignaturasDisponibles}
-            cursoSeleccionado={cursoSeleccionado}
-            cursoNombre={cursoNombre}
-            asignaturaSeleccionada={asignaturaSeleccionada}
-            asignaturaNombre={asignaturaNombre}
-            trimestreSeleccionado={trimestreSeleccionado}
-            trimestreNombre={trimestreNombre}
-            onCursoChange={handleCursoChange}
-            onAsignaturaChange={(id, nombre) => { setAsignaturaSeleccionada(id); setAsignaturaNombre(nombre); }}
-            onTrimestreChange={(id, nombre) => { setTrimestreSeleccionado(id); setTrimestreNombre(nombre); }}
-            onAccion={analizarProgreso}
-            accionTexto="Analizar"
-            dropdownAbierto={dropdownAbierto}
-            setDropdownAbierto={setDropdownAbierto}
-          />
+          <div className="filtros-docente-grid">
+            {/* Selector de Curso */}
+            <div className="filtro-grupo">
+              <label className="filtro-label">Curso</label>
+              <select
+                className="form-control"
+                value={cursoSeleccionado}
+                onChange={handleCursoChange}
+              >
+                <option value="">Seleccionar curso</option>
+                {cursos.map(curso => (
+                  <option key={curso.id} value={curso.id}>
+                    {curso.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Selector de Asignatura */}
+            <div className="filtro-grupo">
+              <label className="filtro-label">Asignatura</label>
+              <select
+                className="form-control"
+                value={asignaturaSeleccionada}
+                onChange={handleAsignaturaChange}
+                disabled={!cursoSeleccionado}
+              >
+                <option value="">Seleccionar asignatura</option>
+                {asignaturas.map(asig => (
+                  <option key={asig.asignatura_id} value={asig.asignatura_id}>
+                    {asig.asignatura_nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Selector de Trimestre */}
+            <div className="filtro-grupo">
+              <label className="filtro-label">Trimestre</label>
+              <select
+                className="form-control"
+                value={trimestreSeleccionado}
+                onChange={handleTrimestreChange}
+              >
+                {trimestres.map(trim => (
+                  <option key={trim.id} value={trim.id}>
+                    {trim.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Boton Analizar */}
+            <div className="filtro-grupo filtro-accion">
+              <button
+                className="btn btn-primary"
+                onClick={analizarProgreso}
+                disabled={!cursoSeleccionado || !asignaturaSeleccionada || cargandoEstadisticas}
+              >
+                {cargandoEstadisticas ? 'Analizando...' : 'Analizar'}
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <div className="alert alert-danger mt-3">{error}</div>
+          )}
         </div>
       </div>
 
-      {estadisticas && (
+      {cargandoEstadisticas && (
+        <div className="card mt-4">
+          <div className="card-body text-center">
+            <p>Analizando datos de progreso...</p>
+          </div>
+        </div>
+      )}
+
+      {estadisticas && !cargandoEstadisticas && (
         <>
-          <div className="docente-kpis-grid" style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)', gap: '12px' }}>
-            <DocenteKPICard tipo="alumnos" valor={estadisticas.alumnosConNotas} label="Total Alumnos" variante="primary" />
-            <DocenteKPICard tipo="aprobados" valor={estadisticas.aprobados} label="Aprobados" trend="up" trendValue={`${estadisticas.porcentajeAprobados}%`} variante="success" />
-            <DocenteKPICard tipo="alerta" valor={estadisticas.reprobados} label="Requieren Apoyo" trend="down" trendValue={`${estadisticas.porcentajeReprobados}%`} variante="danger" />
-            <DocenteKPICard tipo="promedio" valor={estadisticas.promedioCurso.toFixed(1)} label="Promedio Curso" variante="info" />
-            <DocenteKPICard tipo="estrella" valor={estadisticas.notaMaxima.toFixed(1)} label="Nota Maxima" variante="warning" />
-            <DocenteKPICard tipo="barras" valor={estadisticas.notaMinima.toFixed(1)} label="Nota Minima" variante="secondary" />
+          {/* KPIs */}
+          <div
+            className="docente-kpis-grid"
+            style={{
+              marginTop: '20px',
+              display: 'grid',
+              gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)',
+              gap: '12px'
+            }}
+          >
+            <DocenteKPICard
+              tipo="alumnos"
+              valor={estadisticas.kpis.alumnosConNotas}
+              label="Total Alumnos"
+              variante="primary"
+            />
+            <DocenteKPICard
+              tipo="aprobados"
+              valor={estadisticas.kpis.aprobados}
+              label="Aprobados"
+              trend="up"
+              trendValue={`${estadisticas.kpis.porcentajeAprobados}%`}
+              variante="success"
+            />
+            <DocenteKPICard
+              tipo="alerta"
+              valor={estadisticas.kpis.reprobados}
+              label="Requieren Apoyo"
+              trend="down"
+              trendValue={`${estadisticas.kpis.porcentajeReprobados}%`}
+              variante="danger"
+            />
+            <DocenteKPICard
+              tipo="promedio"
+              valor={estadisticas.kpis.promedioCurso}
+              label="Promedio Curso"
+              variante="info"
+            />
+            <DocenteKPICard
+              tipo="estrella"
+              valor={estadisticas.kpis.notaMaxima}
+              label="Nota Maxima"
+              variante="warning"
+            />
+            <DocenteKPICard
+              tipo="barras"
+              valor={estadisticas.kpis.notaMinima}
+              label="Nota Minima"
+              variante="secondary"
+            />
           </div>
 
+          {/* Graficos */}
           <div className="docente-charts-grid" style={{ marginTop: '20px' }}>
             <div className="card docente-chart-card">
               <div className="card-header"><h3>Distribucion de Notas</h3></div>
@@ -236,6 +381,7 @@ function ProgresoTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas }
             </div>
           </div>
 
+          {/* Tabla Alumnos que Requieren Atencion */}
           <div className="card" style={{ marginTop: '20px' }}>
             <div className="card-header"><h3>Alumnos que Requieren Atencion</h3></div>
             <div className="card-body">
@@ -253,18 +399,28 @@ function ProgresoTab({ cursos, asignaciones, alumnosPorCurso, notasRegistradas }
                   <tbody>
                     {estadisticas.alumnosAtencion.length > 0 ? (
                       estadisticas.alumnosAtencion.map((alumno, index) => (
-                        <tr key={index}>
+                        <tr key={alumno.alumno_id || index}>
                           <td>{formatearNombreCompleto(alumno.nombre)}</td>
-                          <td><span className="docente-nota-badge nota-insuficiente">{alumno.promedio.toFixed(1)}</span></td>
+                          <td>
+                            <span className="docente-nota-badge nota-insuficiente">
+                              {alumno.promedio.toFixed(1)}
+                            </span>
+                          </td>
                           <td>{alumno.notasRojas}</td>
-                          <td><span className={`docente-tendencia ${alumno.tendencia}`}>
-                            {alumno.tendencia === 'mejorando' ? '↑' : alumno.tendencia === 'empeorando' ? '↓' : '→'}
-                          </span></td>
+                          <td>
+                            <span className={`docente-tendencia ${alumno.tendencia}`}>
+                              {alumno.tendencia === 'mejorando' ? '↑' : alumno.tendencia === 'empeorando' ? '↓' : '→'}
+                            </span>
+                          </td>
                           <td>{isMobile ? 'Refuerzo' : 'Requiere refuerzo'}</td>
                         </tr>
                       ))
                     ) : (
-                      <tr><td colSpan="5" className="text-center text-muted">No hay alumnos con bajo rendimiento</td></tr>
+                      <tr>
+                        <td colSpan="5" className="text-center text-muted">
+                          No hay alumnos con bajo rendimiento
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>

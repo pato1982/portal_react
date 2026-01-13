@@ -26,6 +26,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('alumnos');
   const [vistaActual, setVistaActual] = useState('landing'); // 'landing', 'loginPage', 'seleccion-rol', 'registro', 'administrador', 'docente' o 'apoderado'
   const [tipoUsuarioRegistro, setTipoUsuarioRegistro] = useState(null); // 'administrador', 'docente', 'apoderado'
+  const [usuarioLogueado, setUsuarioLogueado] = useState(null); // Datos del usuario autenticado
 
   const renderTabContent = () => {
     // Cada tab se envuelve con ErrorBoundary para que un error en uno
@@ -57,6 +58,7 @@ function App() {
   };
 
   const cerrarSesion = () => {
+    setUsuarioLogueado(null);
     setVistaActual('landing');
   };
 
@@ -83,7 +85,15 @@ function App() {
       <ErrorBoundary FallbackComponent={PageErrorFallback}>
         <LoginPage
           onVolver={() => setVistaActual('landing')}
-          onLoginExitoso={(tipo) => {
+          onLoginExitoso={(tipo, usuario) => {
+            // Mapear establecimiento a nombre_establecimiento para el Header
+            const usuarioConEstablecimiento = {
+              ...usuario,
+              tipo_usuario: tipo === 'administrador' ? 'Administrador' : tipo === 'docente' ? 'Docente' : 'Apoderado',
+              nombre_establecimiento: usuario?.establecimiento || 'Establecimiento Educacional'
+            };
+            setUsuarioLogueado(usuarioConEstablecimiento);
+
             if (tipo === 'administrador') {
               setVistaActual('administrador');
             } else if (tipo === 'docente') {
@@ -187,7 +197,7 @@ function App() {
   if (vistaActual === 'docente') {
     return (
       <ErrorBoundary FallbackComponent={PageErrorFallback}>
-        <DocentePage onCambiarVista={cerrarSesion} />
+        <DocentePage onCambiarVista={cerrarSesion} usuarioDocente={usuarioLogueado} />
       </ErrorBoundary>
     );
   }
@@ -204,7 +214,7 @@ function App() {
   // Vista de administrador
   return (
     <div className="app-container">
-      <Header usuario={usuarioDemo} onCerrarSesion={cerrarSesion} />
+      <Header usuario={usuarioLogueado || usuarioDemo} onCerrarSesion={cerrarSesion} />
 
       <main className="main-content">
         <section className="control-panel">

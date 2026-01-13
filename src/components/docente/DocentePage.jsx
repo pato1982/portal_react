@@ -4,12 +4,24 @@ import AgregarNotaTab from './AgregarNotaTab';
 import ModificarNotaTab from './ModificarNotaTab';
 import VerNotasTab from './VerNotasTab';
 import ProgresoTab from './ProgresoTab';
+import config from '../../config/env';
 
-function DocentePage({ onCambiarVista }) {
+function DocentePage({ onCambiarVista, usuarioDocente }) {
   const [tabActual, setTabActual] = useState('asistencia');
   const [currentDate, setCurrentDate] = useState('');
   const [establecimientoDropdownAbierto, setEstablecimientoDropdownAbierto] = useState(false);
+  const [establecimientosDocente, setEstablecimientosDocente] = useState([]);
+  const [establecimientoActual, setEstablecimientoActual] = useState(null);
+  const [cargandoEstablecimientos, setCargandoEstablecimientos] = useState(true);
   const dropdownRef = useRef(null);
+
+  // Datos del docente desde el usuario logueado
+  const docenteActual = {
+    id: usuarioDocente?.docente_id || 0,
+    nombres: usuarioDocente?.nombres || 'Docente',
+    apellidos: usuarioDocente?.apellidos || '',
+    iniciales: usuarioDocente?.iniciales || 'D'
+  };
 
   useEffect(() => {
     const updateDate = () => {
@@ -19,6 +31,37 @@ function DocentePage({ onCambiarVista }) {
     };
     updateDate();
   }, []);
+
+  // Cargar establecimientos del docente
+  useEffect(() => {
+    const cargarEstablecimientos = async () => {
+      if (!docenteActual.id) {
+        setCargandoEstablecimientos(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${config.apiBaseUrl}/docente/${docenteActual.id}/establecimientos`);
+        const data = await response.json();
+
+        if (data.success && data.data.length > 0) {
+          setEstablecimientosDocente(data.data);
+          setEstablecimientoActual(data.data[0]);
+        } else {
+          setEstablecimientosDocente([]);
+          setEstablecimientoActual({ id: 0, nombre: 'Sin establecimiento', comuna: '' });
+        }
+      } catch (error) {
+        console.error('Error al cargar establecimientos:', error);
+        setEstablecimientosDocente([]);
+        setEstablecimientoActual({ id: 0, nombre: 'Sin establecimiento', comuna: '' });
+      } finally {
+        setCargandoEstablecimientos(false);
+      }
+    };
+
+    cargarEstablecimientos();
+  }, [docenteActual.id]);
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -31,31 +74,6 @@ function DocentePage({ onCambiarVista }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Sin establecimientos asignados
-  const establecimientosDocente = [];
-
-  const [establecimientoActual, setEstablecimientoActual] = useState(establecimientosDocente[0] || { id: 0, nombre: 'Sin establecimiento', comuna: '' });
-
-  // Datos base del docente (estructura mínima para la sesión demo)
-  const docenteActual = {
-    id: 1,
-    nombres: 'Docente',
-    apellidos: 'Demo',
-    iniciales: 'DD'
-  };
-
-  // Sin cursos asignados
-  const cursosDocente = [];
-
-  // Sin asignaciones
-  const asignacionesDocente = [];
-
-  // Sin alumnos
-  const alumnosPorCurso = {};
-
-  // Sin notas registradas
-  const [notasRegistradas, setNotasRegistradas] = useState([]);
-
   const tabs = [
     { id: 'asistencia', label: 'Asistencia' },
     { id: 'agregar-nota', label: 'Agregar Nota' },
@@ -63,19 +81,6 @@ function DocentePage({ onCambiarVista }) {
     { id: 'ver-notas', label: 'Ver Notas' },
     { id: 'progreso', label: 'Progreso' }
   ];
-
-  const agregarNota = (nuevaNota) => {
-    const nota = { id: notasRegistradas.length + 1, ...nuevaNota };
-    setNotasRegistradas([nota, ...notasRegistradas]);
-  };
-
-  const editarNota = (id, datosActualizados) => {
-    setNotasRegistradas(notasRegistradas.map(nota => nota.id === id ? { ...nota, ...datosActualizados } : nota));
-  };
-
-  const eliminarNota = (id) => {
-    setNotasRegistradas(notasRegistradas.filter(nota => nota.id !== id));
-  };
 
   return (
     <div className="app-container">
@@ -97,7 +102,9 @@ function DocentePage({ onCambiarVista }) {
                 onClick={() => establecimientosDocente.length > 1 && setEstablecimientoDropdownAbierto(!establecimientoDropdownAbierto)}
                 style={{ cursor: establecimientosDocente.length > 1 ? 'pointer' : 'default' }}
               >
-                <span className="establecimiento-nombre">{establecimientoActual.nombre}</span>
+                <span className="establecimiento-nombre">
+                  {cargandoEstablecimientos ? 'Cargando...' : (establecimientoActual?.nombre || 'Sin establecimiento')}
+                </span>
                 {establecimientosDocente.length > 1 && (
                   <svg
                     className={`establecimiento-arrow ${establecimientoDropdownAbierto ? 'rotated' : ''}`}
@@ -118,7 +125,7 @@ function DocentePage({ onCambiarVista }) {
               {establecimientoDropdownAbierto && establecimientosDocente.length > 1 && (
                 <div className="establecimiento-dropdown">
                   {establecimientosDocente
-                    .filter(est => est.id !== establecimientoActual.id)
+                    .filter(est => est.id !== establecimientoActual?.id)
                     .map(est => (
                       <button
                         key={est.id}
@@ -170,11 +177,38 @@ function DocentePage({ onCambiarVista }) {
             </nav>
 
             <div className="tabs-content">
-              {tabActual === 'asistencia' && <AsistenciaTab cursos={cursosDocente} alumnosPorCurso={alumnosPorCurso} />}
-              {tabActual === 'agregar-nota' && <AgregarNotaTab cursos={cursosDocente} asignaciones={asignacionesDocente} alumnosPorCurso={alumnosPorCurso} notasRegistradas={notasRegistradas} onAgregarNota={agregarNota} />}
-              {tabActual === 'modificar-nota' && <ModificarNotaTab cursos={cursosDocente} asignaciones={asignacionesDocente} alumnosPorCurso={alumnosPorCurso} notasRegistradas={notasRegistradas} onEditarNota={editarNota} onEliminarNota={eliminarNota} />}
-              {tabActual === 'ver-notas' && <VerNotasTab cursos={cursosDocente} asignaciones={asignacionesDocente} alumnosPorCurso={alumnosPorCurso} notasRegistradas={notasRegistradas} />}
-              {tabActual === 'progreso' && <ProgresoTab cursos={cursosDocente} asignaciones={asignacionesDocente} alumnosPorCurso={alumnosPorCurso} notasRegistradas={notasRegistradas} />}
+              {tabActual === 'asistencia' && (
+                <AsistenciaTab
+                  docenteId={docenteActual.id}
+                  establecimientoId={establecimientoActual?.id}
+                  usuarioId={usuarioDocente?.id}
+                />
+              )}
+              {tabActual === 'agregar-nota' && (
+                <AgregarNotaTab
+                  docenteId={docenteActual.id}
+                  establecimientoId={establecimientoActual?.id}
+                  usuarioId={usuarioDocente?.id}
+                />
+              )}
+              {tabActual === 'modificar-nota' && (
+                <ModificarNotaTab
+                  docenteId={docenteActual.id}
+                  establecimientoId={establecimientoActual?.id}
+                />
+              )}
+              {tabActual === 'ver-notas' && (
+                <VerNotasTab
+                  docenteId={docenteActual.id}
+                  establecimientoId={establecimientoActual?.id}
+                />
+              )}
+              {tabActual === 'progreso' && (
+                <ProgresoTab
+                  docenteId={docenteActual.id}
+                  establecimientoId={establecimientoActual?.id}
+                />
+              )}
             </div>
           </div>
         </section>

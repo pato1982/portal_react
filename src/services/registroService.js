@@ -205,7 +205,10 @@ export const registrarUsuario = async (tipo, datos) => {
   }
 
   try {
-    const response = await fetch(`${config.apiBaseUrl}/registro/${tipo}`, {
+    // Mapear tipos si es necesario
+    const tipoRuta = tipo === 'administrador' ? 'admin' : tipo;
+
+    const response = await fetch(`${config.apiBaseUrl}/registro/${tipoRuta}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(datos),

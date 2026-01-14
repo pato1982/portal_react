@@ -210,7 +210,7 @@ function App() {
   if (vistaActual === 'apoderado') {
     return (
       <ErrorBoundary FallbackComponent={PageErrorFallback}>
-        <ApoderadoPage onCambiarVista={cerrarSesion} />
+        <ApoderadoPage onCambiarVista={cerrarSesion} usuario={usuarioLogueado} />
       </ErrorBoundary>
     );
   }

@@ -1,0 +1,626 @@
+const express = require('express');
+const { pool } = require('../config/database');
+
+const router = express.Router();
+
+// ============================================
+// RUTAS DE CHAT - Docentes y Administradores
+// ============================================
+
+// ============================================
+// GET /api/chat/contactos - Obtener lista de contactos
+// Solo docentes y administradores del mismo establecimiento
+// Admin siempre aparece primero para los docentes
+// ============================================
+router.get('/contactos', async (req, res) => {
+    const { usuario_id, establecimiento_id } = req.query;
+
+    if (!usuario_id || !establecimiento_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'usuario_id y establecimiento_id son requeridos'
+        });
+    }
+
+    try {
+        // Obtener tipo de usuario actual
+        const [usuarioActual] = await pool.query(
+            'SELECT tipo_usuario FROM tb_usuarios WHERE id = ? AND activo = 1',
+            [usuario_id]
+        );
+
+        if (usuarioActual.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+
+        const tipoUsuario = usuarioActual[0].tipo_usuario;
+
+        // Solo docentes y administradores pueden usar el chat
+        if (tipoUsuario !== 'docente' && tipoUsuario !== 'administrador') {
+            return res.status(403).json({
+                success: false,
+                message: 'El chat solo está disponible para docentes y administradores'
+            });
+        }
+
+        let contactos = [];
+
+        // Obtener administradores del establecimiento (siempre primero)
+        const [admins] = await pool.query(`
+            SELECT
+                u.id AS usuario_id,
+                a.id AS entidad_id,
+                a.nombres,
+                a.apellidos,
+                CONCAT(a.nombres, ' ', a.apellidos) AS nombre_completo,
+                a.foto_url,
+                'administrador' AS tipo,
+                1 AS es_admin,
+                (
+                    SELECT COUNT(*)
+                    FROM tb_chat_mensajes m
+                    INNER JOIN tb_chat_conversaciones c ON m.conversacion_id = c.id
+                    WHERE c.establecimiento_id = ?
+                    AND ((c.usuario1_id = ? AND c.usuario2_id = u.id) OR (c.usuario2_id = ? AND c.usuario1_id = u.id))
+                    AND m.remitente_id = u.id
+                    AND m.leido = 0
+                    AND m.eliminado_destinatario = 0
+                ) AS mensajes_no_leidos
+            FROM tb_usuarios u
+            INNER JOIN tb_administradores a ON u.id = a.usuario_id
+            INNER JOIN tb_administrador_establecimiento ae ON a.id = ae.administrador_id
+            WHERE ae.establecimiento_id = ?
+            AND ae.activo = 1
+            AND u.activo = 1
+            AND a.activo = 1
+            AND u.id != ?
+        `, [establecimiento_id, usuario_id, usuario_id, establecimiento_id, usuario_id]);
+
+        contactos = [...admins];
+
+        // Obtener docentes del establecimiento
+        const [docentes] = await pool.query(`
+            SELECT
+                u.id AS usuario_id,
+                d.id AS entidad_id,
+                d.nombres,
+                d.apellidos,
+                CONCAT(d.nombres, ' ', d.apellidos) AS nombre_completo,
+                d.foto_url,
+                d.especialidad,
+                'docente' AS tipo,
+                0 AS es_admin,
+                (
+                    SELECT COUNT(*)
+                    FROM tb_chat_mensajes m
+                    INNER JOIN tb_chat_conversaciones c ON m.conversacion_id = c.id
+                    WHERE c.establecimiento_id = ?
+                    AND ((c.usuario1_id = ? AND c.usuario2_id = u.id) OR (c.usuario2_id = ? AND c.usuario1_id = u.id))
+                    AND m.remitente_id = u.id
+                    AND m.leido = 0
+                    AND m.eliminado_destinatario = 0
+                ) AS mensajes_no_leidos
+            FROM tb_usuarios u
+            INNER JOIN tb_docentes d ON u.id = d.usuario_id
+            INNER JOIN tb_docente_establecimiento de ON d.id = de.docente_id
+            WHERE de.establecimiento_id = ?
+            AND de.activo = 1
+            AND u.activo = 1
+            AND d.activo = 1
+            AND u.id != ?
+        `, [establecimiento_id, usuario_id, usuario_id, establecimiento_id, usuario_id]);
+
+        contactos = [...contactos, ...docentes];
+
+        res.json({
+            success: true,
+            data: contactos
+        });
+
+    } catch (error) {
+        console.error('Error al obtener contactos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener contactos'
+        });
+    }
+});
+
+// ============================================
+// GET /api/chat/conversaciones - Obtener conversaciones del usuario
+// ============================================
+router.get('/conversaciones', async (req, res) => {
+    const { usuario_id, establecimiento_id } = req.query;
+
+    if (!usuario_id || !establecimiento_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'usuario_id y establecimiento_id son requeridos'
+        });
+    }
+
+    try {
+        const [conversaciones] = await pool.query(`
+            SELECT
+                c.id,
+                c.asunto,
+                c.contexto_tipo,
+                c.mensajes_count,
+                c.ultimo_mensaje_fecha,
+                c.fecha_creacion,
+                CASE
+                    WHEN c.usuario1_id = ? THEN c.usuario2_id
+                    ELSE c.usuario1_id
+                END AS otro_usuario_id,
+                CASE
+                    WHEN c.usuario1_id = ? THEN c.usuario1_archivado
+                    ELSE c.usuario2_archivado
+                END AS archivado,
+                (
+                    SELECT m.mensaje
+                    FROM tb_chat_mensajes m
+                    WHERE m.conversacion_id = c.id
+                    AND m.eliminado_remitente = 0
+                    AND m.eliminado_destinatario = 0
+                    ORDER BY m.fecha_envio DESC
+                    LIMIT 1
+                ) AS ultimo_mensaje,
+                (
+                    SELECT COUNT(*)
+                    FROM tb_chat_mensajes m
+                    WHERE m.conversacion_id = c.id
+                    AND m.remitente_id != ?
+                    AND m.leido = 0
+                    AND m.eliminado_destinatario = 0
+                ) AS mensajes_no_leidos
+            FROM tb_chat_conversaciones c
+            WHERE c.establecimiento_id = ?
+            AND (c.usuario1_id = ? OR c.usuario2_id = ?)
+            AND c.activo = 1
+            AND CASE
+                WHEN c.usuario1_id = ? THEN c.usuario1_eliminado = 0
+                ELSE c.usuario2_eliminado = 0
+            END
+            ORDER BY c.ultimo_mensaje_fecha DESC
+        `, [usuario_id, usuario_id, usuario_id, establecimiento_id, usuario_id, usuario_id, usuario_id]);
+
+        // Obtener información del otro usuario para cada conversación
+        for (let conv of conversaciones) {
+            const [otroUsuario] = await pool.query(`
+                SELECT
+                    u.id AS usuario_id,
+                    u.tipo_usuario,
+                    CASE
+                        WHEN u.tipo_usuario = 'administrador' THEN (SELECT CONCAT(nombres, ' ', apellidos) FROM tb_administradores WHERE usuario_id = u.id)
+                        WHEN u.tipo_usuario = 'docente' THEN (SELECT CONCAT(nombres, ' ', apellidos) FROM tb_docentes WHERE usuario_id = u.id)
+                    END AS nombre_completo,
+                    CASE
+                        WHEN u.tipo_usuario = 'administrador' THEN (SELECT foto_url FROM tb_administradores WHERE usuario_id = u.id)
+                        WHEN u.tipo_usuario = 'docente' THEN (SELECT foto_url FROM tb_docentes WHERE usuario_id = u.id)
+                    END AS foto_url
+                FROM tb_usuarios u
+                WHERE u.id = ?
+            `, [conv.otro_usuario_id]);
+
+            if (otroUsuario.length > 0) {
+                conv.otro_usuario = otroUsuario[0];
+            }
+        }
+
+        res.json({
+            success: true,
+            data: conversaciones
+        });
+
+    } catch (error) {
+        console.error('Error al obtener conversaciones:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener conversaciones'
+        });
+    }
+});
+
+// ============================================
+// GET /api/chat/conversacion/:id/mensajes - Obtener mensajes de una conversación
+// ============================================
+router.get('/conversacion/:id/mensajes', async (req, res) => {
+    const { id } = req.params;
+    const { usuario_id, limite = 50, offset = 0 } = req.query;
+
+    if (!usuario_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'usuario_id es requerido'
+        });
+    }
+
+    try {
+        // Verificar que el usuario pertenece a la conversación
+        const [conv] = await pool.query(
+            'SELECT * FROM tb_chat_conversaciones WHERE id = ? AND (usuario1_id = ? OR usuario2_id = ?) AND activo = 1',
+            [id, usuario_id, usuario_id]
+        );
+
+        if (conv.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Conversación no encontrada'
+            });
+        }
+
+        // Obtener mensajes
+        const [mensajes] = await pool.query(`
+            SELECT
+                m.id,
+                m.remitente_id,
+                m.mensaje,
+                m.tipo_mensaje,
+                m.archivo_url,
+                m.archivo_nombre,
+                m.archivo_tamano,
+                m.leido,
+                m.fecha_lectura,
+                m.editado,
+                m.fecha_edicion,
+                m.fecha_envio,
+                CASE WHEN m.remitente_id = ? THEN 'enviado' ELSE 'recibido' END AS direccion
+            FROM tb_chat_mensajes m
+            WHERE m.conversacion_id = ?
+            AND CASE
+                WHEN m.remitente_id = ? THEN m.eliminado_remitente = 0
+                ELSE m.eliminado_destinatario = 0
+            END
+            ORDER BY m.fecha_envio ASC
+            LIMIT ? OFFSET ?
+        `, [usuario_id, id, usuario_id, parseInt(limite), parseInt(offset)]);
+
+        res.json({
+            success: true,
+            data: mensajes
+        });
+
+    } catch (error) {
+        console.error('Error al obtener mensajes:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener mensajes'
+        });
+    }
+});
+
+// ============================================
+// POST /api/chat/conversacion - Crear o obtener conversación existente
+// ============================================
+router.post('/conversacion', async (req, res) => {
+    const { usuario_id, otro_usuario_id, establecimiento_id, asunto, contexto_tipo, contexto_id } = req.body;
+
+    if (!usuario_id || !otro_usuario_id || !establecimiento_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'usuario_id, otro_usuario_id y establecimiento_id son requeridos'
+        });
+    }
+
+    try {
+        // Verificar que ambos usuarios son docentes o administradores
+        const [usuarios] = await pool.query(
+            'SELECT id, tipo_usuario FROM tb_usuarios WHERE id IN (?, ?) AND activo = 1',
+            [usuario_id, otro_usuario_id]
+        );
+
+        if (usuarios.length !== 2) {
+            return res.status(404).json({
+                success: false,
+                message: 'Uno o ambos usuarios no encontrados'
+            });
+        }
+
+        const tiposValidos = ['docente', 'administrador'];
+        for (const u of usuarios) {
+            if (!tiposValidos.includes(u.tipo_usuario)) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'El chat solo está disponible para docentes y administradores'
+                });
+            }
+        }
+
+        // Buscar conversación existente (ordenando los IDs para evitar duplicados)
+        const [u1, u2] = [usuario_id, otro_usuario_id].sort((a, b) => a - b);
+
+        const [convExistente] = await pool.query(`
+            SELECT id FROM tb_chat_conversaciones
+            WHERE establecimiento_id = ?
+            AND ((usuario1_id = ? AND usuario2_id = ?) OR (usuario1_id = ? AND usuario2_id = ?))
+            AND activo = 1
+        `, [establecimiento_id, u1, u2, u2, u1]);
+
+        if (convExistente.length > 0) {
+            // Reactivar si estaba eliminado para este usuario
+            await pool.query(`
+                UPDATE tb_chat_conversaciones
+                SET
+                    usuario1_eliminado = CASE WHEN usuario1_id = ? THEN 0 ELSE usuario1_eliminado END,
+                    usuario2_eliminado = CASE WHEN usuario2_id = ? THEN 0 ELSE usuario2_eliminado END
+                WHERE id = ?
+            `, [usuario_id, usuario_id, convExistente[0].id]);
+
+            return res.json({
+                success: true,
+                data: { id: convExistente[0].id },
+                message: 'Conversación existente recuperada'
+            });
+        }
+
+        // Crear nueva conversación
+        const [resultado] = await pool.query(`
+            INSERT INTO tb_chat_conversaciones
+            (establecimiento_id, usuario1_id, usuario2_id, asunto, contexto_tipo, contexto_id, iniciada_por)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [establecimiento_id, u1, u2, asunto || null, contexto_tipo || 'general', contexto_id || null, usuario_id]);
+
+        res.json({
+            success: true,
+            data: { id: resultado.insertId },
+            message: 'Conversación creada'
+        });
+
+    } catch (error) {
+        console.error('Error al crear conversación:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al crear conversación'
+        });
+    }
+});
+
+// ============================================
+// POST /api/chat/mensaje - Enviar mensaje
+// ============================================
+router.post('/mensaje', async (req, res) => {
+    const { conversacion_id, remitente_id, mensaje, tipo_mensaje, archivo_url, archivo_nombre, archivo_tamano } = req.body;
+
+    if (!conversacion_id || !remitente_id || !mensaje) {
+        return res.status(400).json({
+            success: false,
+            message: 'conversacion_id, remitente_id y mensaje son requeridos'
+        });
+    }
+
+    try {
+        // Verificar que el remitente pertenece a la conversación
+        const [conv] = await pool.query(
+            'SELECT * FROM tb_chat_conversaciones WHERE id = ? AND (usuario1_id = ? OR usuario2_id = ?) AND activo = 1',
+            [conversacion_id, remitente_id, remitente_id]
+        );
+
+        if (conv.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Conversación no encontrada o no tienes acceso'
+            });
+        }
+
+        // Insertar mensaje
+        const [resultado] = await pool.query(`
+            INSERT INTO tb_chat_mensajes
+            (conversacion_id, remitente_id, mensaje, tipo_mensaje, archivo_url, archivo_nombre, archivo_tamano)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        `, [conversacion_id, remitente_id, mensaje, tipo_mensaje || 'texto', archivo_url || null, archivo_nombre || null, archivo_tamano || null]);
+
+        // Actualizar conversación
+        await pool.query(`
+            UPDATE tb_chat_conversaciones
+            SET
+                mensajes_count = mensajes_count + 1,
+                ultimo_mensaje_id = ?,
+                ultimo_mensaje_fecha = NOW()
+            WHERE id = ?
+        `, [resultado.insertId, conversacion_id]);
+
+        // Obtener el mensaje insertado
+        const [mensajeInsertado] = await pool.query(
+            'SELECT * FROM tb_chat_mensajes WHERE id = ?',
+            [resultado.insertId]
+        );
+
+        res.json({
+            success: true,
+            data: mensajeInsertado[0],
+            message: 'Mensaje enviado'
+        });
+
+    } catch (error) {
+        console.error('Error al enviar mensaje:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al enviar mensaje'
+        });
+    }
+});
+
+// ============================================
+// PUT /api/chat/mensaje/:id/leido - Marcar mensaje como leído
+// ============================================
+router.put('/mensaje/:id/leido', async (req, res) => {
+    const { id } = req.params;
+    const { usuario_id } = req.body;
+
+    if (!usuario_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'usuario_id es requerido'
+        });
+    }
+
+    try {
+        // Solo marcar como leído si el usuario NO es el remitente
+        await pool.query(`
+            UPDATE tb_chat_mensajes
+            SET leido = 1, fecha_lectura = NOW()
+            WHERE id = ? AND remitente_id != ? AND leido = 0
+        `, [id, usuario_id]);
+
+        res.json({
+            success: true,
+            message: 'Mensaje marcado como leído'
+        });
+
+    } catch (error) {
+        console.error('Error al marcar mensaje como leído:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al marcar mensaje como leído'
+        });
+    }
+});
+
+// ============================================
+// PUT /api/chat/conversacion/:id/leer-todos - Marcar todos los mensajes como leídos
+// ============================================
+router.put('/conversacion/:id/leer-todos', async (req, res) => {
+    const { id } = req.params;
+    const { usuario_id } = req.body;
+
+    if (!usuario_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'usuario_id es requerido'
+        });
+    }
+
+    try {
+        // Verificar que el usuario pertenece a la conversación
+        const [conv] = await pool.query(
+            'SELECT * FROM tb_chat_conversaciones WHERE id = ? AND (usuario1_id = ? OR usuario2_id = ?) AND activo = 1',
+            [id, usuario_id, usuario_id]
+        );
+
+        if (conv.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Conversación no encontrada'
+            });
+        }
+
+        // Marcar todos los mensajes no leídos como leídos (excepto los enviados por el usuario)
+        await pool.query(`
+            UPDATE tb_chat_mensajes
+            SET leido = 1, fecha_lectura = NOW()
+            WHERE conversacion_id = ? AND remitente_id != ? AND leido = 0
+        `, [id, usuario_id]);
+
+        res.json({
+            success: true,
+            message: 'Mensajes marcados como leídos'
+        });
+
+    } catch (error) {
+        console.error('Error al marcar mensajes como leídos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al marcar mensajes como leídos'
+        });
+    }
+});
+
+// ============================================
+// GET /api/chat/no-leidos - Obtener conteo total de mensajes no leídos
+// ============================================
+router.get('/no-leidos', async (req, res) => {
+    const { usuario_id, establecimiento_id } = req.query;
+
+    if (!usuario_id || !establecimiento_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'usuario_id y establecimiento_id son requeridos'
+        });
+    }
+
+    try {
+        const [resultado] = await pool.query(`
+            SELECT COUNT(*) AS total_no_leidos
+            FROM tb_chat_mensajes m
+            INNER JOIN tb_chat_conversaciones c ON m.conversacion_id = c.id
+            WHERE c.establecimiento_id = ?
+            AND (c.usuario1_id = ? OR c.usuario2_id = ?)
+            AND c.activo = 1
+            AND m.remitente_id != ?
+            AND m.leido = 0
+            AND m.eliminado_destinatario = 0
+        `, [establecimiento_id, usuario_id, usuario_id, usuario_id]);
+
+        res.json({
+            success: true,
+            data: {
+                total_no_leidos: resultado[0].total_no_leidos
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al obtener mensajes no leídos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener mensajes no leídos'
+        });
+    }
+});
+
+// ============================================
+// GET /api/chat/nuevos-mensajes - Polling para nuevos mensajes
+// ============================================
+router.get('/nuevos-mensajes', async (req, res) => {
+    const { usuario_id, establecimiento_id, desde } = req.query;
+
+    if (!usuario_id || !establecimiento_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'usuario_id y establecimiento_id son requeridos'
+        });
+    }
+
+    try {
+        // Obtener mensajes nuevos desde la última consulta
+        const fechaDesde = desde || new Date(Date.now() - 30000).toISOString(); // últimos 30 segundos si no se especifica
+
+        const [mensajes] = await pool.query(`
+            SELECT
+                m.id,
+                m.conversacion_id,
+                m.remitente_id,
+                m.mensaje,
+                m.tipo_mensaje,
+                m.fecha_envio,
+                c.usuario1_id,
+                c.usuario2_id
+            FROM tb_chat_mensajes m
+            INNER JOIN tb_chat_conversaciones c ON m.conversacion_id = c.id
+            WHERE c.establecimiento_id = ?
+            AND (c.usuario1_id = ? OR c.usuario2_id = ?)
+            AND c.activo = 1
+            AND m.remitente_id != ?
+            AND m.fecha_envio > ?
+            AND m.eliminado_destinatario = 0
+            ORDER BY m.fecha_envio ASC
+        `, [establecimiento_id, usuario_id, usuario_id, usuario_id, fechaDesde]);
+
+        res.json({
+            success: true,
+            data: mensajes,
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('Error al obtener nuevos mensajes:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener nuevos mensajes'
+        });
+    }
+});
+
+module.exports = router;

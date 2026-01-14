@@ -239,7 +239,10 @@ function App() {
 
       {/* El chat flotante tiene su propio ErrorBoundary - si falla, simplemente no se muestra */}
       <ErrorBoundary fallback={null}>
-        <ChatFlotante />
+        <ChatFlotante
+          usuario={usuarioLogueado ? { ...usuarioLogueado, tipo: 'administrador' } : null}
+          establecimientoId={usuarioLogueado?.establecimiento_id}
+        />
       </ErrorBoundary>
     </div>
   );

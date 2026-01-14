@@ -6,6 +6,90 @@ const router = express.Router();
 const SALT_ROUNDS = 10;
 
 // ============================================
+// Funciones auxiliares para registrar intentos fallidos
+// ============================================
+
+// Registrar intento fallido de registro de ADMINISTRADOR
+const registrarFalloAdmin = async (establecimientoId, datos, codigoIngresado, motivoFallo, req) => {
+    try {
+        await pool.query(`
+            INSERT INTO tb_intentos_registro_fallidos_admin
+            (establecimiento_id, rut_admin, nombres_admin, apellidos_admin, email_admin, telefono_admin,
+             codigo_ingresado, motivo_fallo, ip_address, user_agent, fecha_intento)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        `, [
+            establecimientoId || 0,
+            datos.rut || '',
+            datos.nombres || '',
+            datos.apellidos || '',
+            datos.email || null,
+            datos.telefono || null,
+            codigoIngresado || null,
+            motivoFallo,
+            req.ip,
+            req.headers['user-agent']
+        ]);
+    } catch (error) {
+        console.error('Error al registrar intento fallido de admin:', error);
+    }
+};
+
+// Registrar intento fallido de registro de DOCENTE
+const registrarFalloDocente = async (establecimientoId, datos, motivoFallo, req) => {
+    try {
+        await pool.query(`
+            INSERT INTO tb_intentos_registro_fallidos_docentes
+            (establecimiento_id, rut_docente, nombres_docente, apellidos_docente, email_docente,
+             telefono_docente, especialidad_indicada, motivo_fallo, ip_address, user_agent, fecha_intento)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        `, [
+            establecimientoId || 0,
+            datos.rut || '',
+            datos.nombres || '',
+            datos.apellidos || '',
+            datos.email || null,
+            datos.telefono || null,
+            datos.especialidad || null,
+            motivoFallo,
+            req.ip,
+            req.headers['user-agent']
+        ]);
+    } catch (error) {
+        console.error('Error al registrar intento fallido de docente:', error);
+    }
+};
+
+// Registrar intento fallido de registro de APODERADO
+const registrarFalloApoderado = async (establecimientoId, datosApoderado, datosAlumno, motivoFallo, req) => {
+    try {
+        await pool.query(`
+            INSERT INTO tb_intentos_registro_fallidos
+            (establecimiento_id, rut_apoderado, nombres_apoderado, apellidos_apoderado, email_apoderado,
+             telefono_apoderado, rut_alumno, nombres_alumno, apellidos_alumno, curso_indicado,
+             parentesco, motivo_fallo, ip_address, user_agent, fecha_intento)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        `, [
+            establecimientoId || 0,
+            datosApoderado.rut || '',
+            datosApoderado.nombres || '',
+            datosApoderado.apellidos || '',
+            datosApoderado.email || null,
+            datosApoderado.telefono || null,
+            datosAlumno.rut || null,
+            datosAlumno.nombres || null,
+            datosAlumno.apellidos || null,
+            datosAlumno.curso || null,
+            datosAlumno.parentesco || null,
+            motivoFallo,
+            req.ip,
+            req.headers['user-agent']
+        ]);
+    } catch (error) {
+        console.error('Error al registrar intento fallido de apoderado:', error);
+    }
+};
+
+// ============================================
 // POST /api/registro/validar-codigo - Validar código de administrador
 // ============================================
 router.post('/validar-codigo', async (req, res) => {
@@ -77,6 +161,8 @@ router.post('/validar-docente', async (req, res) => {
         `, [rut]);
 
         if (preregistros.length === 0) {
+            // Registrar intento fallido
+            await registrarFalloDocente(null, { rut, nombres: '', apellidos: '', email: null }, 'rut_no_preregistrado', req);
             return res.status(400).json({
                 success: false,
                 message: 'El RUT ingresado no coincide con el registrado por el establecimiento. Por favor, comuníquese con ellos para verificar o corregir sus datos.'
@@ -131,6 +217,10 @@ router.post('/validar-apoderado', async (req, res) => {
         `, [rutApoderado]);
 
         if (preregistros.length === 0) {
+            // Registrar intento fallido
+            const datosApoderado = { rut: rutApoderado, nombres: '', apellidos: '', email: null };
+            const primerAlumno = alumnos.length > 0 ? alumnos[0] : { rut: '', nombres: '', apellidos: '' };
+            await registrarFalloApoderado(null, datosApoderado, primerAlumno, 'rut_no_preregistrado', req);
             return res.status(400).json({
                 success: false,
                 message: 'El RUT del apoderado ingresado no coincide con el registrado en el establecimiento. Por favor, comuníquese con el establecimiento para verificar sus datos.'
@@ -151,6 +241,16 @@ router.post('/validar-apoderado', async (req, res) => {
             const alumnoTexto = alumnosNoCoinciden.length === 1
                 ? `El RUT del Alumno ${alumnosNoCoinciden[0]}`
                 : `Los RUT de los Alumnos ${alumnosNoCoinciden.join(', ')}`;
+
+            // Registrar intento fallido con el primer alumno que no coincide
+            const alumnoFallido = alumnos[alumnosNoCoinciden[0] - 1];
+            const datosApoderado = {
+                rut: rutApoderado,
+                nombres: preregistros[0].nombres_apoderado,
+                apellidos: preregistros[0].apellidos_apoderado,
+                email: null
+            };
+            await registrarFalloApoderado(preregistros[0].establecimiento_id, datosApoderado, alumnoFallido, 'alumno_no_encontrado', req);
 
             return res.status(400).json({
                 success: false,
@@ -193,6 +293,7 @@ router.post('/validar-apoderado', async (req, res) => {
 // ============================================
 router.post('/admin', async (req, res) => {
     const { codigo, rut, nombres, apellidos, email, telefono, password } = req.body;
+    const datosAdmin = { rut, nombres, apellidos, email, telefono };
 
     if (!codigo || !rut || !nombres || !apellidos || !email || !password) {
         return res.status(400).json({
@@ -206,7 +307,16 @@ router.post('/admin', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // Validar código
+        // Validar código - primero verificar si existe pero está expirado o usado
+        const [codigoInfo] = await connection.query(`
+            SELECT cv.*, e.id as est_id FROM tb_codigos_validacion cv
+            LEFT JOIN tb_establecimientos e ON cv.establecimiento_id = e.id
+            WHERE cv.codigo = ?
+        `, [codigo.toUpperCase()]);
+
+        const establecimientoId = codigoInfo.length > 0 ? codigoInfo[0].est_id : null;
+
+        // Validar código activo
         const [codigos] = await connection.query(`
             SELECT * FROM tb_codigos_validacion
             WHERE codigo = ? AND activo = 1 AND usado = 0
@@ -215,6 +325,13 @@ router.post('/admin', async (req, res) => {
 
         if (codigos.length === 0) {
             await connection.rollback();
+            // Determinar motivo específico
+            let motivoFallo = 'codigo_invalido';
+            if (codigoInfo.length > 0) {
+                if (codigoInfo[0].usado === 1) motivoFallo = 'codigo_usado';
+                else if (codigoInfo[0].fecha_expiracion && new Date(codigoInfo[0].fecha_expiracion) < new Date()) motivoFallo = 'codigo_expirado';
+            }
+            await registrarFalloAdmin(establecimientoId, datosAdmin, codigo, motivoFallo, req);
             return res.status(400).json({
                 success: false,
                 message: 'El código no es válido o ya fue utilizado'
@@ -231,6 +348,7 @@ router.post('/admin', async (req, res) => {
 
         if (existeEmail.length > 0) {
             await connection.rollback();
+            await registrarFalloAdmin(codigoValidacion.establecimiento_id, datosAdmin, codigo, 'ya_registrado', req);
             return res.status(400).json({
                 success: false,
                 message: 'El correo electrónico ya está registrado'
@@ -245,6 +363,7 @@ router.post('/admin', async (req, res) => {
 
         if (existeRut.length > 0) {
             await connection.rollback();
+            await registrarFalloAdmin(codigoValidacion.establecimiento_id, datosAdmin, codigo, 'ya_registrado', req);
             return res.status(400).json({
                 success: false,
                 message: 'El RUT ya está registrado'
@@ -321,7 +440,22 @@ router.post('/docente', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // Validar pre-registro (case-insensitive)
+        // Primero buscar cualquier preregistro para obtener el establecimiento_id
+        const [preregistroInfo] = await connection.query(`
+            SELECT establecimiento_id, nombres, apellidos, especialidad, usado FROM tb_preregistro_docentes
+            WHERE UPPER(rut) = UPPER(?)
+        `, [rut]);
+
+        const establecimientoId = preregistroInfo.length > 0 ? preregistroInfo[0].establecimiento_id : null;
+        const datosDocente = {
+            rut,
+            nombres: preregistroInfo.length > 0 ? preregistroInfo[0].nombres : '',
+            apellidos: preregistroInfo.length > 0 ? preregistroInfo[0].apellidos : '',
+            email,
+            especialidad: preregistroInfo.length > 0 ? preregistroInfo[0].especialidad : null
+        };
+
+        // Validar pre-registro activo y no usado (case-insensitive)
         const [preregistros] = await connection.query(`
             SELECT * FROM tb_preregistro_docentes
             WHERE UPPER(rut) = UPPER(?) AND activo = 1 AND usado = 0
@@ -329,6 +463,12 @@ router.post('/docente', async (req, res) => {
 
         if (preregistros.length === 0) {
             await connection.rollback();
+            // Determinar motivo
+            let motivoFallo = 'rut_no_preregistrado';
+            if (preregistroInfo.length > 0 && preregistroInfo[0].usado === 1) {
+                motivoFallo = 'ya_registrado';
+            }
+            await registrarFalloDocente(establecimientoId, datosDocente, motivoFallo, req);
             return res.status(400).json({
                 success: false,
                 message: 'El RUT no está autorizado para registro'
@@ -345,6 +485,7 @@ router.post('/docente', async (req, res) => {
 
         if (existeEmail.length > 0) {
             await connection.rollback();
+            await registrarFalloDocente(preregistro.establecimiento_id, datosDocente, 'ya_registrado', req);
             return res.status(400).json({
                 success: false,
                 message: 'El correo electrónico ya está registrado'
@@ -434,7 +575,23 @@ router.post('/apoderado', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // Validar pre-registro (case-insensitive)
+        // Primero buscar cualquier preregistro para obtener datos
+        const [preregistroInfo] = await connection.query(`
+            SELECT * FROM tb_preregistro_relaciones
+            WHERE UPPER(rut_apoderado) = UPPER(?)
+        `, [rutApoderado]);
+
+        const establecimientoId = preregistroInfo.length > 0 ? preregistroInfo[0].establecimiento_id : null;
+        const datosApoderado = {
+            rut: rutApoderado,
+            nombres: preregistroInfo.length > 0 ? preregistroInfo[0].nombres_apoderado : '',
+            apellidos: preregistroInfo.length > 0 ? preregistroInfo[0].apellidos_apoderado : '',
+            email,
+            telefono: preregistroInfo.length > 0 ? preregistroInfo[0].telefono_apoderado : null
+        };
+        const primerAlumno = alumnos.length > 0 ? alumnos[0] : { rut: '', nombres: '', apellidos: '' };
+
+        // Validar pre-registro activo y no usado (case-insensitive)
         const [preregistros] = await connection.query(`
             SELECT * FROM tb_preregistro_relaciones
             WHERE UPPER(rut_apoderado) = UPPER(?) AND activo = 1 AND usado = 0
@@ -442,6 +599,13 @@ router.post('/apoderado', async (req, res) => {
 
         if (preregistros.length === 0) {
             await connection.rollback();
+            // Determinar motivo
+            let motivoFallo = 'rut_no_preregistrado';
+            if (preregistroInfo.length > 0) {
+                const todosUsados = preregistroInfo.every(p => p.usado === 1);
+                if (todosUsados) motivoFallo = 'ya_registrado';
+            }
+            await registrarFalloApoderado(establecimientoId, datosApoderado, primerAlumno, motivoFallo, req);
             return res.status(400).json({
                 success: false,
                 message: 'El RUT no está autorizado para registro'
@@ -453,6 +617,7 @@ router.post('/apoderado', async (req, res) => {
         for (const alumno of alumnos) {
             if (!rutsAlumnosPreregistro.includes(alumno.rut.toUpperCase())) {
                 await connection.rollback();
+                await registrarFalloApoderado(preregistros[0].establecimiento_id, datosApoderado, alumno, 'alumno_no_encontrado', req);
                 return res.status(400).json({
                     success: false,
                     message: 'Uno o más alumnos no están registrados para este apoderado'
@@ -470,6 +635,7 @@ router.post('/apoderado', async (req, res) => {
 
         if (existeEmail.length > 0) {
             await connection.rollback();
+            await registrarFalloApoderado(primerPreregistro.establecimiento_id, datosApoderado, primerAlumno, 'ya_registrado', req);
             return res.status(400).json({
                 success: false,
                 message: 'El correo electrónico ya está registrado'

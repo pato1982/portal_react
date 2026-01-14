@@ -8,10 +8,33 @@ const JWT_SECRET = process.env.JWT_SECRET || 'portal_estudiantil_secret_key_2024
 const JWT_EXPIRES_IN = '24h';
 
 // ============================================
+// Función auxiliar para registrar intentos de login fallidos
+// ============================================
+const registrarLoginFallido = async (emailIngresado, tipoUsuario, motivoFallo, req, establecimientoId = null) => {
+    try {
+        await pool.query(`
+            INSERT INTO tb_intentos_login_fallidos
+            (email_ingresado, tipo_usuario_intentado, establecimiento_id, motivo_fallo, ip_address, user_agent, fecha_intento)
+            VALUES (?, ?, ?, ?, ?, ?, NOW())
+        `, [emailIngresado, tipoUsuario, establecimientoId, motivoFallo, req.ip, req.headers['user-agent']]);
+    } catch (error) {
+        console.error('Error al registrar intento de login fallido:', error);
+    }
+};
+
+// ============================================
 // POST /api/auth/login - Iniciar sesión
 // ============================================
 router.post('/login', async (req, res) => {
     const { email, password, tipo } = req.body;
+
+    // Mapear tipo del frontend al tipo de la base de datos
+    const tipoMap = {
+        'admin': 'administrador',
+        'docente': 'docente',
+        'apoderado': 'apoderado'
+    };
+    const tipoDb = tipoMap[tipo] || tipo;
 
     if (!email || !password || !tipo) {
         return res.status(400).json({
@@ -21,13 +44,15 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-        // Buscar usuario por email
+        // Buscar usuario por email (incluir inactivos para saber el motivo exacto)
         const [usuarios] = await pool.query(
-            'SELECT * FROM tb_usuarios WHERE email = ? AND activo = 1',
+            'SELECT * FROM tb_usuarios WHERE email = ?',
             [email]
         );
 
         if (usuarios.length === 0) {
+            // Registrar intento fallido: email no existe
+            await registrarLoginFallido(email, tipoDb, 'email_no_existe', req);
             return res.status(401).json({
                 success: false,
                 message: 'Credenciales incorrectas'
@@ -36,24 +61,27 @@ router.post('/login', async (req, res) => {
 
         const usuario = usuarios[0];
 
+        // Verificar si la cuenta está inactiva
+        if (usuario.activo !== 1) {
+            await registrarLoginFallido(email, tipoDb, 'cuenta_inactiva', req);
+            return res.status(401).json({
+                success: false,
+                message: 'Credenciales incorrectas'
+            });
+        }
+
         // Verificar si está bloqueado
         if (usuario.bloqueado_hasta && new Date(usuario.bloqueado_hasta) > new Date()) {
+            await registrarLoginFallido(email, tipoDb, 'cuenta_bloqueada', req);
             return res.status(403).json({
                 success: false,
                 message: 'Cuenta bloqueada temporalmente. Intente más tarde.'
             });
         }
 
-        // Mapear tipo del frontend al tipo de la base de datos
-        const tipoMap = {
-            'admin': 'administrador',
-            'docente': 'docente',
-            'apoderado': 'apoderado'
-        };
-        const tipoDb = tipoMap[tipo] || tipo;
-
         // Verificar tipo de usuario
         if (usuario.tipo_usuario !== tipoDb) {
+            await registrarLoginFallido(email, tipoDb, 'otro', req); // tipo incorrecto
             return res.status(401).json({
                 success: false,
                 message: 'Tipo de usuario incorrecto'
@@ -64,6 +92,9 @@ router.post('/login', async (req, res) => {
         const passwordValida = await bcrypt.compare(password, usuario.password_hash);
 
         if (!passwordValida) {
+            // Registrar intento fallido: password incorrecta
+            await registrarLoginFallido(email, tipoDb, 'password_incorrecta', req);
+
             // Incrementar intentos fallidos
             await pool.query(
                 'UPDATE tb_usuarios SET intentos_fallidos = intentos_fallidos + 1 WHERE id = ?',
@@ -148,8 +179,11 @@ router.post('/login', async (req, res) => {
 
                 datosAdicionales = {
                     apoderado_id: apoderado[0].id,
+                    rut: apoderado[0].rut,
                     nombres: apoderado[0].nombres,
                     apellidos: apoderado[0].apellidos,
+                    telefono: apoderado[0].telefono,
+                    direccion: apoderado[0].direccion,
                     pupilos: pupilos.map(p => ({
                         id: p.id,
                         nombres: p.nombres,
@@ -317,8 +351,11 @@ router.get('/me', async (req, res) => {
 
                 datosAdicionales = {
                     apoderado_id: apoderado[0].id,
+                    rut: apoderado[0].rut,
                     nombres: apoderado[0].nombres,
                     apellidos: apoderado[0].apellidos,
+                    telefono: apoderado[0].telefono,
+                    direccion: apoderado[0].direccion,
                     pupilos: pupilos
                 };
             }

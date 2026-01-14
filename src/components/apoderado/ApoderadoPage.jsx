@@ -175,11 +175,11 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
       case 'informacion':
         return <InformacionTab pupilo={pupiloSeleccionado} apoderado={apoderadoActual} />;
       case 'notas':
-        return <NotasTab notas={notasFiltradas} pupilo={pupiloSeleccionado} />;
+        return <NotasTab pupilo={pupiloSeleccionado} />;
       case 'comunicados':
-        return <ComunicadosTab comunicados={comunicadosFiltrados} onMarcarLeido={marcarComoLeido} />;
+        return <ComunicadosTab pupilo={pupiloSeleccionado} usuarioId={apoderadoActual.id} />;
       case 'progreso':
-        return <ProgresoTab notas={notasFiltradas} pupilo={pupiloSeleccionado} />;
+        return <ProgresoTab pupilo={pupiloSeleccionado} />;
       default:
         return <InformacionTab pupilo={pupiloSeleccionado} apoderado={apoderadoActual} />;
     }
@@ -188,7 +188,14 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
   return (
     <div className="apoderado-container">
       {/* Header Corporativo Reemplazado */}
-      <Header usuario={apoderadoActual} onCerrarSesion={onCambiarVista} />
+      <Header
+        usuario={{
+          ...apoderadoActual,
+          tipo_usuario: 'Apoderado',
+          nombre_establecimiento: pupiloSeleccionado?.establecimiento_nombre || 'Sin establecimiento'
+        }}
+        onCerrarSesion={onCambiarVista}
+      />
 
       <main className="apoderado-main">
         <div className="control-panel">

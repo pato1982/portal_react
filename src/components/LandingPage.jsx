@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/landing.css';
+import { enviarConsulta } from '../services/contactoService';
 
 // Componentes extraidos
 import {
@@ -39,6 +40,8 @@ function LandingPage({ onIrALogin, onIrARegistro }) {
     correo: '',
     consulta: ''
   });
+  const [enviandoContacto, setEnviandoContacto] = useState(false);
+  const [mensajeContacto, setMensajeContacto] = useState({ tipo: '', texto: '' });
   const [navbarShadow, setNavbarShadow] = useState(false);
 
   // Efecto de navbar al hacer scroll
@@ -80,12 +83,31 @@ function LandingPage({ onIrALogin, onIrARegistro }) {
   };
 
   // Enviar formulario de contacto
-  const handleContactoSubmit = (e) => {
+  const handleContactoSubmit = async (e) => {
     e.preventDefault();
-    alert('Consulta enviada correctamente. Nos pondremos en contacto pronto.');
-    setFormContacto({ nombre: '', establecimiento: '', telefono: '', correo: '', consulta: '' });
-    setModalContactoActivo(false);
-    setModalPlanActivo(null);
+    setEnviandoContacto(true);
+    setMensajeContacto({ tipo: '', texto: '' });
+
+    try {
+      const resultado = await enviarConsulta(formContacto);
+
+      if (resultado.success) {
+        setMensajeContacto({ tipo: 'exito', texto: resultado.message });
+        setFormContacto({ nombre: '', establecimiento: '', telefono: '', correo: '', consulta: '' });
+        // Cerrar modal despues de 2 segundos
+        setTimeout(() => {
+          setModalContactoActivo(false);
+          setModalPlanActivo(null);
+          setMensajeContacto({ tipo: '', texto: '' });
+        }, 2000);
+      } else {
+        setMensajeContacto({ tipo: 'error', texto: resultado.error });
+      }
+    } catch (error) {
+      setMensajeContacto({ tipo: 'error', texto: 'Error al enviar la consulta. Intente nuevamente.' });
+    } finally {
+      setEnviandoContacto(false);
+    }
   };
 
   // Abrir modal de contacto desde los planes
@@ -220,10 +242,12 @@ function LandingPage({ onIrALogin, onIrARegistro }) {
       {/* Modal de Contacto */}
       <ModalContacto
         activo={modalContactoActivo}
-        onCerrar={() => setModalContactoActivo(false)}
+        onCerrar={() => { setModalContactoActivo(false); setMensajeContacto({ tipo: '', texto: '' }); }}
         formData={formContacto}
         onChange={handleContactoChange}
         onSubmit={handleContactoSubmit}
+        enviando={enviandoContacto}
+        mensaje={mensajeContacto}
       />
     </div>
   );

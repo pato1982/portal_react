@@ -1,8 +1,44 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import config from '../../config/env';
 
-function NotasTab({ notas, pupilo }) {
+function NotasTab({ pupilo }) {
+  const [notas, setNotas] = useState([]);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
   const [notaSeleccionada, setNotaSeleccionada] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+
+  // Cargar notas cuando cambia el pupilo
+  useEffect(() => {
+    const cargarNotas = async () => {
+      if (!pupilo?.id) {
+        setNotas([]);
+        return;
+      }
+
+      setCargando(true);
+      setError('');
+
+      try {
+        const url = `${config.apiBaseUrl}/apoderado/pupilo/${pupilo.id}/notas`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.success) {
+          setNotas(data.data || []);
+        } else {
+          setError(data.error || 'Error al cargar notas');
+        }
+      } catch (err) {
+        console.error('Error cargando notas:', err);
+        setError('Error de conexion');
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    cargarNotas();
+  }, [pupilo?.id]);
 
   // Obtener asignaturas unicas
   const asignaturas = useMemo(() => {
@@ -11,20 +47,25 @@ function NotasTab({ notas, pupilo }) {
   }, [notas]);
 
   // Organizar notas por asignatura y trimestre (guardando objeto completo)
+  // Usa numero_evaluacion como indice para ubicar cada nota en su columna correcta
   const notasOrganizadas = useMemo(() => {
     const organizadas = {};
 
     asignaturas.forEach(asig => {
       organizadas[asig] = {
-        1: [], // Trimestre 1
-        2: [], // Trimestre 2
-        3: []  // Trimestre 3
+        1: Array(8).fill(undefined), // Trimestre 1 - 8 columnas
+        2: Array(8).fill(undefined), // Trimestre 2 - 8 columnas
+        3: Array(8).fill(undefined)  // Trimestre 3 - 8 columnas
       };
     });
 
     notas.forEach(nota => {
       if (organizadas[nota.asignatura] && organizadas[nota.asignatura][nota.trimestre]) {
-        organizadas[nota.asignatura][nota.trimestre].push(nota);
+        // Usar numero_evaluacion - 1 como indice (0-based)
+        const idx = (nota.numero_evaluacion || 1) - 1;
+        if (idx >= 0 && idx < 8) {
+          organizadas[nota.asignatura][nota.trimestre][idx] = nota;
+        }
       }
     });
 
@@ -37,9 +78,10 @@ function NotasTab({ notas, pupilo }) {
     asignaturas.forEach(asig => {
       promedios[asig] = {};
       [1, 2, 3].forEach(trim => {
-        const notasTrim = notasOrganizadas[asig][trim];
+        // Filtrar: debe existir (no undefined), tener nota y no ser pendiente
+        const notasTrim = notasOrganizadas[asig][trim].filter(n => n && n.nota !== null && !n.es_pendiente);
         if (notasTrim.length > 0) {
-          const suma = notasTrim.reduce((acc, n) => acc + n.nota, 0);
+          const suma = notasTrim.reduce((acc, n) => acc + parseFloat(n.nota), 0);
           promedios[asig][trim] = suma / notasTrim.length;
         } else {
           promedios[asig][trim] = null;
@@ -68,10 +110,10 @@ function NotasTab({ notas, pupilo }) {
 
   // Calcular promedio general
   const promedioGeneral = useMemo(() => {
-    const todasNotas = notas.map(n => n.nota);
-    if (todasNotas.length > 0) {
-      const suma = todasNotas.reduce((acc, n) => acc + n, 0);
-      return (suma / todasNotas.length).toFixed(1);
+    const notasValidas = notas.filter(n => n.nota !== null && !n.es_pendiente);
+    if (notasValidas.length > 0) {
+      const suma = notasValidas.reduce((acc, n) => acc + parseFloat(n.nota), 0);
+      return (suma / notasValidas.length).toFixed(1);
     }
     return '-';
   }, [notas]);
@@ -84,6 +126,7 @@ function NotasTab({ notas, pupilo }) {
   };
 
   const formatearFecha = (fecha) => {
+    if (!fecha) return 'Sin fecha';
     const date = new Date(fecha);
     return date.toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' });
   };
@@ -104,6 +147,69 @@ function NotasTab({ notas, pupilo }) {
 
   // Generar array de 8 columnas por trimestre
   const columnasNotas = Array.from({ length: 8 }, (_, i) => i + 1);
+
+  // Si no hay pupilo seleccionado
+  if (!pupilo) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p style={{ color: '#64748b', padding: '40px 0' }}>
+              No hay pupilo seleccionado. Seleccione un pupilo para ver sus notas.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si está cargando
+  if (cargando) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p style={{ color: '#64748b', padding: '40px 0' }}>
+              Cargando notas...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si hay error
+  if (error) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p style={{ color: '#ef4444', padding: '40px 0' }}>
+              {error}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay notas
+  if (notas.length === 0) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-header">
+            <h3>Libro de Calificaciones</h3>
+          </div>
+          <div className="card-body text-center">
+            <p style={{ color: '#64748b', padding: '40px 0' }}>
+              No hay notas registradas para {pupilo.nombres} {pupilo.apellidos}.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="tab-panel active" onClick={cerrarPopup}>
@@ -157,12 +263,16 @@ function NotasTab({ notas, pupilo }) {
                         return (
                           <td key={`t1-${idx}`} className="nota-celda trimestre-1">
                             {notaObj !== undefined ? (
-                              <span
-                                className={`nota-valor nota-clickable ${getNotaClass(notaObj.nota)}`}
-                                onClick={(e) => handleNotaClick(notaObj, e)}
-                              >
-                                {notaObj.nota.toFixed(1)}
-                              </span>
+                              notaObj.es_pendiente ? (
+                                <span className="nota-valor nota-pendiente">P</span>
+                              ) : (
+                                <span
+                                  className={`nota-valor nota-clickable ${getNotaClass(parseFloat(notaObj.nota))}`}
+                                  onClick={(e) => handleNotaClick(notaObj, e)}
+                                >
+                                  {parseFloat(notaObj.nota).toFixed(1)}
+                                </span>
+                              )
                             ) : (
                               <span className="nota-vacia">-</span>
                             )}
@@ -185,12 +295,16 @@ function NotasTab({ notas, pupilo }) {
                         return (
                           <td key={`t2-${idx}`} className="nota-celda trimestre-2">
                             {notaObj !== undefined ? (
-                              <span
-                                className={`nota-valor nota-clickable ${getNotaClass(notaObj.nota)}`}
-                                onClick={(e) => handleNotaClick(notaObj, e)}
-                              >
-                                {notaObj.nota.toFixed(1)}
-                              </span>
+                              notaObj.es_pendiente ? (
+                                <span className="nota-valor nota-pendiente">P</span>
+                              ) : (
+                                <span
+                                  className={`nota-valor nota-clickable ${getNotaClass(parseFloat(notaObj.nota))}`}
+                                  onClick={(e) => handleNotaClick(notaObj, e)}
+                                >
+                                  {parseFloat(notaObj.nota).toFixed(1)}
+                                </span>
+                              )
                             ) : (
                               <span className="nota-vacia">-</span>
                             )}
@@ -213,12 +327,16 @@ function NotasTab({ notas, pupilo }) {
                         return (
                           <td key={`t3-${idx}`} className="nota-celda trimestre-3">
                             {notaObj !== undefined ? (
-                              <span
-                                className={`nota-valor nota-clickable ${getNotaClass(notaObj.nota)}`}
-                                onClick={(e) => handleNotaClick(notaObj, e)}
-                              >
-                                {notaObj.nota.toFixed(1)}
-                              </span>
+                              notaObj.es_pendiente ? (
+                                <span className="nota-valor nota-pendiente">P</span>
+                              ) : (
+                                <span
+                                  className={`nota-valor nota-clickable ${getNotaClass(parseFloat(notaObj.nota))}`}
+                                  onClick={(e) => handleNotaClick(notaObj, e)}
+                                >
+                                  {parseFloat(notaObj.nota).toFixed(1)}
+                                </span>
+                              )
                             ) : (
                               <span className="nota-vacia">-</span>
                             )}
@@ -261,8 +379,8 @@ function NotasTab({ notas, pupilo }) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="nota-popup-header">
-            <span className={`nota-popup-valor ${getNotaClass(notaSeleccionada.nota)}`}>
-              {notaSeleccionada.nota.toFixed(1)}
+            <span className={`nota-popup-valor ${getNotaClass(parseFloat(notaSeleccionada.nota))}`}>
+              {parseFloat(notaSeleccionada.nota).toFixed(1)}
             </span>
             <span className="nota-popup-asignatura">{notaSeleccionada.asignatura}</span>
           </div>
@@ -285,7 +403,7 @@ function NotasTab({ notas, pupilo }) {
               </div>
             )}
             {!notaSeleccionada.comentario && (
-              <div className="nota-popup-sin-comentario">Sin comentarios del docente</div>
+              <div className="nota-popup-sin-comentario">No hay comentarios</div>
             )}
           </div>
         </div>

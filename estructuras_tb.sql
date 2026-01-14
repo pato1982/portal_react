@@ -1477,6 +1477,32 @@ CREATE TABLE `tb_intentos_registro_fallidos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- TOTAL: 52 tablas documentadas
--- Última actualización: 2026-01-12
+-- TABLA 53: tb_consultas_contacto
+-- Guarda las consultas enviadas desde el formulario de contacto de la landing page
+-- ============================================
+CREATE TABLE `tb_consultas_contacto` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nombre_solicitante` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `establecimiento` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `telefono` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `correo` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `consulta` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `estado` enum('pendiente','en_proceso','respondida','cerrada') COLLATE utf8mb4_unicode_ci DEFAULT 'pendiente',
+  `respuesta` text COLLATE utf8mb4_unicode_ci,
+  `respondido_por` int DEFAULT NULL,
+  `fecha_respuesta` datetime DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `fecha_envio` datetime DEFAULT CURRENT_TIMESTAMP,
+  `activo` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `idx_estado` (`estado`),
+  KEY `idx_fecha_envio` (`fecha_envio`),
+  KEY `idx_correo` (`correo`),
+  KEY `idx_activo` (`activo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- TOTAL: 53 tablas documentadas
+-- Última actualización: 2026-01-13
 -- ============================================

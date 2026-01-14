@@ -17,6 +17,21 @@ function InformacionTab({ pupilo, apoderado }) {
     return date.toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' });
   };
 
+  // Si no hay pupilo seleccionado, mostrar mensaje
+  if (!pupilo) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p style={{ color: '#64748b', padding: '40px 0' }}>
+              No hay pupilo seleccionado. Seleccione un pupilo para ver su informacion.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="tab-panel active">
       <div className="info-section">
@@ -47,21 +62,21 @@ function InformacionTab({ pupilo, apoderado }) {
               </div>
               <div className="info-field">
                 <span className="info-label">Curso</span>
-                <span className="info-value">{pupilo.curso}</span>
+                <span className="info-value">{pupilo.curso_nombre || 'Sin asignar'}</span>
               </div>
             </div>
             <div className="info-grid-4" style={{ marginTop: '16px' }}>
               <div className="info-field">
                 <span className="info-label">Fecha de Nacimiento</span>
-                <span className="info-value">{formatearFecha(pupilo.fechaNacimiento)}</span>
+                <span className="info-value">{pupilo.fecha_nacimiento ? formatearFecha(pupilo.fecha_nacimiento) : 'No registrada'}</span>
               </div>
               <div className="info-field">
                 <span className="info-label">Edad</span>
-                <span className="info-value">{calcularEdad(pupilo.fechaNacimiento)} anos</span>
+                <span className="info-value">{pupilo.fecha_nacimiento ? calcularEdad(pupilo.fecha_nacimiento) + ' anos' : '-'}</span>
               </div>
               <div className="info-field">
-                <span className="info-label">Email Institucional</span>
-                <span className="info-value">{pupilo.email}</span>
+                <span className="info-label">Sexo</span>
+                <span className="info-value">{pupilo.sexo || 'No especificado'}</span>
               </div>
               <div className="info-field">
                 <span className="info-label">Estado</span>
@@ -88,29 +103,29 @@ function InformacionTab({ pupilo, apoderado }) {
             <div className="info-grid-4">
               <div className="info-field">
                 <span className="info-label">Nombre Completo</span>
-                <span className="info-value">{apoderado.nombre} {apoderado.apellidos}</span>
+                <span className="info-value">{apoderado.nombres} {apoderado.apellidos}</span>
               </div>
               <div className="info-field">
                 <span className="info-label">Parentesco</span>
-                <span className="info-value">{apoderado.parentesco || 'No especificado'}</span>
+                <span className="info-value">{pupilo.parentesco || 'No especificado'}</span>
               </div>
               <div className="info-field">
                 <span className="info-label">Telefono</span>
-                <span className="info-value">{apoderado.telefono}</span>
+                <span className="info-value">{apoderado.telefono || 'No registrado'}</span>
               </div>
               <div className="info-field">
                 <span className="info-label">Correo Electronico</span>
-                <span className="info-value">{apoderado.email}</span>
+                <span className="info-value">{apoderado.email || 'No registrado'}</span>
               </div>
             </div>
             <div className="info-grid-4" style={{ marginTop: '16px' }}>
               <div className="info-field">
                 <span className="info-label">RUT</span>
-                <span className="info-value">{apoderado.rut}</span>
+                <span className="info-value">{apoderado.rut || 'No registrado'}</span>
               </div>
               <div className="info-field info-field-wide">
                 <span className="info-label">Direccion</span>
-                <span className="info-value">{apoderado.direccion}</span>
+                <span className="info-value">{apoderado.direccion || 'No registrada'}</span>
               </div>
             </div>
           </div>

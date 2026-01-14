@@ -1,61 +1,56 @@
 import React, { useMemo, useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
+import config from '../../config/env';
 
-function ProgresoTab({ notas, pupilo }) {
+function ProgresoTab({ pupilo }) {
   const chartRendimientoRef = useRef(null);
   const chartAsignaturasRef = useRef(null);
   const chartRendimientoInstance = useRef(null);
   const chartAsignaturasInstance = useRef(null);
   const [asignaturaSeleccionada, setAsignaturaSeleccionada] = useState('todas');
 
-  // Calcular estadisticas generales
-  const estadisticas = useMemo(() => {
-    if (notas.length === 0) return null;
+  // Estados para datos de la API
+  const [datosProgreso, setDatosProgreso] = useState(null);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
 
-    const totalNotas = notas.length;
-    const sumaNotas = notas.reduce((acc, n) => acc + n.nota, 0);
-    const promedio = sumaNotas / totalNotas;
-    const notaMaxima = Math.max(...notas.map(n => n.nota));
-    const notaMinima = Math.min(...notas.map(n => n.nota));
-    const aprobadas = notas.filter(n => n.nota >= 4.0).length;
-    const reprobadas = notas.filter(n => n.nota < 4.0).length;
-
-    // Promedios por trimestre
-    const promediosPorTrimestre = {};
-    [1, 2, 3].forEach(trim => {
-      const notasTrim = notas.filter(n => n.trimestre === trim);
-      if (notasTrim.length > 0) {
-        const suma = notasTrim.reduce((acc, n) => acc + n.nota, 0);
-        promediosPorTrimestre[trim] = suma / notasTrim.length;
+  // Cargar datos de progreso cuando cambia el pupilo
+  useEffect(() => {
+    const cargarProgreso = async () => {
+      if (!pupilo?.id) {
+        setDatosProgreso(null);
+        return;
       }
-    });
 
-    // Promedios por asignatura
-    const asignaturas = [...new Set(notas.map(n => n.asignatura))].sort();
-    const promediosPorAsignatura = {};
-    asignaturas.forEach(asig => {
-      const notasAsig = notas.filter(n => n.asignatura === asig);
-      const suma = notasAsig.reduce((acc, n) => acc + n.nota, 0);
-      promediosPorAsignatura[asig] = suma / notasAsig.length;
-    });
+      setCargando(true);
+      setError('');
 
-    return {
-      totalNotas,
-      promedio,
-      notaMaxima,
-      notaMinima,
-      aprobadas,
-      reprobadas,
-      porcentajeAprobacion: (aprobadas / totalNotas) * 100,
-      promediosPorTrimestre,
-      promediosPorAsignatura,
-      asignaturas
+      try {
+        const url = `${config.apiBaseUrl}/apoderado/pupilo/${pupilo.id}/progreso`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.success) {
+          setDatosProgreso(data.data);
+        } else {
+          setError(data.error || 'Error al cargar progreso');
+        }
+      } catch (err) {
+        console.error('Error cargando progreso:', err);
+        setError('Error de conexion');
+      } finally {
+        setCargando(false);
+      }
     };
-  }, [notas]);
+
+    cargarProgreso();
+  }, [pupilo?.id]);
 
   // Estadisticas filtradas por asignatura seleccionada (para KPIs)
   const estadisticasFiltradas = useMemo(() => {
-    if (!estadisticas) return null;
+    if (!datosProgreso) return null;
+
+    const { estadisticas, promediosPorAsignatura } = datosProgreso;
 
     // Si es "todas", usar estadisticas generales
     if (asignaturaSeleccionada === 'todas') {
@@ -69,77 +64,79 @@ function ProgresoTab({ notas, pupilo }) {
       };
     }
 
-    // Filtrar notas por asignatura seleccionada
-    const notasAsignatura = notas.filter(n => n.asignatura === asignaturaSeleccionada);
-
-    if (notasAsignatura.length === 0) {
+    // Si hay datos de la asignatura seleccionada
+    if (promediosPorAsignatura[asignaturaSeleccionada]) {
       return {
-        promedio: 0,
-        notaMaxima: 0,
-        notaMinima: 0,
-        porcentajeAprobacion: 0,
-        totalNotas: 0,
+        promedio: promediosPorAsignatura[asignaturaSeleccionada],
+        notaMaxima: estadisticas.notaMaxima, // Mantener general
+        notaMinima: estadisticas.notaMinima, // Mantener general
+        porcentajeAprobacion: estadisticas.porcentajeAprobacion, // Mantener general
+        totalNotas: estadisticas.totalNotas, // Mantener general
         label: asignaturaSeleccionada
       };
     }
 
-    const totalNotas = notasAsignatura.length;
-    const sumaNotas = notasAsignatura.reduce((acc, n) => acc + n.nota, 0);
-    const promedio = sumaNotas / totalNotas;
-    const notaMaxima = Math.max(...notasAsignatura.map(n => n.nota));
-    const notaMinima = Math.min(...notasAsignatura.map(n => n.nota));
-    const aprobadas = notasAsignatura.filter(n => n.nota >= 4.0).length;
-    const porcentajeAprobacion = (aprobadas / totalNotas) * 100;
-
     return {
-      promedio,
-      notaMaxima,
-      notaMinima,
-      porcentajeAprobacion,
-      totalNotas,
+      promedio: 0,
+      notaMaxima: 0,
+      notaMinima: 0,
+      porcentajeAprobacion: 0,
+      totalNotas: 0,
       label: asignaturaSeleccionada
     };
-  }, [estadisticas, asignaturaSeleccionada, notas]);
+  }, [datosProgreso, asignaturaSeleccionada]);
 
-  // Datos mensuales por asignatura (demo)
-  const datosMensualesPorAsignatura = useMemo(() => {
-    // Datos demo para cada asignatura
-    return {
-      'todas': [5.8, 6.0, 6.2, 5.9, 6.1, 6.4, 6.3, 6.5, 6.2, 6.4],
-      'Ciencias': [6.0, 6.2, 6.5, 6.3, 6.4, 6.8, 6.5, 6.7, 6.4, 6.6],
-      'Historia': [5.2, 5.5, 5.8, 5.6, 5.7, 6.0, 5.9, 6.1, 5.8, 6.0],
-      'Ingles': [6.5, 6.8, 7.0, 6.9, 7.0, 7.0, 6.8, 7.0, 6.9, 7.0],
-      'Lenguaje': [5.5, 5.8, 6.0, 5.9, 6.0, 6.2, 6.1, 6.3, 6.0, 6.2],
-      'Matematicas': [6.2, 6.5, 6.3, 6.4, 6.6, 6.8, 6.7, 6.9, 6.5, 6.7]
-    };
-  }, []);
-
-  // Datos mensuales segun asignatura seleccionada
+  // Datos mensuales para el grafico
   const datosMensuales = useMemo(() => {
-    return datosMensualesPorAsignatura[asignaturaSeleccionada] || datosMensualesPorAsignatura['todas'];
-  }, [asignaturaSeleccionada, datosMensualesPorAsignatura]);
+    if (!datosProgreso || !datosProgreso.promediosMensuales) {
+      return [];
+    }
+
+    const mesesOrden = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // Mar - Dic
+    const datos = [];
+
+    mesesOrden.forEach(mes => {
+      if (datosProgreso.promediosMensuales[mes] !== undefined) {
+        datos.push(datosProgreso.promediosMensuales[mes]);
+      } else {
+        datos.push(null); // Sin datos para este mes
+      }
+    });
+
+    return datos;
+  }, [datosProgreso]);
 
   // Calcular variaciones porcentuales
   const variaciones = useMemo(() => {
     const vars = [];
     for (let i = 1; i < datosMensuales.length; i++) {
-      const variacion = ((datosMensuales[i] - datosMensuales[i - 1]) / datosMensuales[i - 1]) * 100;
-      vars.push(variacion.toFixed(1));
+      if (datosMensuales[i] !== null && datosMensuales[i - 1] !== null) {
+        const variacion = ((datosMensuales[i] - datosMensuales[i - 1]) / datosMensuales[i - 1]) * 100;
+        vars.push(variacion.toFixed(1));
+      } else {
+        vars.push(null);
+      }
     }
     return vars;
   }, [datosMensuales]);
 
   // Grafico de rendimiento mensual
   useEffect(() => {
-    if (!chartRendimientoRef.current || !estadisticas) return;
+    if (!chartRendimientoRef.current || !datosProgreso) return;
 
     if (chartRendimientoInstance.current) {
       chartRendimientoInstance.current.destroy();
     }
 
     const ctx = chartRendimientoRef.current.getContext('2d');
-
     const meses = ['Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+    // Filtrar datos validos
+    const datosValidos = datosMensuales.filter(d => d !== null);
+
+    if (datosValidos.length === 0) {
+      return; // No hay datos para mostrar
+    }
 
     // Plugin para mostrar variaciones
     const variacionPlugin = {
@@ -155,20 +152,22 @@ function ProgresoTab({ notas, pupilo }) {
         for (let i = 1; i < meta.data.length; i++) {
           const current = meta.data[i];
           const previous = meta.data[i - 1];
-          const variacion = parseFloat(variaciones[i - 1]);
 
-          const midX = (current.x + previous.x) / 2;
-          const midY = (current.y + previous.y) / 2 - 12;
+          if (variaciones[i - 1] !== null) {
+            const variacion = parseFloat(variaciones[i - 1]);
+            const midX = (current.x + previous.x) / 2;
+            const midY = (current.y + previous.y) / 2 - 12;
 
-          if (variacion > 0) {
-            ctx.fillStyle = '#10b981';
-            ctx.fillText(`+${variacion}%`, midX, midY);
-          } else if (variacion < 0) {
-            ctx.fillStyle = '#ef4444';
-            ctx.fillText(`${variacion}%`, midX, midY);
-          } else {
-            ctx.fillStyle = '#64748b';
-            ctx.fillText(`0%`, midX, midY);
+            if (variacion > 0) {
+              ctx.fillStyle = '#10b981';
+              ctx.fillText(`+${variacion}%`, midX, midY);
+            } else if (variacion < 0) {
+              ctx.fillStyle = '#ef4444';
+              ctx.fillText(`${variacion}%`, midX, midY);
+            } else {
+              ctx.fillStyle = '#64748b';
+              ctx.fillText(`0%`, midX, midY);
+            }
           }
         }
         ctx.restore();
@@ -190,7 +189,8 @@ function ProgresoTab({ notas, pupilo }) {
           pointRadius: 5,
           pointBackgroundColor: '#3b82f6',
           pointBorderColor: '#fff',
-          pointBorderWidth: 2
+          pointBorderWidth: 2,
+          spanGaps: true // Conectar lineas aunque haya nulls
         }]
       },
       options: {
@@ -230,23 +230,26 @@ function ProgresoTab({ notas, pupilo }) {
         chartRendimientoInstance.current.destroy();
       }
     };
-  }, [estadisticas, datosMensuales, variaciones, asignaturaSeleccionada]);
+  }, [datosProgreso, datosMensuales, variaciones, asignaturaSeleccionada]);
 
   // Grafico de promedios por asignatura
   useEffect(() => {
-    if (!chartAsignaturasRef.current || !estadisticas) return;
+    if (!chartAsignaturasRef.current || !datosProgreso) return;
 
     if (chartAsignaturasInstance.current) {
       chartAsignaturasInstance.current.destroy();
     }
 
-    const ctx = chartAsignaturasRef.current.getContext('2d');
+    const { asignaturas, promediosPorAsignatura } = datosProgreso;
 
-    const labels = estadisticas.asignaturas;
-    const data = labels.map(asig => estadisticas.promediosPorAsignatura[asig]);
+    if (!asignaturas || asignaturas.length === 0) return;
+
+    const ctx = chartAsignaturasRef.current.getContext('2d');
+    const labels = asignaturas;
+    const data = labels.map(asig => promediosPorAsignatura[asig] || 0);
 
     const colors = labels.map(asig => {
-      const nota = estadisticas.promediosPorAsignatura[asig];
+      const nota = promediosPorAsignatura[asig] || 0;
       if (nota >= 6.0) return '#10b981';
       if (nota >= 5.0) return '#3b82f6';
       if (nota >= 4.0) return '#f59e0b';
@@ -300,7 +303,7 @@ function ProgresoTab({ notas, pupilo }) {
         chartAsignaturasInstance.current.destroy();
       }
     };
-  }, [estadisticas]);
+  }, [datosProgreso]);
 
   const getNotaClass = (nota) => {
     if (nota >= 6.0) return 'nota-excelente';
@@ -309,11 +312,57 @@ function ProgresoTab({ notas, pupilo }) {
     return 'nota-insuficiente';
   };
 
-  if (!estadisticas) {
+  // Si no hay pupilo seleccionado
+  if (!pupilo) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p style={{ color: '#64748b', padding: '40px 0' }}>
+              No hay pupilo seleccionado. Seleccione un pupilo para ver su progreso.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si esta cargando
+  if (cargando) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p style={{ color: '#64748b', padding: '40px 0' }}>
+              Cargando progreso...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si hay error
+  if (error) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p style={{ color: '#ef4444', padding: '40px 0' }}>
+              {error}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay datos
+  if (!datosProgreso || datosProgreso.estadisticas.totalNotas === 0) {
     return (
       <div className="tab-panel active">
         <div className="progreso-vacio">
-          <p>No hay datos suficientes para mostrar el progreso</p>
+          <p>No hay datos suficientes para mostrar el progreso de {pupilo.nombres} {pupilo.apellidos}</p>
         </div>
       </div>
     );
@@ -333,7 +382,7 @@ function ProgresoTab({ notas, pupilo }) {
               onChange={(e) => setAsignaturaSeleccionada(e.target.value)}
             >
               <option value="todas">Todas</option>
-              {estadisticas.asignaturas.map(asig => (
+              {datosProgreso.asignaturas.map(asig => (
                 <option key={asig} value={asig}>{asig}</option>
               ))}
             </select>
@@ -356,10 +405,10 @@ function ProgresoTab({ notas, pupilo }) {
                 </svg>
               </div>
               <div className="kpi-data">
-                <span className={`kpi-valor ${getNotaClass(estadisticasFiltradas.promedio)}`}>
-                  {estadisticasFiltradas.promedio.toFixed(1)}
+                <span className={`kpi-valor ${getNotaClass(estadisticasFiltradas?.promedio || 0)}`}>
+                  {(estadisticasFiltradas?.promedio || 0).toFixed(1)}
                 </span>
-                <span className="kpi-label">Promedio {estadisticasFiltradas.label}</span>
+                <span className="kpi-label">Promedio {estadisticasFiltradas?.label}</span>
               </div>
             </div>
 
@@ -373,7 +422,7 @@ function ProgresoTab({ notas, pupilo }) {
                 </svg>
               </div>
               <div className="kpi-data">
-                <span className="kpi-valor">94%</span>
+                <span className="kpi-valor">{datosProgreso.asistencia.porcentaje.toFixed(0)}%</span>
                 <span className="kpi-label">Asistencia</span>
               </div>
             </div>
@@ -387,7 +436,7 @@ function ProgresoTab({ notas, pupilo }) {
                 </svg>
               </div>
               <div className="kpi-data">
-                <span className="kpi-valor">{estadisticasFiltradas.totalNotas}</span>
+                <span className="kpi-valor">{estadisticasFiltradas?.totalNotas || 0}</span>
                 <span className="kpi-label">Total Notas</span>
               </div>
             </div>
@@ -401,7 +450,7 @@ function ProgresoTab({ notas, pupilo }) {
                 </svg>
               </div>
               <div className="kpi-data">
-                <span className="kpi-valor">{estadisticasFiltradas.porcentajeAprobacion.toFixed(0)}%</span>
+                <span className="kpi-valor">{(estadisticasFiltradas?.porcentajeAprobacion || 0).toFixed(0)}%</span>
                 <span className="kpi-label">Tasa Aprobacion</span>
               </div>
             </div>
@@ -414,8 +463,8 @@ function ProgresoTab({ notas, pupilo }) {
                 </svg>
               </div>
               <div className="kpi-data">
-                <span className={`kpi-valor ${getNotaClass(estadisticasFiltradas.notaMaxima)}`}>
-                  {estadisticasFiltradas.notaMaxima.toFixed(1)}
+                <span className={`kpi-valor ${getNotaClass(estadisticasFiltradas?.notaMaxima || 0)}`}>
+                  {(estadisticasFiltradas?.notaMaxima || 0).toFixed(1)}
                 </span>
                 <span className="kpi-label">Nota Maxima</span>
               </div>
@@ -429,8 +478,8 @@ function ProgresoTab({ notas, pupilo }) {
                 </svg>
               </div>
               <div className="kpi-data">
-                <span className={`kpi-valor ${getNotaClass(estadisticasFiltradas.notaMinima)}`}>
-                  {estadisticasFiltradas.notaMinima.toFixed(1)}
+                <span className={`kpi-valor ${getNotaClass(estadisticasFiltradas?.notaMinima || 0)}`}>
+                  {(estadisticasFiltradas?.notaMinima || 0).toFixed(1)}
                 </span>
                 <span className="kpi-label">Nota Minima</span>
               </div>

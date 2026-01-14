@@ -4,6 +4,7 @@ import AgregarNotaTab from './AgregarNotaTab';
 import ModificarNotaTab from './ModificarNotaTab';
 import VerNotasTab from './VerNotasTab';
 import ProgresoTab from './ProgresoTab';
+import ChatFlotante from '../ChatFlotante';
 import config from '../../config/env';
 
 function DocentePage({ onCambiarVista, usuarioDocente }) {
@@ -218,6 +219,17 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
         <p>Sistema de Gestion Academica &copy; 2024 | Todos los derechos reservados</p>
         <p className="footer-creditos">Sistema escolar desarrollado por <span className="ch-naranja">CH</span>system</p>
       </footer>
+
+      {/* Chat flotante para comunicacion con admin y otros docentes */}
+      <ChatFlotante
+        usuario={{
+          id: usuarioDocente?.id,
+          tipo: 'docente',
+          nombres: docenteActual.nombres,
+          apellidos: docenteActual.apellidos
+        }}
+        establecimientoId={establecimientoActual?.id}
+      />
     </div>
   );
 }

@@ -6,7 +6,9 @@ function ModalContacto({
   onCerrar,
   formData,
   onChange,
-  onSubmit
+  onSubmit,
+  enviando = false,
+  mensaje = { tipo: '', texto: '' }
 }) {
   return (
     <div
@@ -22,6 +24,11 @@ function ModalContacto({
           <button className="modal-footer-cerrar" onClick={onCerrar}>&times;</button>
         </div>
         <div className="modal-footer-body">
+          {mensaje.texto && (
+            <div className={`mensaje-contacto ${mensaje.tipo}`}>
+              {mensaje.texto}
+            </div>
+          )}
           <form onSubmit={onSubmit} className="form-contacto">
             <div className="form-row-doble">
               <div className="form-group">
@@ -88,11 +95,11 @@ function ModalContacto({
               ></textarea>
             </div>
             <div className="form-actions">
-              <button type="button" className="btn btn-outline" onClick={onCerrar}>
+              <button type="button" className="btn btn-outline" onClick={onCerrar} disabled={enviando}>
                 Cancelar
               </button>
-              <button type="submit" className="btn btn-primary">
-                Enviar consulta
+              <button type="submit" className="btn btn-primary" disabled={enviando}>
+                {enviando ? 'Enviando...' : 'Enviar consulta'}
               </button>
             </div>
           </form>

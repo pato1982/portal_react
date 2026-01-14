@@ -1,7 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useResponsive } from '../../hooks';
+import config from '../../config/env';
 
-function ComunicadosTab({ comunicados, onMarcarLeido }) {
+function ComunicadosTab({ pupilo, usuarioId }) {
+  const [comunicados, setComunicados] = useState([]);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
   const [comunicadoExpandido, setComunicadoExpandido] = useState(null);
   const [filtroFechaDesde, setFiltroFechaDesde] = useState('');
   const [filtroFechaHasta, setFiltroFechaHasta] = useState('');
@@ -14,7 +18,61 @@ function ComunicadosTab({ comunicados, onMarcarLeido }) {
     reunion: { label: 'Reunion', color: '#8b5cf6' },
     academico: { label: 'Academico', color: '#3b82f6' },
     evento: { label: 'Evento', color: '#10b981' },
-    administrativo: { label: 'Administrativo', color: '#f59e0b' }
+    administrativo: { label: 'Administrativo', color: '#f59e0b' },
+    informativo: { label: 'Informativo', color: '#6b7280' },
+    urgente: { label: 'Urgente', color: '#ef4444' }
+  };
+
+  // Cargar comunicados cuando cambia el pupilo
+  useEffect(() => {
+    const cargarComunicados = async () => {
+      if (!pupilo?.id) {
+        setComunicados([]);
+        return;
+      }
+
+      setCargando(true);
+      setError('');
+
+      try {
+        const url = `${config.apiBaseUrl}/apoderado/pupilo/${pupilo.id}/comunicados?usuario_id=${usuarioId || 0}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.success) {
+          setComunicados(data.data || []);
+        } else {
+          setError(data.error || 'Error al cargar comunicados');
+        }
+      } catch (err) {
+        console.error('Error cargando comunicados:', err);
+        setError('Error de conexion');
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    cargarComunicados();
+  }, [pupilo?.id, usuarioId]);
+
+  // Marcar comunicado como leido
+  const marcarComoLeido = async (comunicadoId) => {
+    if (!usuarioId) return;
+
+    try {
+      await fetch(`${config.apiBaseUrl}/apoderado/comunicado/${comunicadoId}/marcar-leido`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_id: usuarioId })
+      });
+
+      // Actualizar estado local
+      setComunicados(prev => prev.map(c =>
+        c.id === comunicadoId ? { ...c, leido: 1 } : c
+      ));
+    } catch (err) {
+      console.error('Error marcando comunicado como leido:', err);
+    }
   };
 
   // Filtrar comunicados segun los filtros aplicados
@@ -25,7 +83,7 @@ function ComunicadosTab({ comunicados, onMarcarLeido }) {
         return false;
       }
       // Filtro por fecha hasta
-      if (filtroFechaHasta && new Date(c.fecha) > new Date(filtroFechaHasta)) {
+      if (filtroFechaHasta && new Date(c.fecha) > new Date(filtroFechaHasta + 'T23:59:59')) {
         return false;
       }
       // Filtro por tipo
@@ -68,7 +126,7 @@ function ComunicadosTab({ comunicados, onMarcarLeido }) {
 
   const hayFiltrosActivos = filtroFechaDesde || filtroFechaHasta || filtroTipo;
 
-  // Lista ordenada por fecha (más recientes primero) para móvil
+  // Lista ordenada por fecha (mas recientes primero) para movil
   const comunicadosOrdenados = useMemo(() => {
     return [...comunicadosFiltrados].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
   }, [comunicadosFiltrados]);
@@ -94,7 +152,7 @@ function ComunicadosTab({ comunicados, onMarcarLeido }) {
     } else {
       setComunicadoExpandido(comunicado.id);
       if (!comunicado.leido) {
-        onMarcarLeido(comunicado.id);
+        marcarComoLeido(comunicado.id);
       }
     }
   };
@@ -109,9 +167,9 @@ function ComunicadosTab({ comunicados, onMarcarLeido }) {
         <div className="comunicado-mensaje-info">
           <span
             className="comunicado-tipo-badge"
-            style={{ background: tiposComunicado[comunicado.tipo]?.color }}
+            style={{ background: tiposComunicado[comunicado.tipo]?.color || '#6b7280' }}
           >
-            {tiposComunicado[comunicado.tipo]?.label}
+            {tiposComunicado[comunicado.tipo]?.label || comunicado.tipo}
           </span>
           <h4 className="comunicado-mensaje-titulo">{comunicado.titulo}</h4>
         </div>
@@ -123,6 +181,15 @@ function ComunicadosTab({ comunicados, onMarcarLeido }) {
       <p className={`comunicado-mensaje-texto ${comunicadoExpandido === comunicado.id ? 'expandido' : ''}`}>
         {comunicado.mensaje}
       </p>
+      {comunicadoExpandido === comunicado.id && comunicado.fecha_evento && (
+        <div className="comunicado-evento-info" style={{ marginTop: '10px', padding: '10px', background: '#f8fafc', borderRadius: '6px', fontSize: '13px' }}>
+          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+            <span><strong>Fecha evento:</strong> {new Date(comunicado.fecha_evento).toLocaleDateString('es-CL')}</span>
+            {comunicado.hora_evento && <span><strong>Hora:</strong> {comunicado.hora_evento}</span>}
+            {comunicado.lugar_evento && <span><strong>Lugar:</strong> {comunicado.lugar_evento}</span>}
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -131,6 +198,51 @@ function ComunicadosTab({ comunicados, onMarcarLeido }) {
                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     return meses[new Date().getMonth()];
   };
+
+  // Si no hay pupilo seleccionado
+  if (!pupilo) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p style={{ color: '#64748b', padding: '40px 0' }}>
+              No hay pupilo seleccionado. Seleccione un pupilo para ver sus comunicados.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si esta cargando
+  if (cargando) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p style={{ color: '#64748b', padding: '40px 0' }}>
+              Cargando comunicados...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si hay error
+  if (error) {
+    return (
+      <div className="tab-panel active">
+        <div className="card">
+          <div className="card-body text-center">
+            <p style={{ color: '#ef4444', padding: '40px 0' }}>
+              {error}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="tab-panel active">
@@ -166,6 +278,8 @@ function ComunicadosTab({ comunicados, onMarcarLeido }) {
             <option value="academico">Academico</option>
             <option value="evento">Evento</option>
             <option value="administrativo">Administrativo</option>
+            <option value="informativo">Informativo</option>
+            <option value="urgente">Urgente</option>
           </select>
         </div>
         {hayFiltrosActivos && (
@@ -180,7 +294,7 @@ function ComunicadosTab({ comunicados, onMarcarLeido }) {
       </div>
 
       {isMobile ? (
-        /* Vista Móvil: Lista única ordenada por fecha */
+        /* Vista Movil: Lista unica ordenada por fecha */
         <div className="comunicados-lista-movil">
           {comunicadosOrdenados.length > 0 ? (
             comunicadosOrdenados.map(renderComunicado)

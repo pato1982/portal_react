@@ -3,6 +3,8 @@ const cors = require('cors');
 const { pool, testConnection } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const registroRoutes = require('./routes/registro');
+const chatRoutes = require('./routes/chat');
+const contactoRoutes = require('./routes/contacto');
 require('dotenv').config();
 
 const app = express();
@@ -17,6 +19,12 @@ app.use('/api/auth', authRoutes);
 
 // Rutas de registro
 app.use('/api/registro', registroRoutes);
+
+// Rutas de chat
+app.use('/api/chat', chatRoutes);
+
+// Rutas de contacto
+app.use('/api/contacto', contactoRoutes);
 
 // ============================================
 // RUTAS DE ESTABLECIMIENTOS
@@ -680,6 +688,283 @@ app.get('/api/apoderado/mis-pupilos/:apoderadoId', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Error al obtener pupilos'
+        });
+    }
+});
+
+// GET /api/apoderado/pupilo/:alumnoId/notas - Obtener notas de un pupilo
+app.get('/api/apoderado/pupilo/:alumnoId/notas', async (req, res) => {
+    const { alumnoId } = req.params;
+    const { establecimiento_id } = req.query;
+
+    try {
+        const anioActual = new Date().getFullYear();
+
+        const [notas] = await pool.query(`
+            SELECT
+                asig.nombre as asignatura,
+                n.trimestre,
+                n.numero_evaluacion,
+                n.nota,
+                n.fecha_evaluacion as fecha,
+                n.comentario,
+                n.es_pendiente
+            FROM tb_notas n
+            JOIN tb_asignaturas asig ON n.asignatura_id = asig.id
+            WHERE n.alumno_id = ?
+            AND n.activo = 1
+            AND n.anio_academico = ?
+            ${establecimiento_id ? 'AND n.establecimiento_id = ?' : ''}
+            ORDER BY asig.nombre ASC, n.trimestre ASC, n.numero_evaluacion ASC
+        `, establecimiento_id ? [alumnoId, anioActual, establecimiento_id] : [alumnoId, anioActual]);
+
+        res.json({
+            success: true,
+            data: notas
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo notas del pupilo:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener notas'
+        });
+    }
+});
+
+// GET /api/apoderado/pupilo/:alumnoId/comunicados - Obtener comunicados del curso del pupilo
+app.get('/api/apoderado/pupilo/:alumnoId/comunicados', async (req, res) => {
+    const { alumnoId } = req.params;
+    const { usuario_id } = req.query;
+
+    try {
+        // Obtener el curso_id del alumno
+        const [alumnoData] = await pool.query(`
+            SELECT ae.curso_id, ae.establecimiento_id
+            FROM tb_alumno_establecimiento ae
+            WHERE ae.alumno_id = ? AND ae.activo = 1
+            LIMIT 1
+        `, [alumnoId]);
+
+        if (alumnoData.length === 0) {
+            return res.json({ success: true, data: [] });
+        }
+
+        const { curso_id, establecimiento_id } = alumnoData[0];
+
+        // Obtener comunicados para el curso del alumno o para todos los cursos
+        const [comunicados] = await pool.query(`
+            SELECT DISTINCT
+                c.id,
+                c.titulo,
+                c.mensaje,
+                c.tipo,
+                c.prioridad,
+                c.fecha_envio as fecha,
+                c.fecha_evento,
+                c.hora_evento,
+                c.lugar_evento,
+                c.requiere_confirmacion,
+                CASE WHEN cl.id IS NOT NULL THEN 1 ELSE 0 END as leido,
+                cl.fecha_lectura
+            FROM tb_comunicados c
+            LEFT JOIN tb_comunicado_curso cc ON c.id = cc.comunicado_id
+            LEFT JOIN tb_comunicado_leido cl ON c.id = cl.comunicado_id AND cl.usuario_id = ?
+            WHERE c.establecimiento_id = ?
+            AND c.activo = 1
+            AND c.enviado = 1
+            AND c.para_apoderados = 1
+            AND (c.para_todos_cursos = 1 OR cc.curso_id = ?)
+            AND (c.fecha_expiracion IS NULL OR c.fecha_expiracion >= CURDATE())
+            ORDER BY c.fecha_envio DESC
+        `, [usuario_id || 0, establecimiento_id, curso_id]);
+
+        res.json({
+            success: true,
+            data: comunicados
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo comunicados del pupilo:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener comunicados'
+        });
+    }
+});
+
+// POST /api/apoderado/comunicado/:comunicadoId/marcar-leido - Marcar comunicado como leido
+app.post('/api/apoderado/comunicado/:comunicadoId/marcar-leido', async (req, res) => {
+    const { comunicadoId } = req.params;
+    const { usuario_id } = req.body;
+
+    if (!usuario_id) {
+        return res.status(400).json({
+            success: false,
+            error: 'Se requiere usuario_id'
+        });
+    }
+
+    try {
+        // Verificar si ya existe el registro
+        const [existing] = await pool.query(`
+            SELECT id FROM tb_comunicado_leido
+            WHERE comunicado_id = ? AND usuario_id = ?
+        `, [comunicadoId, usuario_id]);
+
+        if (existing.length === 0) {
+            // Insertar nuevo registro de lectura
+            await pool.query(`
+                INSERT INTO tb_comunicado_leido (comunicado_id, usuario_id, fecha_lectura)
+                VALUES (?, ?, NOW())
+            `, [comunicadoId, usuario_id]);
+        }
+
+        res.json({
+            success: true,
+            message: 'Comunicado marcado como leido'
+        });
+
+    } catch (error) {
+        console.error('Error marcando comunicado como leido:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al marcar comunicado'
+        });
+    }
+});
+
+// GET /api/apoderado/pupilo/:alumnoId/progreso - Obtener estadisticas de progreso del pupilo
+app.get('/api/apoderado/pupilo/:alumnoId/progreso', async (req, res) => {
+    const { alumnoId } = req.params;
+
+    try {
+        const anioActual = new Date().getFullYear();
+
+        // 1. Obtener todas las notas del alumno (excluyendo pendientes)
+        const [notas] = await pool.query(`
+            SELECT
+                n.nota,
+                n.trimestre,
+                n.fecha_evaluacion,
+                asig.nombre as asignatura
+            FROM tb_notas n
+            JOIN tb_asignaturas asig ON n.asignatura_id = asig.id
+            WHERE n.alumno_id = ?
+            AND n.activo = 1
+            AND n.anio_academico = ?
+            AND n.es_pendiente = 0
+            AND n.nota IS NOT NULL
+            ORDER BY n.fecha_evaluacion ASC
+        `, [alumnoId, anioActual]);
+
+        // 2. Calcular estadisticas de notas
+        let estadisticas = {
+            totalNotas: 0,
+            promedio: 0,
+            notaMaxima: 0,
+            notaMinima: 0,
+            aprobadas: 0,
+            reprobadas: 0,
+            porcentajeAprobacion: 0
+        };
+
+        if (notas.length > 0) {
+            const notasValores = notas.map(n => parseFloat(n.nota));
+            const suma = notasValores.reduce((acc, n) => acc + n, 0);
+            const aprobadas = notasValores.filter(n => n >= 4.0).length;
+
+            estadisticas = {
+                totalNotas: notas.length,
+                promedio: suma / notas.length,
+                notaMaxima: Math.max(...notasValores),
+                notaMinima: Math.min(...notasValores),
+                aprobadas: aprobadas,
+                reprobadas: notas.length - aprobadas,
+                porcentajeAprobacion: (aprobadas / notas.length) * 100
+            };
+        }
+
+        // 3. Calcular promedios por trimestre
+        const promediosPorTrimestre = {};
+        [1, 2, 3].forEach(trim => {
+            const notasTrim = notas.filter(n => n.trimestre === trim);
+            if (notasTrim.length > 0) {
+                const suma = notasTrim.reduce((acc, n) => acc + parseFloat(n.nota), 0);
+                promediosPorTrimestre[trim] = suma / notasTrim.length;
+            }
+        });
+
+        // 4. Calcular promedios por asignatura
+        const asignaturas = [...new Set(notas.map(n => n.asignatura))].sort();
+        const promediosPorAsignatura = {};
+        asignaturas.forEach(asig => {
+            const notasAsig = notas.filter(n => n.asignatura === asig);
+            if (notasAsig.length > 0) {
+                const suma = notasAsig.reduce((acc, n) => acc + parseFloat(n.nota), 0);
+                promediosPorAsignatura[asig] = suma / notasAsig.length;
+            }
+        });
+
+        // 5. Calcular promedios mensuales (para grafico de linea)
+        const promediosMensuales = {};
+        notas.forEach(n => {
+            if (n.fecha_evaluacion) {
+                const mes = new Date(n.fecha_evaluacion).getMonth() + 1; // 1-12
+                if (!promediosMensuales[mes]) {
+                    promediosMensuales[mes] = { suma: 0, count: 0 };
+                }
+                promediosMensuales[mes].suma += parseFloat(n.nota);
+                promediosMensuales[mes].count++;
+            }
+        });
+        // Convertir a promedios
+        Object.keys(promediosMensuales).forEach(mes => {
+            promediosMensuales[mes] = promediosMensuales[mes].suma / promediosMensuales[mes].count;
+        });
+
+        // 6. Obtener asistencia del alumno
+        const [asistenciaData] = await pool.query(`
+            SELECT
+                COUNT(*) as totalDias,
+                SUM(CASE WHEN estado IN ('presente', 'atrasado', 'justificado') THEN 1 ELSE 0 END) as diasPresente
+            FROM tb_asistencia
+            WHERE alumno_id = ?
+            AND anio_academico = ?
+            AND activo = 1
+        `, [alumnoId, anioActual]);
+
+        let asistencia = {
+            porcentaje: 0,
+            diasPresente: 0,
+            totalDias: 0
+        };
+
+        if (asistenciaData.length > 0 && asistenciaData[0].totalDias > 0) {
+            asistencia = {
+                porcentaje: (asistenciaData[0].diasPresente / asistenciaData[0].totalDias) * 100,
+                diasPresente: asistenciaData[0].diasPresente || 0,
+                totalDias: asistenciaData[0].totalDias || 0
+            };
+        }
+
+        res.json({
+            success: true,
+            data: {
+                estadisticas,
+                asistencia,
+                promediosPorTrimestre,
+                promediosPorAsignatura,
+                promediosMensuales,
+                asignaturas
+            }
+        });
+
+    } catch (error) {
+        console.error('Error obteniendo progreso del pupilo:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener progreso'
         });
     }
 });

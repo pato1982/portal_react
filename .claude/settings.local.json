@@ -20,7 +20,8 @@
       "Bash(/mnt/c/Program\\\\ Files/nodejs/node.exe:*)",
       "Bash(curl:*)",
       "Bash(grep:*)",
-      "Bash(cmd.exe /c \"npm install react-datepicker\")"
+      "Bash(cmd.exe /c \"npm install react-datepicker\")",
+      "Bash(node:*)"
     ]
   }
 }

@@ -399,7 +399,7 @@ router.post('/admin', async (req, res) => {
         // Marcar código como usado
         await connection.query(`
             UPDATE tb_codigos_validacion
-            SET usado = 1, fecha_uso = NOW(), usuario_id = ?
+            SET usado = 1, fecha_uso = NOW(), usado_por_id = ?
             WHERE id = ?
         `, [usuarioId, codigoValidacion.id]);
 

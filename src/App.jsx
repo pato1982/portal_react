@@ -16,6 +16,7 @@ import LoginPage from './components/LoginPage';
 import RegistroPage from './components/RegistroPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { PageErrorFallback, SectionErrorFallback } from './components/common/ErrorFallback';
+import { useAuth } from './contexts';
 import { usuarioDemo } from './data/demoData';
 import './styles/docente.css';
 import './styles/apoderado.css';
@@ -27,6 +28,7 @@ function App() {
   const [vistaActual, setVistaActual] = useState('landing'); // 'landing', 'loginPage', 'seleccion-rol', 'registro', 'administrador', 'docente' o 'apoderado'
   const [tipoUsuarioRegistro, setTipoUsuarioRegistro] = useState(null); // 'administrador', 'docente', 'apoderado'
   const [usuarioLogueado, setUsuarioLogueado] = useState(null); // Datos del usuario autenticado
+  const { login: loginContext, logout: logoutContext } = useAuth();
 
   const renderTabContent = () => {
     // Cada tab se envuelve con ErrorBoundary para que un error en uno
@@ -59,6 +61,7 @@ function App() {
 
   const cerrarSesion = () => {
     setUsuarioLogueado(null);
+    logoutContext();
     setVistaActual('landing');
   };
 
@@ -93,6 +96,7 @@ function App() {
               nombre_establecimiento: usuario?.establecimiento || 'Establecimiento Educacional'
             };
             setUsuarioLogueado(usuarioConEstablecimiento);
+            loginContext(usuarioConEstablecimiento, tipo);
 
             if (tipo === 'administrador') {
               setVistaActual('administrador');

@@ -34,7 +34,7 @@ app.use('/api/contacto', contactoRoutes);
 app.get('/api/establecimientos', async (req, res) => {
     try {
         const [rows] = await pool.query(`
-      SELECT id, nombre, codigo, direccion, telefono, email
+      SELECT id, nombre, rbd, direccion, telefono, email
       FROM tb_establecimientos
       WHERE activo = 1
       ORDER BY nombre

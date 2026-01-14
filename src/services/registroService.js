@@ -73,7 +73,7 @@ export const validarCodigoPortal = async (codigo) => {
     const response = await fetch(`${config.apiBaseUrl}/registro/validar-codigo`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ codigo }),
+      body: JSON.stringify({ codigo: codigo.trim() }),
     });
 
     const data = await response.json();

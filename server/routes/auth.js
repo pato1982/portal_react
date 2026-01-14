@@ -127,7 +127,7 @@ router.post('/login', async (req, res) => {
 
         if (tipoDb === 'administrador') {
             const [admin] = await pool.query(`
-                SELECT a.*, e.nombre as establecimiento
+                SELECT a.*, e.nombre as establecimiento, ae.establecimiento_id
                 FROM tb_administradores a
                 LEFT JOIN tb_administrador_establecimiento ae ON a.id = ae.administrador_id AND ae.activo = 1
                 LEFT JOIN tb_establecimientos e ON ae.establecimiento_id = e.id
@@ -145,7 +145,7 @@ router.post('/login', async (req, res) => {
             }
         } else if (tipoDb === 'docente') {
             const [docente] = await pool.query(`
-                SELECT d.*, e.nombre as establecimiento
+                SELECT d.*, e.nombre as establecimiento, de.establecimiento_id
                 FROM tb_docentes d
                 LEFT JOIN tb_docente_establecimiento de ON d.id = de.docente_id AND de.activo = 1
                 LEFT JOIN tb_establecimientos e ON de.establecimiento_id = e.id
@@ -158,7 +158,8 @@ router.post('/login', async (req, res) => {
                     nombres: docente[0].nombres,
                     apellidos: docente[0].apellidos,
                     iniciales: `${docente[0].nombres?.charAt(0) || ''}${docente[0].apellidos?.charAt(0) || ''}`,
-                    establecimiento: docente[0].establecimiento
+                    establecimiento: docente[0].establecimiento,
+                    establecimiento_id: docente[0].establecimiento_id
                 };
             }
         } else if (tipoDb === 'apoderado') {
@@ -169,7 +170,7 @@ router.post('/login', async (req, res) => {
             if (apoderado.length > 0) {
                 // Obtener pupilos
                 const [pupilos] = await pool.query(`
-                    SELECT a.id, a.nombres, a.apellidos, c.nombre as curso
+                    SELECT a.id, a.nombres, a.apellidos, c.nombre as curso, ae.establecimiento_id
                     FROM tb_apoderado_alumno aa
                     JOIN tb_alumnos a ON aa.alumno_id = a.id
                     LEFT JOIN tb_alumno_establecimiento ae ON a.id = ae.alumno_id AND ae.activo = 1
@@ -189,7 +190,8 @@ router.post('/login', async (req, res) => {
                         nombres: p.nombres,
                         apellidos: p.apellidos,
                         curso: p.curso
-                    }))
+                    })),
+                    establecimiento_id: pupilos.length > 0 ? pupilos[0].establecimiento_id : null
                 };
             }
         }
@@ -208,9 +210,9 @@ router.post('/login', async (req, res) => {
 
         // Registrar sesión en la base de datos
         await pool.query(`
-            INSERT INTO tb_sesiones (usuario_id, token, ip_address, user_agent, fecha_expiracion)
-            VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))
-        `, [usuario.id, token, req.ip, req.headers['user-agent']]);
+            INSERT INTO tb_sesiones (usuario_id, establecimiento_id, tipo_usuario, token_sesion, ip_address, user_agent, fecha_expiracion)
+            VALUES (?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 24 HOUR))
+        `, [usuario.id, datosAdicionales.establecimiento_id || null, tipoDb, token, req.ip, req.headers['user-agent']]);
 
         // Respuesta exitosa
         res.json({
@@ -246,7 +248,7 @@ router.post('/logout', async (req, res) => {
     try {
         // Invalidar sesión en la base de datos
         await pool.query(
-            'UPDATE tb_sesiones SET activa = 0, fecha_cierre = NOW() WHERE token = ?',
+            'UPDATE tb_sesiones SET activa = 0, fecha_logout = NOW() WHERE token_sesion = ?',
             [token]
         );
 
@@ -276,7 +278,7 @@ router.get('/me', async (req, res) => {
 
         // Verificar que la sesión esté activa en la base de datos
         const [sesiones] = await pool.query(
-            'SELECT * FROM tb_sesiones WHERE token = ? AND activa = 1 AND fecha_expiracion > NOW()',
+            'SELECT * FROM tb_sesiones WHERE token_sesion = ? AND activa = 1 AND fecha_expiracion > NOW()',
             [token]
         );
 

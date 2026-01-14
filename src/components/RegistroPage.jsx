@@ -182,7 +182,7 @@ function RegistroPage({ tipoUsuario, onVolver, onRegistroExitoso }) {
 
       if (tipoUsuario === 'administrador' && paso === 2) {
         valido = await validarCodigoPortalLocal();
-        datosRegistro.codigoPortal = codigoPortal;
+        datosRegistro.codigo = codigoPortal;
       } else if (tipoUsuario === 'docente' && paso === 2) {
         valido = await validarPreRegistroDocenteLocal();
       } else if (tipoUsuario === 'apoderado' && paso === 3) {

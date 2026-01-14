@@ -180,6 +180,21 @@ function RegistroPage({ tipoUsuario, onVolver, onRegistroExitoso }) {
       let valido = false;
       let datosRegistro = { ...formData, password };
 
+      // Adaptar datos para el backend
+      datosRegistro.email = formData.correo;
+
+      // Separar nombres y apellidos del campo único "nombres"
+      const nombreCompleto = formData.nombres ? formData.nombres.trim() : '';
+      const ultimoEspacio = nombreCompleto.lastIndexOf(' ');
+
+      if (ultimoEspacio !== -1) {
+        datosRegistro.nombres = nombreCompleto.substring(0, ultimoEspacio);
+        datosRegistro.apellidos = nombreCompleto.substring(ultimoEspacio + 1);
+      } else {
+        datosRegistro.nombres = nombreCompleto;
+        datosRegistro.apellidos = '.'; // Valor por defecto si no hay apellido para pasar validación
+      }
+
       if (tipoUsuario === 'administrador' && paso === 2) {
         valido = await validarCodigoPortalLocal();
         datosRegistro.codigo = codigoPortal;

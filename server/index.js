@@ -2084,6 +2084,18 @@ app.post('/api/asistencia/registrar', async (req, res) => {
         const mes = new Date(fecha).getMonth() + 1;
         const trimestre = mes <= 4 ? 1 : mes <= 8 ? 2 : 3;
 
+        // Obtener nombres para el log
+        const [userRow] = await connection.query('SELECT nombres, apellidos, tipo_usuario FROM tb_usuarios u LEFT JOIN tb_docentes d ON u.id = d.usuario_id WHERE u.id = ?', [registrado_por]);
+        const [cursoRow] = await connection.query('SELECT nombre FROM tb_cursos WHERE id = ?', [curso_id]);
+
+        const nombreUsuario = userRow.length > 0 ? `${userRow[0].nombres} ${userRow[0].apellidos}` : 'Usuario';
+        const tipoUsuario = userRow.length > 0 ? userRow[0].tipo_usuario : 'docente';
+        const nombreCurso = cursoRow.length > 0 ? cursoRow[0].nombre : `ID ${curso_id}`;
+
+        // Contar asistencias existentes para el log
+        const [existentes] = await connection.query('SELECT COUNT(*) as count FROM tb_asistencia WHERE curso_id = ? AND fecha = ?', [curso_id, fecha]);
+        const esModificacion = existentes[0].count > 0;
+
         // Eliminar asistencia existente para esa fecha y curso (si existe)
         await connection.query(`
             DELETE FROM tb_asistencia
@@ -2112,6 +2124,22 @@ app.post('/api/asistencia/registrar', async (req, res) => {
                 registrado_por || null
             ]);
         }
+
+        // Registrar en tb_log_actividades
+        await connection.query(`
+            INSERT INTO tb_log_actividades
+            (usuario_id, tipo_usuario, nombre_usuario, accion, modulo, descripcion,
+             entidad_tipo, entidad_id, establecimiento_id)
+            VALUES (?, ?, ?, ?, 'asistencia', ?, 'curso', ?, ?)
+        `, [
+            registrado_por,
+            tipoUsuario,
+            nombreUsuario,
+            esModificacion ? 'editar' : 'crear',
+            `${esModificacion ? 'Modificación' : 'Registro'} de asistencia para el curso ${nombreCurso} el día ${fecha}`,
+            curso_id,
+            establecimiento_id
+        ]);
 
         await connection.commit();
         res.json({ success: true, message: 'Asistencia registrada correctamente' });
@@ -2907,7 +2935,7 @@ app.post('/api/asistencia/masivo', async (req, res) => {
                         observacion = ?, registrado_por = ?
                     WHERE id = ?
                 `, [item.estado, item.hora_llegada || null, item.minutos_atraso || 0,
-                    item.observacion || null, registrado_por || null, existente[0].id]);
+                item.observacion || null, registrado_por || null, existente[0].id]);
                 registrosActualizados++;
             } else {
                 // Insertar

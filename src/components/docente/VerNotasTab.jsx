@@ -100,6 +100,7 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
 
   const { isMobile, isTablet } = useResponsive();
   const showMobile = isMobile;
+  const isNormalSize = !isMobile;
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
   // Cargar cursos del docente
@@ -341,7 +342,7 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
       `}</style>
 
       <div className="card" style={{ overflow: 'visible' }}>
-        <div className="card-header"><h3>Filtros</h3></div>
+        <div className="card-header"><h3>Buscar Nota</h3></div>
         <div className="card-body" style={{ overflow: 'visible' }}>
           {showMobile ? (
             <>
@@ -517,7 +518,7 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

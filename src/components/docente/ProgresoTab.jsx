@@ -177,21 +177,23 @@ function ProgresoTab({ docenteId, establecimientoId }) {
   }), [estadisticas]);
 
   const chartTrimestre = useMemo(() => ({
-    labels: ['Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+    labels: ['1° Trimestre', '2° Trimestre', '3° Trimestre'],
     datasets: [{
-      label: 'Promedio',
+      label: 'Promedio Curso',
       data: estadisticas ? [
-        null, null, estadisticas.promediosPorTrimestre[1] || null,
-        null, null, estadisticas.promediosPorTrimestre[2] || null,
-        null, null, null, estadisticas.promediosPorTrimestre[3] || null
-      ] : [null, null, 0, null, null, 0, null, null, null, 0],
+        estadisticas.promediosPorTrimestre[1] || null,
+        estadisticas.promediosPorTrimestre[2] || null,
+        estadisticas.promediosPorTrimestre[3] || null
+      ] : [null, null, null],
       borderColor: chartColors.primary,
       backgroundColor: chartColors.primaryLight,
       fill: true,
-      tension: 0.4,
+      tension: 0.3,
       spanGaps: true,
       pointRadius: 6,
-      pointBackgroundColor: chartColors.primary
+      pointHoverRadius: 8,
+      pointBackgroundColor: chartColors.primary,
+      borderWidth: 3
     }]
   }), [estadisticas]);
 

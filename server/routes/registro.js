@@ -503,32 +503,66 @@ router.post('/docente', async (req, res) => {
 
         const usuarioId = resultUsuario.insertId;
 
-        // Crear docente en tb_docentes
-        const [resultDocente] = await connection.query(`
-            INSERT INTO tb_docentes (usuario_id, rut, nombres, apellidos, email, telefono, activo)
-            VALUES (?, ?, ?, ?, ?, ?, 1)
-        `, [usuarioId, rut, preregistro.nombres, preregistro.apellidos, email, preregistro.telefono]);
+        // Verificar si el docente ya existe en el sistema (por RUT)
+        const [docentesExistentes] = await connection.query(
+            'SELECT id FROM tb_docentes WHERE rut = ?',
+            [rut]
+        );
 
-        const docenteId = resultDocente.insertId;
+        let docenteId;
 
-        // Asociar al establecimiento
-        await connection.query(`
-            INSERT INTO tb_docente_establecimiento
-            (docente_id, establecimiento_id, fecha_ingreso, activo)
-            VALUES (?, ?, CURDATE(), 1)
-        `, [docenteId, preregistro.establecimiento_id]);
-
-        // Transferir asignaturas de tb_preregistro_docente_asignatura a tb_docente_asignatura
-        const [asignaturasPreregistro] = await connection.query(`
-            SELECT asignatura_id FROM tb_preregistro_docente_asignatura
-            WHERE preregistro_docente_id = ?
-        `, [preregistro.id]);
-
-        for (const asig of asignaturasPreregistro) {
+        if (docentesExistentes.length > 0) {
+            // El docente ya existe (caso datos poblados), vincular usuario
+            docenteId = docentesExistentes[0].id;
             await connection.query(`
-                INSERT INTO tb_docente_asignatura (docente_id, asignatura_id, activo)
-                VALUES (?, ?, 1)
-            `, [docenteId, asig.asignatura_id]);
+                UPDATE tb_docentes 
+                SET usuario_id = ?, email = ?, activo = 1 
+                WHERE id = ?
+            `, [usuarioId, email, docenteId]);
+
+            // Asegurar que está vinculado al establecimiento
+            const [relacionEst] = await connection.query(
+                'SELECT id FROM tb_docente_establecimiento WHERE docente_id = ? AND establecimiento_id = ?',
+                [docenteId, preregistro.establecimiento_id]
+            );
+
+            if (relacionEst.length === 0) {
+                await connection.query(`
+                    INSERT INTO tb_docente_establecimiento
+                    (docente_id, establecimiento_id, fecha_ingreso, activo)
+                    VALUES (?, ?, CURDATE(), 1)
+                `, [docenteId, preregistro.establecimiento_id]);
+            }
+
+            // NO sobreescribimos asignaturas si ya existe, asumiendo que ya tiene las correctas
+        } else {
+            // Crear nuevo registro de docente
+            const [resultDocente] = await connection.query(`
+                INSERT INTO tb_docentes (usuario_id, rut, nombres, apellidos, email, telefono, activo)
+                VALUES (?, ?, ?, ?, ?, ?, 1)
+            `, [usuarioId, rut, preregistro.nombres, preregistro.apellidos, email, preregistro.telefono]);
+
+            docenteId = resultDocente.insertId;
+
+            // Asociar al establecimiento
+            await connection.query(`
+                INSERT INTO tb_docente_establecimiento
+                (docente_id, establecimiento_id, fecha_ingreso, activo)
+                VALUES (?, ?, CURDATE(), 1)
+            `, [docenteId, preregistro.establecimiento_id]);
+
+            // Transferir asignaturas de tb_preregistro_docente_asignatura a tb_docente_asignatura
+            const [asignaturasPreregistro] = await connection.query(`
+                SELECT asignatura_id FROM tb_preregistro_docente_asignatura
+                WHERE preregistro_docente_id = ?
+            `, [preregistro.id]);
+
+            for (const asig of asignaturasPreregistro) {
+                await connection.query(`
+                    INSERT INTO tb_docente_asignatura (docente_id, asignatura_id, activo)
+                    VALUES (?, ?, 1)
+                `, [docenteId, asig.asignatura_id]);
+            }
         }
 
         // Marcar pre-registro como usado

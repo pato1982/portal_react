@@ -39,9 +39,9 @@ function ProgresoTab({ docenteId, establecimientoId }) {
     { id: '3', nombre: '3er Trimestre' }
   ];
 
-  // Cargar cursos y asignaturas del docente
+  // Cargar cursos del docente (Usando el endpoint existente verificados en otras tabs)
   useEffect(() => {
-    const cargarCursosAsignaturas = async () => {
+    const cargarCursos = async () => {
       if (!docenteId || !establecimientoId) {
         setCargandoCursos(false);
         return;
@@ -50,28 +50,27 @@ function ProgresoTab({ docenteId, establecimientoId }) {
       setCargandoCursos(true);
       try {
         const response = await fetch(
-          `${config.apiBaseUrl}/docente/${docenteId}/cursos-asignaturas?establecimiento_id=${establecimientoId}`
+          `${config.apiBaseUrl}/docente/${docenteId}/cursos?establecimiento_id=${establecimientoId}`
         );
         const data = await response.json();
 
         if (data.success) {
-          setCursos(data.data.cursos || []);
-          // Las asignaturas se filtrarán cuando se seleccione un curso
+          setCursos(data.data || []);
         } else {
           setError('Error al cargar cursos');
         }
       } catch (err) {
         console.error('Error al cargar cursos:', err);
-        setError('Error de conexion');
+        setError('Error de conexion al cargar cursos');
       } finally {
         setCargandoCursos(false);
       }
     };
 
-    cargarCursosAsignaturas();
+    cargarCursos();
   }, [docenteId, establecimientoId]);
 
-  // Cargar asignaturas cuando cambia el curso
+  // Cargar asignaturas cuando cambia el curso (Usando endpoint existente)
   useEffect(() => {
     const cargarAsignaturas = async () => {
       if (!cursoSeleccionado || !docenteId || !establecimientoId) {
@@ -80,16 +79,21 @@ function ProgresoTab({ docenteId, establecimientoId }) {
       }
 
       try {
+        // Usar endpoint especifico de asignaturas por curso
         const response = await fetch(
-          `${config.apiBaseUrl}/docente/${docenteId}/cursos-asignaturas?establecimiento_id=${establecimientoId}`
+          `${config.apiBaseUrl}/docente/${docenteId}/asignaturas-por-curso/${cursoSeleccionado}?establecimiento_id=${establecimientoId}`
         );
         const data = await response.json();
 
         if (data.success) {
-          const asignaturasDelCurso = data.data.asignaturas.filter(
-            a => a.curso_id === parseInt(cursoSeleccionado)
-          );
-          setAsignaturas(asignaturasDelCurso);
+          // Mapear respuesta para compatibilidad con select
+          // Endpoint devuelve: [{ id, nombre, ... }]
+          // Componente espera: [{ asignatura_id, asignatura_nombre }]
+          const asignaturasMapeadas = data.data.map(a => ({
+            asignatura_id: a.id,
+            asignatura_nombre: a.nombre
+          }));
+          setAsignaturas(asignaturasMapeadas);
         }
       } catch (err) {
         console.error('Error al cargar asignaturas:', err);
@@ -101,7 +105,7 @@ function ProgresoTab({ docenteId, establecimientoId }) {
 
   const handleCursoChange = (e) => {
     const cursoId = e.target.value;
-    const curso = cursos.find(c => c.id === parseInt(cursoId));
+    const curso = cursos.find(c => c.id === parseInt(cursoId) || c.id.toString() === cursoId);
     setCursoSeleccionado(cursoId);
     setCursoNombre(curso ? curso.nombre : '');
     setAsignaturaSeleccionada('');
@@ -111,7 +115,7 @@ function ProgresoTab({ docenteId, establecimientoId }) {
 
   const handleAsignaturaChange = (e) => {
     const asignaturaId = e.target.value;
-    const asignatura = asignaturas.find(a => a.asignatura_id === parseInt(asignaturaId));
+    const asignatura = asignaturas.find(a => a.asignatura_id.toString() === asignaturaId);
     setAsignaturaSeleccionada(asignaturaId);
     setAsignaturaNombre(asignatura ? asignatura.asignatura_nombre : '');
   };
@@ -137,6 +141,11 @@ function ProgresoTab({ docenteId, establecimientoId }) {
       }
 
       const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Error server: ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.success) {
@@ -146,7 +155,7 @@ function ProgresoTab({ docenteId, establecimientoId }) {
       }
     } catch (err) {
       console.error('Error al analizar progreso:', err);
-      setError('Error de conexion');
+      setError('Error de conexion al analizar progreso. Verifique que existan notas registradas.');
     } finally {
       setCargandoEstadisticas(false);
     }
@@ -221,14 +230,22 @@ function ProgresoTab({ docenteId, establecimientoId }) {
       <div className="card">
         <div className="card-header"><h3>Parametros de Analisis</h3></div>
         <div className="card-body">
-          <div className="filtros-docente-grid">
+          {/* LAYOUT FIX: Flex container para una fila en desktop */}
+          <div className="filtros-progreso-container" style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: '15px',
+            alignItems: isMobile ? 'stretch' : 'flex-end',
+            marginBottom: '10px'
+          }}>
             {/* Selector de Curso */}
-            <div className="filtro-grupo">
-              <label className="filtro-label">Curso</label>
+            <div className="filtro-grupo" style={{ flex: isMobile ? 'auto' : '1' }}>
+              <label className="filtro-label" style={{ marginBottom: '5px', display: 'block', fontWeight: '500' }}>Curso</label>
               <select
                 className="form-control"
                 value={cursoSeleccionado}
                 onChange={handleCursoChange}
+                style={{ width: '100%' }}
               >
                 <option value="">Seleccionar curso</option>
                 {cursos.map(curso => (
@@ -240,13 +257,14 @@ function ProgresoTab({ docenteId, establecimientoId }) {
             </div>
 
             {/* Selector de Asignatura */}
-            <div className="filtro-grupo">
-              <label className="filtro-label">Asignatura</label>
+            <div className="filtro-grupo" style={{ flex: isMobile ? 'auto' : '1' }}>
+              <label className="filtro-label" style={{ marginBottom: '5px', display: 'block', fontWeight: '500' }}>Asignatura</label>
               <select
                 className="form-control"
                 value={asignaturaSeleccionada}
                 onChange={handleAsignaturaChange}
                 disabled={!cursoSeleccionado}
+                style={{ width: '100%' }}
               >
                 <option value="">Seleccionar asignatura</option>
                 {asignaturas.map(asig => (
@@ -258,12 +276,13 @@ function ProgresoTab({ docenteId, establecimientoId }) {
             </div>
 
             {/* Selector de Trimestre */}
-            <div className="filtro-grupo">
-              <label className="filtro-label">Trimestre</label>
+            <div className="filtro-grupo" style={{ flex: isMobile ? 'auto' : '1' }}>
+              <label className="filtro-label" style={{ marginBottom: '5px', display: 'block', fontWeight: '500' }}>Trimestre</label>
               <select
                 className="form-control"
                 value={trimestreSeleccionado}
                 onChange={handleTrimestreChange}
+                style={{ width: '100%' }}
               >
                 {trimestres.map(trim => (
                   <option key={trim.id} value={trim.id}>
@@ -274,11 +293,12 @@ function ProgresoTab({ docenteId, establecimientoId }) {
             </div>
 
             {/* Boton Analizar */}
-            <div className="filtro-grupo filtro-accion">
+            <div className="filtro-accion" style={{ flex: isMobile ? 'auto' : '0 0 auto' }}>
               <button
                 className="btn btn-primary"
                 onClick={analizarProgreso}
                 disabled={!cursoSeleccionado || !asignaturaSeleccionada || cargandoEstadisticas}
+                style={{ width: isMobile ? '100%' : 'auto', minWidth: '120px' }}
               >
                 {cargandoEstadisticas ? 'Analizando...' : 'Analizar'}
               </button>
@@ -307,7 +327,7 @@ function ProgresoTab({ docenteId, establecimientoId }) {
             style={{
               marginTop: '20px',
               display: 'grid',
-              gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(6, 1fr)',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(6, 1fr)',
               gap: '12px'
             }}
           >

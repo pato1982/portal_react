@@ -98,7 +98,8 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
   const [consultando, setConsultando] = useState(false);
   const [consultado, setConsultado] = useState(false);
 
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
+  const showMobile = isMobile;
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
   // Cargar cursos del docente
@@ -317,12 +318,32 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
             position: relative;
             z-index: 1100; /* Mayor que otros inputs */
         }
+        /* Overrides para uniformidad en Filtros */
+        .docente-filtros-row .form-group {
+          margin-bottom: 0 !important;
+          min-width: 0;
+        }
+        .docente-filtros-row .form-control,
+        .docente-filtros-row .docente-autocomplete-container input {
+          height: 30px !important;
+          min-height: 30px !important;
+          padding: 0 10px !important;
+          font-size: 13px !important;
+        }
+        .docente-filtros-row label {
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          text-transform: uppercase !important;
+          margin-bottom: 5px !important;
+          display: block !important;
+          height: 14px;
+        }
       `}</style>
 
       <div className="card" style={{ overflow: 'visible' }}>
         <div className="card-header"><h3>Filtros</h3></div>
         <div className="card-body" style={{ overflow: 'visible' }}>
-          {isMobile ? (
+          {showMobile ? (
             <>
               <div className="form-row-movil">
                 {cargandoCursos ? (
@@ -376,7 +397,15 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
               </div>
             </>
           ) : (
-            <div className="docente-filtros-row" style={{ gridTemplateColumns: '1fr 1fr 1fr auto', overflow: 'visible', position: 'relative', zIndex: 10 }}>
+            // Layout para Tablet y Desktop (Normal)
+            <div className="docente-filtros-row" style={{
+              gridTemplateColumns: isTablet ? '1fr 1fr' : 'repeat(3, minmax(0, 1fr)) auto',
+              gap: '15px',
+              overflow: 'visible',
+              position: 'relative',
+              zIndex: 10,
+              alignItems: 'end'
+            }}>
               {cargandoCursos ? (
                 <div className="form-group">
                   <label>Curso</label>
@@ -417,9 +446,9 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
                   placeholder={cargandoAlumnos ? 'Cargando...' : (cursoSeleccionado ? 'Todos los alumnos' : 'Primero seleccione curso')}
                 />
               </div>
-              <div className="docente-filtros-actions">
-                <button className="btn btn-secondary" onClick={limpiarFiltros}>Limpiar</button>
-                <button className="btn btn-primary" onClick={consultar} disabled={consultando || !cursoSeleccionado || !asignaturaSeleccionada}>
+              <div className="docente-filtros-actions" style={{ gridColumn: isTablet ? '1 / -1' : 'auto', justifyContent: isTablet ? 'center' : 'flex-end', marginTop: isTablet ? '10px' : '0', gap: '8px' }}>
+                <button className="btn btn-secondary" onClick={limpiarFiltros} style={{ height: '30px', fontSize: '11px', padding: '0 15px', textTransform: 'uppercase', fontWeight: '600' }}>Limpiar</button>
+                <button className="btn btn-primary" onClick={consultar} disabled={consultando || !cursoSeleccionado || !asignaturaSeleccionada} style={{ height: '30px', fontSize: '11px', padding: '0 15px', textTransform: 'uppercase', fontWeight: '600' }}>
                   {consultando ? 'Consultando...' : 'Consultar'}
                 </button>
               </div>

@@ -263,6 +263,58 @@ function ProgresoTab({ docenteId, establecimientoId }) {
     }]
   }), [estadisticas]);
 
+  // Opciones especificas para el grafico de evolucion
+  const evolucionChartOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: (context) => `Promedio: ${Number(context.raw).toFixed(1)}`
+        }
+      }
+    },
+    scales: {
+      y: {
+        min: 1.0,
+        max: 7.0,
+        grid: { color: '#f1f5f9' },
+        ticks: { stepSize: 0.5 }
+      },
+      x: {
+        grid: { display: false },
+        ticks: {
+          font: { size: 10 }, // Letra mas chica como solictado
+          autoSkip: false,
+          maxRotation: 0,
+          callback: function (val, index, values) {
+            const label = this.getLabelForValue(val);
+            const currentTrim = label.split(' ')[0]; // "T1"
+
+            // Mostrar etiqueta solo al inicio de cada bloque de trimestre
+            if (index === 0) return currentTrim.replace('T', 'Trimestre ');
+
+            const prevLabel = this.getLabelForValue(values[index - 1].value);
+            const prevTrim = prevLabel.split(' ')[0];
+
+            if (currentTrim !== prevTrim) {
+              return currentTrim.replace('T', 'Trimestre ');
+            }
+            return '';
+          }
+        }
+      }
+    },
+    interaction: {
+      mode: 'nearest',
+      axis: 'x',
+      intersect: false
+    }
+  }), []);
+
   if (cargandoCursos) {
     return (
       <div className="tab-panel active">
@@ -338,7 +390,7 @@ function ProgresoTab({ docenteId, establecimientoId }) {
               <div className="card-header"><h3>Evolucion de Notas (Nota a Nota)</h3></div>
               <div className="card-body docente-chart-container">
                 {chartEvolucionData ?
-                  <Line data={chartEvolucionData} options={lineChartOptions} /> :
+                  <Line data={chartEvolucionData} options={evolucionChartOptions} /> :
                   <p className="text-center text-muted">Sin datos suficientes para proyectar evolución.</p>
                 }
               </div>

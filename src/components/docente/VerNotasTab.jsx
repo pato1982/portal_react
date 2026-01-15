@@ -189,11 +189,18 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
     setDatosNotas([]);
   };
 
+  // Agregar opcion "Todos" a la lista de alumnos
+  const alumnosConTodos = useMemo(() => {
+    if (alumnos.length === 0) return [];
+    return [{ id: '', nombres: 'Todos', apellidos: ' ' }, ...alumnos];
+  }, [alumnos]);
+
   const handleSeleccionarAlumno = (alumno) => {
-    if (alumno) {
+    if (alumno && alumno.id !== '') {
       setFiltroAlumnoId(alumno.id);
       setFiltroAlumno(`${alumno.apellidos}, ${alumno.nombres}`);
     } else {
+      // Si selecciona Todos o limpia
       setFiltroAlumnoId('');
       setFiltroAlumno('');
     }
@@ -350,7 +357,7 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
               </div>
               <div style={{ position: 'relative', zIndex: 1001 }}>
                 <AutocompleteAlumno
-                  alumnos={alumnos}
+                  alumnos={alumnosConTodos}
                   alumnoSeleccionado={filtroAlumnoId}
                   busqueda={filtroAlumno}
                   onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
@@ -400,7 +407,7 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
               />
               <div className="autocomplete-container" style={{ position: 'relative', zIndex: 100 }}>
                 <AutocompleteAlumno
-                  alumnos={alumnos}
+                  alumnos={alumnosConTodos}
                   alumnoSeleccionado={filtroAlumnoId}
                   busqueda={filtroAlumno}
                   onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}

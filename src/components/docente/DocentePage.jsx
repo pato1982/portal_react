@@ -8,7 +8,12 @@ import ChatFlotante from '../ChatFlotante';
 import config from '../../config/env';
 
 function DocentePage({ onCambiarVista, usuarioDocente }) {
-  const [tabActual, setTabActual] = useState('asistencia');
+  const [tabActual, setTabActual] = useState(() => localStorage.getItem('docenteActiveTab') || 'asistencia');
+
+  // Persistir tab activa
+  useEffect(() => {
+    localStorage.setItem('docenteActiveTab', tabActual);
+  }, [tabActual]);
   const [currentDate, setCurrentDate] = useState('');
   const [establecimientoDropdownAbierto, setEstablecimientoDropdownAbierto] = useState(false);
   const [establecimientosDocente, setEstablecimientosDocente] = useState([]);

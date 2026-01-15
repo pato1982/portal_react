@@ -370,6 +370,7 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
           asignatura_id: parseInt(asignaturaSeleccionada),
           curso_id: parseInt(cursoSeleccionado),
           docente_id: docenteId,
+          registrado_por: usuarioId,
           tipo_evaluacion_id: tipoEvaluacion ? parseInt(tipoEvaluacion) : null,
           trimestre: parseInt(trimestre),
           nota: notaPendiente ? null : parseFloat(nota),

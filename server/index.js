@@ -1553,6 +1553,7 @@ app.post('/api/notas/registrar', async (req, res) => {
         asignatura_id,
         curso_id,
         docente_id,
+        registrado_por,
         tipo_evaluacion_id,
         trimestre,
         nota,
@@ -1582,6 +1583,16 @@ app.post('/api/notas/registrar', async (req, res) => {
         await connection.beginTransaction();
 
         const anio = fecha_evaluacion ? new Date(fecha_evaluacion).getFullYear() : new Date().getFullYear();
+
+        // Obtener nombres para el log
+        const [alumnoRow] = await connection.query('SELECT nombres, apellidos FROM tb_alumnos WHERE id = ?', [alumno_id]);
+        const [asignaturaRow] = await connection.query('SELECT nombre FROM tb_asignaturas WHERE id = ?', [asignatura_id]);
+        const [userRow] = await connection.query('SELECT nombres, apellidos, tipo_usuario FROM tb_usuarios u LEFT JOIN tb_docentes d ON u.id = d.usuario_id WHERE u.id = ?', [registrado_por]);
+
+        const nombreAlumno = alumnoRow.length > 0 ? `${alumnoRow[0].nombres} ${alumnoRow[0].apellidos}` : `ID ${alumno_id}`;
+        const nombreAsignatura = asignaturaRow.length > 0 ? asignaturaRow[0].nombre : `ID ${asignatura_id}`;
+        const nombreUsuario = userRow.length > 0 ? `${userRow[0].nombres} ${userRow[0].apellidos}` : 'Usuario';
+        const tipoUsuario = userRow.length > 0 ? userRow[0].tipo_usuario : 'docente';
 
         // Obtener el siguiente número de evaluación para este alumno/asignatura/trimestre
         const [maxEval] = await connection.query(`
@@ -1619,6 +1630,22 @@ app.post('/api/notas/registrar', async (req, res) => {
             fecha_evaluacion || null,
             descripcion || null,
             comentario || null
+        ]);
+
+        // Registrar en tb_log_actividades
+        const valorNota = es_pendiente ? 'PENDIENTE' : nota;
+        await connection.query(`
+            INSERT INTO tb_log_actividades
+            (usuario_id, tipo_usuario, nombre_usuario, accion, modulo, descripcion,
+             entidad_tipo, entidad_id, establecimiento_id)
+            VALUES (?, ?, ?, 'crear', 'notas', ?, 'nota', ?, ?)
+        `, [
+            registrado_por,
+            tipoUsuario,
+            nombreUsuario,
+            `Registro de nota ${valorNota} para el alumno ${nombreAlumno} en la asignatura ${nombreAsignatura}`,
+            result.insertId,
+            establecimiento_id
         ]);
 
         await connection.commit();

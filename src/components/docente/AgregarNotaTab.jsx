@@ -66,7 +66,7 @@ function AgregarNotaTab({ docenteId, establecimientoId, usuarioId }) {
         );
         const data = await response.json();
         if (data.success) {
-          setCursos(data.data);
+          setCursos(data.data || []);
         }
       } catch (error) {
         console.error('Error al cargar cursos:', error);
@@ -89,7 +89,7 @@ function AgregarNotaTab({ docenteId, establecimientoId, usuarioId }) {
         );
         const data = await response.json();
         if (data.success) {
-          setTiposEvaluacion(data.data);
+          setTiposEvaluacion(data.data || []);
         }
       } catch (error) {
         console.error('Error al cargar tipos de evaluación:', error);
@@ -114,7 +114,7 @@ function AgregarNotaTab({ docenteId, establecimientoId, usuarioId }) {
         );
         const data = await response.json();
         if (data.success) {
-          setAsignaturas(data.data);
+          setAsignaturas(data.data || []);
         }
       } catch (error) {
         console.error('Error al cargar asignaturas:', error);
@@ -139,7 +139,7 @@ function AgregarNotaTab({ docenteId, establecimientoId, usuarioId }) {
         const response = await fetch(`${config.apiBaseUrl}/curso/${cursoSeleccionado}/alumnos`);
         const data = await response.json();
         if (data.success) {
-          setAlumnos(data.data);
+          setAlumnos(data.data || []);
         }
       } catch (error) {
         console.error('Error al cargar alumnos:', error);
@@ -164,7 +164,7 @@ function AgregarNotaTab({ docenteId, establecimientoId, usuarioId }) {
       const response = await fetch(url);
       const data = await response.json();
       if (data.success) {
-        setNotasRecientes(data.data);
+        setNotasRecientes(data.data || []);
       }
     } catch (error) {
       console.error('Error al cargar notas recientes:', error);
@@ -192,7 +192,7 @@ function AgregarNotaTab({ docenteId, establecimientoId, usuarioId }) {
         const response = await fetch(`${config.apiBaseUrl}/curso/${filtroCurso}/alumnos`);
         const data = await response.json();
         if (data.success) {
-          setAlumnosFiltro(data.data);
+          setAlumnosFiltro(data.data || []);
         }
       } catch (error) {
         console.error('Error al cargar alumnos para filtro:', error);

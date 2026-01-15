@@ -74,7 +74,8 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
 
   const [pestanaActiva, setPestanaActiva] = useState('registro');
 
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
+  const showTabs = isMobile || isTablet;
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
   const trimestres = [
@@ -606,7 +607,7 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
           {/* ... filtros (mismo código) ... */}
           {/* ... Simplificado filtros visual ... */}
           {/* (Mantengo filtros pero no cambios significativos allí) */}
-          {isMobile ? (
+          {showTabs ? (
             // ... Movil ...
             <>
               <SelectMovil
@@ -674,7 +675,7 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
                 <tr>
                   <th style={{ width: '50px' }}>Fecha</th>
                   <th style={{ width: 'auto' }}>Alumno</th>
-                  {!isMobile && <th style={{ width: '60px' }}>Curso</th>}
+                  {!showTabs && <th style={{ width: '60px' }}>Curso</th>}
                   <th style={{ width: '60px' }}>Asig.</th>
                   <th style={{ width: '40px' }}>Tri.</th>
                   <th style={{ width: '45px' }}>Nota</th>
@@ -687,9 +688,9 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
                     <td style={{ fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
                       {n.alumno_apellidos}, {n.alumno_nombres?.split(' ')[0]}
                     </td>
-                    {!isMobile && <td style={{ fontSize: '12px' }}>{formatearCurso(n.curso_nombre)}</td>}
+                    {!showTabs && <td style={{ fontSize: '12px' }}>{formatearCurso(n.curso_nombre)}</td>}
                     <td style={{ fontSize: '12px' }}>
-                      {isMobile ?
+                      {showTabs ?
                         abreviarAsignatura(n.asignatura_nombre) :
                         abreviarAsignatura(n.asignatura_nombre)
                       }
@@ -711,8 +712,8 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   );
 
   return (
-    <div className="tab-panel active" style={{ height: 'calc(100vh - 140px)', minHeight: '500px' }}>
-      {isMobile && (
+    <div className="tab-panel active" style={{ height: (showTabs) ? 'auto' : 'calc(100vh - 140px)', minHeight: '500px' }}>
+      {showTabs && (
         <div className="mobile-subtabs">
           <button
             className={`mobile-subtab ${pestanaActiva === 'registro' ? 'active' : ''}`}
@@ -730,8 +731,8 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
       )}
 
       {/* Two columns with specific height to allow scrolling */}
-      <div className="two-columns" style={{ height: '100%', alignItems: 'stretch' }}>
-        {(!isMobile || pestanaActiva === 'registro') && (
+      <div className={showTabs ? "" : "two-columns"} style={{ height: '100%', alignItems: 'stretch', display: showTabs ? 'block' : 'grid' }}>
+        {(!showTabs || pestanaActiva === 'registro') && (
           <div className="column" style={{ height: 'auto' }}>
             <div className="card">
               <div className="card-header">
@@ -739,7 +740,7 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
               </div>
               <div className="card-body">
                 <form onSubmit={handleSubmit}>
-                  {isMobile ? <FormularioMovil /> : <FormularioDesktop />}
+                  {showTabs ? <FormularioMovil /> : <FormularioDesktop />}
 
                   <div style={{ marginBottom: '16px' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -767,12 +768,12 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
                     ></textarea>
                   </div>
 
-                  <div className={`form-actions ${isMobile ? 'form-actions-movil' : ''}`}>
+                  <div className={`form-actions ${showTabs ? 'form-actions-movil' : ''}`}>
                     <button type="button" className="btn btn-secondary" onClick={limpiarFormulario}>
                       Limpiar
                     </button>
                     <button type="submit" className="btn btn-primary" disabled={guardando}>
-                      {guardando ? 'Guardando...' : (isMobile ? 'Registrar' : 'Registrar Nota')}
+                      {guardando ? 'Guardando...' : (showTabs ? 'Registrar' : 'Registrar Nota')}
                     </button>
                   </div>
                 </form>
@@ -781,8 +782,8 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
           </div>
         )}
 
-        {(!isMobile || pestanaActiva === 'ultimas') && (
-          <div className="column" style={{ height: '100%', overflow: 'hidden' }}>
+        {(!showTabs || pestanaActiva === 'ultimas') && (
+          <div className="column" style={{ height: showTabs ? 'auto' : '100%', overflow: 'hidden' }}>
             <TablaUltimasNotas />
           </div>
         )}

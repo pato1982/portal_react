@@ -1589,8 +1589,10 @@ app.post('/api/notas/registrar', async (req, res) => {
         );
 
         // El año académico es el del periodo activo, o el de la fecha si no hay activo
+        // Usar la fecha de evaluación o la fecha actual si no viene
         const fechaParaAnio = fecha_evaluacion || new Date().toISOString().split('T')[0];
-        const anioAcademico = new Date(fechaParaAnio).getUTCFullYear();
+        // Extraer el año directamente del string (ej: "2026-01-15" -> 2026)
+        const anioAcademico = parseInt(fechaParaAnio.split('-')[0]);
 
         // Obtener nombres para el log
         const [alumnoRow] = await connection.query('SELECT nombres, apellidos FROM tb_alumnos WHERE id = ?', [alumno_id]);
@@ -2122,7 +2124,8 @@ app.post('/api/asistencia/registrar', async (req, res) => {
         );
 
         // El año académico es el del periodo activo, o el de la fecha si no hay activo
-        const anioAcademico = new Date(fecha).getUTCFullYear();
+        // Extraer el año directamente del string de fecha (ej: "2026-01-15" -> 2026)
+        const anioAcademico = parseInt(fecha.split('-')[0]);
 
         // Calcular trimestre (lógica chilena estándar pero robustecida)
         const mes = new Date(fecha).getUTCMonth() + 1; // Usar UTC para parsear "YYYY-MM-DD" correctamente
@@ -2882,7 +2885,8 @@ app.post('/api/asistencia', async (req, res) => {
         trimestre = 1
     } = req.body;
 
-    const anio = anio_academico || new Date().getFullYear();
+    // Extraer el año directamente del string de fecha (ej: "2026-01-15" -> 2026)
+    const anio = parseInt(fecha.split('-')[0]);
 
     if (!alumno_id || !curso_id || !fecha || !estado) {
         return res.status(400).json({
@@ -2947,7 +2951,8 @@ app.post('/api/asistencia/masivo', async (req, res) => {
         trimestre = 1
     } = req.body;
 
-    const anio = anio_academico || new Date().getFullYear();
+    // Extraer el año directamente del string de fecha (ej: "2026-01-15" -> 2026)
+    const anio = parseInt(fecha.split('-')[0]);
 
     if (!curso_id || !fecha || !asistencias || asistencias.length === 0) {
         return res.status(400).json({

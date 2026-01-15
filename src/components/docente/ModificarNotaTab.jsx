@@ -435,8 +435,8 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
   // Componente DatePicker personalizado con tooltip
   const DatePickerCustom = () => (
     <div className="form-group" style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <label style={{ marginBottom: 0 }}>Fecha</label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px', height: '14px' }}>
+        <label style={{ marginBottom: 0, display: 'inline-block' }}>Fecha</label>
         {filtroCurso && fechasConNotas.length > 0 && (
           <div className="tooltip-container">
             <span className="tooltip-icon" style={{
@@ -576,6 +576,27 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
             position: relative;
             z-index: 1100; /* Mayor que otros inputs pero menor que modal */
         }
+        /* Overrides para uniformidad en Filtros */
+        .docente-filtros-row .form-group {
+          margin-bottom: 0 !important;
+          min-width: 0;
+        }
+        .docente-filtros-row .form-control,
+        .docente-filtros-row .docente-autocomplete-container input,
+        .docente-filtros-row .react-datepicker-wrapper input {
+          height: 30px !important;
+          min-height: 30px !important;
+          padding: 0 10px !important;
+          font-size: 13px !important;
+        }
+        .docente-filtros-row label {
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          text-transform: uppercase !important;
+          margin-bottom: 5px !important;
+          display: block !important;
+          height: 14px;
+        }
       `}</style>
 
       <div className="card" style={{ overflow: 'visible' }}>
@@ -642,11 +663,12 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
           ) : (
             // Layout para Tablet y Desktop (Normal)
             <div className="docente-filtros-row" style={{
-              gridTemplateColumns: isTablet ? '1fr 1fr' : 'repeat(4, 1fr) auto',
+              gridTemplateColumns: isTablet ? '1fr 1fr' : 'repeat(4, minmax(0, 1fr)) auto',
               gap: '15px',
               overflow: 'visible',
               position: 'relative',
-              zIndex: 10
+              zIndex: 10,
+              alignItems: 'end'
             }}>
               {cargandoCursos ? (
                 <div className="form-group">
@@ -693,9 +715,9 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
 
               <DatePickerCustom />
 
-              <div className="docente-filtros-actions" style={{ gridColumn: isTablet ? '1 / -1' : 'auto', justifyContent: isTablet ? 'center' : 'flex-end', marginTop: isTablet ? '10px' : '0' }}>
-                <button type="button" className="btn btn-secondary" onClick={limpiarBusqueda} style={{ height: '30px', fontSize: '12px', padding: '0 15px' }}>Limpiar</button>
-                <button type="button" className="btn btn-primary" onClick={buscarNotas} disabled={buscando || !filtroCurso} style={{ height: '30px', fontSize: '12px', padding: '0 15px' }}>
+              <div className="docente-filtros-actions" style={{ gridColumn: isTablet ? '1 / -1' : 'auto', justifyContent: isTablet ? 'center' : 'flex-end', marginTop: isTablet ? '10px' : '0', gap: '8px' }}>
+                <button type="button" className="btn btn-secondary" onClick={limpiarBusqueda} style={{ height: '30px', fontSize: '11px', padding: '0 15px', textTransform: 'uppercase', fontWeight: '600' }}>Limpiar</button>
+                <button type="button" className="btn btn-primary" onClick={buscarNotas} disabled={buscando || !filtroCurso} style={{ height: '30px', fontSize: '11px', padding: '0 15px', textTransform: 'uppercase', fontWeight: '600' }}>
                   {buscando ? 'Buscando...' : 'Buscar'}
                 </button>
               </div>

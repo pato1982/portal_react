@@ -317,9 +317,9 @@ function ProgresoTab({ docenteId, establecimientoId }) {
 
   return (
     <div className="tab-panel active">
-      <div className="card">
+      <div className="card" style={{ overflow: 'visible' }}>
         <div className="card-header"><h3>Parametros de Analisis</h3></div>
-        <div className="card-body">
+        <div className="card-body" style={{ overflow: 'visible' }}>
           <div className="filtros-progreso-container" style={{
             display: 'flex',
             flexDirection: isMobile ? 'column' : 'row',
@@ -359,7 +359,7 @@ function ProgresoTab({ docenteId, establecimientoId }) {
                 className="btn btn-primary"
                 onClick={analizarProgreso}
                 disabled={!cursoSeleccionado || !asignaturaSeleccionada || cargandoEstadisticas}
-                style={{ width: isMobile ? '100%' : 'auto', minWidth: '120px', height: '38px' }}
+                style={{ width: isMobile ? '100%' : 'auto', minWidth: '100px', height: '30px', fontSize: '13px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 {cargandoEstadisticas ? 'Analizando...' : 'Analizar'}
               </button>

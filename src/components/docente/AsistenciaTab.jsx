@@ -326,9 +326,9 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
 
   return (
     <div className="tab-panel active">
-      <div className="card">
+      <div className="card" style={{ overflow: 'visible' }}>
         <div className="card-header"><h3>Registro de Asistencia</h3></div>
-        <div className="card-body">
+        <div className="card-body" style={{ overflow: 'visible' }}>
           <div className="docente-asistencia-filtros">
             <div className="docente-asistencia-filtros-row">
               {cargandoCursos ? (
@@ -372,11 +372,12 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
               </div>
             </div>
             <div className="docente-filtros-actions">
-              <button className="btn btn-secondary" onClick={limpiarFiltros}>Limpiar</button>
+              <button className="btn btn-secondary" onClick={limpiarFiltros} style={{ height: '30px', fontSize: '13px', padding: '0 12px', display: 'flex', alignItems: 'center' }}>Limpiar</button>
               <button
                 className="btn btn-primary"
                 onClick={handleCargarLista}
                 disabled={cargandoAlumnos || !cursoSeleccionado}
+                style={{ height: '30px', fontSize: '13px', padding: '0 12px', display: 'flex', alignItems: 'center' }}
               >
                 {cargandoAlumnos ? 'Cargando...' : 'Cargar Lista'}
               </button>

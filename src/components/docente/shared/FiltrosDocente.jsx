@@ -36,7 +36,10 @@ export function SelectNativo({ label, value, onChange, options, placeholder, dis
           justifyContent: 'space-between',
           alignItems: 'center',
           backgroundColor: disabled ? '#e9ecef' : '#fff',
-          height: '38px', // Bootstrap default height
+          height: '30px', // Reducido de 38px
+          fontSize: '13px', // Fuente mas chica
+          minHeight: 'unset', // Añadido para asegurar que la altura sea 30px
+          padding: '0 8px', // Padding ajustado
           border: '1px solid #ced4da',
           borderRadius: '0.25rem'
         }}
@@ -50,7 +53,7 @@ export function SelectNativo({ label, value, onChange, options, placeholder, dis
       {isOpen && !disabled && (
         <div style={{
           position: 'absolute',
-          top: '100%',
+          top: '32px', // Ajustado a la nueva altura
           left: 0,
           right: 0,
           maxHeight: '250px', // Scroll solicitado
@@ -58,9 +61,9 @@ export function SelectNativo({ label, value, onChange, options, placeholder, dis
           backgroundColor: '#fff',
           border: '1px solid #ced4da',
           borderRadius: '4px',
-          zIndex: 1050,
+          zIndex: 2000, // Z-index aumentado
           boxShadow: '0 4px 6px rgba(0,0,0,0.15)',
-          marginTop: '2px'
+          marginTop: '0'
         }}>
           <div
             style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', color: '#64748b', fontSize: '14px' }}

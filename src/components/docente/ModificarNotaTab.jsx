@@ -429,10 +429,32 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
     return isHighlighted ? 'fecha-con-notas' : 'fecha-sin-notas';
   };
 
-  // Componente DatePicker personalizado
+  // Componente DatePicker personalizado con tooltip
   const DatePickerCustom = () => (
-    <div className="form-group">
-      <label>Fecha</label>
+    <div className="form-group" style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <label style={{ marginBottom: 0 }}>Fecha</label>
+        {filtroCurso && fechasConNotas.length > 0 && (
+          <div className="tooltip-container">
+            <span className="tooltip-icon" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              backgroundColor: '#f59e0b',
+              color: 'white',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              cursor: 'help'
+            }}>?</span>
+            <div className="tooltip-text">
+              Fechas resaltadas tienen notas registradas
+            </div>
+          </div>
+        )}
+      </div>
       <DatePicker
         selected={filtroFecha}
         onChange={(date) => setFiltroFecha(date)}
@@ -447,17 +469,12 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
         showYearDropdown
         dropdownMode="select"
       />
-      {filtroCurso && fechasConNotas.length > 0 && (
-        <small style={{ color: '#64748b', fontSize: '11px', marginTop: '4px', display: 'block' }}>
-          Fechas resaltadas tienen notas registradas
-        </small>
-      )}
     </div>
   );
 
   return (
     <div className="tab-panel active">
-      {/* Estilos para el calendario */}
+      {/* Estilos para el calendario y tooltips */}
       <style>{`
         .fecha-con-notas {
           background-color: #3b82f6 !important;
@@ -487,6 +504,10 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
           border: 1px solid #e2e8f0;
           border-radius: 8px;
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+          z-index: 2000 !important; /* Asegurar que el calendario esté arriba */
+        }
+        .react-datepicker-popper {
+          z-index: 2000 !important;
         }
         .react-datepicker__header {
           background-color: #f8fafc;
@@ -499,11 +520,62 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
         .react-datepicker__day-name {
           color: #64748b;
         }
+        /* Estilos Tooltip */
+        .tooltip-container {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip-text {
+            visibility: hidden;
+            width: 140px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 4px;
+            padding: 5px;
+            position: absolute;
+            z-index: 3000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -70px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 11px;
+            pointer-events: none;
+        }
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        /* Fix para Autocomplete Dropdown z-index y scroll */
+        .autocomplete-suggestions { 
+            z-index: 1500 !important; 
+            max-height: 200px !important;
+            overflow-y: auto !important;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        /* Asegurar que el input del alumno tenga posicion relativa para el dropdown */
+        .autocomplete-container {
+            position: relative;
+            z-index: 1100; /* Mayor que otros inputs pero menor que modal */
+        }
       `}</style>
 
       <div className="card">
         <div className="card-header"><h3>Buscar Nota</h3></div>
         <div className="card-body">
+          {/* Añadir overflow visible a las filas de filtros y mayor z-index */}
           {isMobile ? (
             <>
               <div className="form-row-movil">
@@ -538,17 +610,20 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
                   onClose={() => setDropdownAbierto(null)}
                 />
               </div>
-              <div className="form-row-movil">
-                <AutocompleteAlumno
-                  alumnos={alumnos}
-                  alumnoSeleccionado={filtroAlumnoId}
-                  busqueda={filtroAlumno}
-                  onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
-                  onSeleccionar={handleSeleccionarAlumno}
-                  disabled={!filtroCurso || cargandoAlumnos}
-                  placeholder={cargandoAlumnos ? 'Cargando...' : 'Todos'}
-                  onDropdownOpen={() => setDropdownAbierto(null)}
-                />
+              <div className="form-row-movil" style={{ zIndex: dropdownAbierto ? 999 : 'auto' }}>
+                {/* Wrapper para asegurar que el dropdown se vea */}
+                <div style={{ position: 'relative', zIndex: 1001 }}>
+                  <AutocompleteAlumno
+                    alumnos={alumnos}
+                    alumnoSeleccionado={filtroAlumnoId}
+                    busqueda={filtroAlumno}
+                    onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
+                    onSeleccionar={handleSeleccionarAlumno}
+                    disabled={!filtroCurso || cargandoAlumnos}
+                    placeholder={cargandoAlumnos ? 'Cargando...' : 'Todos'}
+                    onDropdownOpen={() => setDropdownAbierto(null)}
+                  />
+                </div>
                 <DatePickerCustom />
               </div>
               <div className="form-actions form-actions-movil">
@@ -559,7 +634,8 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
               </div>
             </>
           ) : (
-            <div className="docente-filtros-row" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr auto' }}>
+            // Desktop Layout
+            <div className="docente-filtros-row" style={{ gridTemplateColumns: '1fr 1fr 1.5fr 1fr auto', overflow: 'visible' }}>
               {cargandoCursos ? (
                 <div className="form-group">
                   <label>Curso</label>
@@ -589,16 +665,22 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
                 placeholder={cargandoAsignaturas ? 'Cargando...' : (filtroCurso ? 'Todas las asignaturas' : 'Primero seleccione curso')}
                 disabled={!filtroCurso || cargandoAsignaturas}
               />
-              <AutocompleteAlumno
-                alumnos={alumnos}
-                alumnoSeleccionado={filtroAlumnoId}
-                busqueda={filtroAlumno}
-                onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
-                onSeleccionar={handleSeleccionarAlumno}
-                disabled={!filtroCurso || cargandoAlumnos}
-                placeholder={cargandoAlumnos ? 'Cargando...' : (filtroCurso ? 'Todos los alumnos' : 'Primero seleccione curso')}
-              />
+
+              {/* Wrapper con z-index alto para el alumno */}
+              <div className="autocomplete-container" style={{ position: 'relative', zIndex: 100 }}>
+                <AutocompleteAlumno
+                  alumnos={alumnos}
+                  alumnoSeleccionado={filtroAlumnoId}
+                  busqueda={filtroAlumno}
+                  onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
+                  onSeleccionar={handleSeleccionarAlumno}
+                  disabled={!filtroCurso || cargandoAlumnos}
+                  placeholder={cargandoAlumnos ? 'Cargando...' : (filtroCurso ? 'Todos los alumnos' : 'Primero seleccione curso')}
+                />
+              </div>
+
               <DatePickerCustom />
+
               <div className="docente-filtros-actions">
                 <button type="button" className="btn btn-secondary" onClick={limpiarBusqueda}>Limpiar</button>
                 <button type="button" className="btn btn-primary" onClick={buscarNotas} disabled={buscando || !filtroCurso}>
@@ -610,7 +692,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: '20px' }}>
+      <div className="card" style={{ marginTop: '20px', zIndex: 1 }}>
         <div className="card-header">
           <h3>Resultados {buscado && `(${resultados.length})`}</h3>
         </div>
@@ -639,7 +721,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
                     {!isMobile && <td>{nota.asignatura_nombre}</td>}
                     <td>
                       <span className={`docente-nota-badge ${getNotaClass(nota.nota, nota.es_pendiente)}`}>
-                        {nota.es_pendiente ? 'Pend.' : (nota.nota !== null ? nota.nota.toFixed(1) : '-')}
+                        {nota.es_pendiente ? 'Pend.' : (nota.nota !== null ? Number(nota.nota).toFixed(1) : '-')}
                       </span>
                     </td>
                     <td style={{ textAlign: 'center' }}>{nota.trimestre}°</td>

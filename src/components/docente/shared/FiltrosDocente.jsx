@@ -1,21 +1,92 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
-// Componente de select nativo para desktop
+// Componente de select nativo para desktop (Customizado para scroll y estilo)
 export function SelectNativo({ label, value, onChange, options, placeholder, disabled }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  // Cerrar al hacer click fuera
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.id.toString() === value?.toString());
+
+  const handleSelect = (id) => {
+    if (disabled) return;
+    onChange({ target: { value: id } });
+    setIsOpen(false);
+  };
+
   return (
-    <div className="form-group">
-      <label>{label}</label>
-      <select
-        className="form-control"
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
+    <div className="form-group" ref={containerRef} style={{ position: 'relative', marginBottom: '15px' }}>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>{label}</label>
+      <div
+        className={`form-control ${disabled ? 'disabled' : ''}`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        style={{
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          backgroundColor: disabled ? '#e9ecef' : '#fff',
+          height: '38px', // Bootstrap default height
+          border: '1px solid #ced4da',
+          borderRadius: '0.25rem'
+        }}
       >
-        <option value="">{placeholder}</option>
-        {options.map(opt => (
-          <option key={opt.id} value={opt.id}>{opt.nombre}</option>
-        ))}
-      </select>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {selectedOption ? (selectedOption.nombre || selectedOption.label || selectedOption.id) : placeholder}
+        </span>
+        <span style={{ fontSize: '10px', marginLeft: '8px', color: '#6c757d' }}>▼</span>
+      </div>
+
+      {isOpen && !disabled && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          maxHeight: '250px', // Scroll solicitado
+          overflowY: 'auto',
+          backgroundColor: '#fff',
+          border: '1px solid #ced4da',
+          borderRadius: '4px',
+          zIndex: 1050,
+          boxShadow: '0 4px 6px rgba(0,0,0,0.15)',
+          marginTop: '2px'
+        }}>
+          <div
+            style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', color: '#64748b', fontSize: '14px' }}
+            onClick={() => handleSelect('')}
+          >
+            {placeholder}
+          </div>
+          {options.map(opt => (
+            <div
+              key={opt.id}
+              style={{
+                padding: '8px 12px',
+                cursor: 'pointer',
+                backgroundColor: (value?.toString() === opt.id.toString()) ? '#f1f5f9' : '#fff',
+                fontSize: '14px',
+                color: '#334155'
+              }}
+              onClick={() => handleSelect(opt.id)}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = (value?.toString() === opt.id.toString()) ? '#f1f5f9' : '#fff'}
+            >
+              {opt.nombre || opt.label}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

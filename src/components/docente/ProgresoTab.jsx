@@ -9,7 +9,8 @@ import {
   doughnutWithLegendOptions,
   trimestrePlugin,
   chartColors,
-  formatearNombreCompleto
+  formatearNombreCompleto,
+  SelectNativo // Nuevo import del componente customizado
 } from './shared';
 import config from '../../config/env';
 
@@ -23,13 +24,12 @@ function ProgresoTab({ docenteId, establecimientoId }) {
   const [trimestreSeleccionado, setTrimestreSeleccionado] = useState('');
 
   const [estadisticas, setEstadisticas] = useState(null);
-  const [notasDetalladas, setNotasDetalladas] = useState([]); // Nuevo estado para datos granulares
+  const [notasDetalladas, setNotasDetalladas] = useState([]);
   const [cargandoCursos, setCargandoCursos] = useState(true);
   const [cargandoEstadisticas, setCargandoEstadisticas] = useState(false);
   const [error, setError] = useState('');
 
   const { isMobile } = useResponsive();
-  const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
   const trimestres = [
     { id: '', nombre: 'Todos los trimestres' },
@@ -38,7 +38,6 @@ function ProgresoTab({ docenteId, establecimientoId }) {
     { id: '3', nombre: '3er Trimestre' }
   ];
 
-  // Cargar cursos
   useEffect(() => {
     const cargarCursos = async () => {
       if (!docenteId || !establecimientoId) {
@@ -63,7 +62,6 @@ function ProgresoTab({ docenteId, establecimientoId }) {
     cargarCursos();
   }, [docenteId, establecimientoId]);
 
-  // Cargar asignaturas
   useEffect(() => {
     const cargarAsignaturas = async () => {
       if (!cursoSeleccionado || !docenteId || !establecimientoId) {
@@ -76,7 +74,10 @@ function ProgresoTab({ docenteId, establecimientoId }) {
         );
         const data = await response.json();
         if (data.success) {
+          // Mapeo para SelectNativo (necesita id, nombre) y logica interna
           const asignaturasMapeadas = data.data.map(a => ({
+            id: a.id,
+            nombre: a.nombre,
             asignatura_id: a.id,
             asignatura_nombre: a.nombre
           }));
@@ -102,9 +103,9 @@ function ProgresoTab({ docenteId, establecimientoId }) {
 
   const handleAsignaturaChange = (e) => {
     const asignaturaId = e.target.value;
-    const asignatura = asignaturas.find(a => a.asignatura_id.toString() === asignaturaId);
+    const asignatura = asignaturas.find(a => a.id.toString() === asignaturaId);
     setAsignaturaSeleccionada(asignaturaId);
-    setAsignaturaNombre(asignatura ? asignatura.asignatura_nombre : '');
+    setAsignaturaNombre(asignatura ? asignatura.nombre : '');
   };
 
   const handleTrimestreChange = (e) => {
@@ -116,12 +117,10 @@ function ProgresoTab({ docenteId, establecimientoId }) {
       setError('Seleccione curso y asignatura');
       return;
     }
-
     setError('');
     setCargandoEstadisticas(true);
 
     try {
-      // 1. Obtener KPI y Estadisticas Generales
       let urlStats = `${config.apiBaseUrl}/docente/${docenteId}/progreso/estadisticas?establecimiento_id=${establecimientoId}&curso_id=${cursoSeleccionado}&asignatura_id=${asignaturaSeleccionada}`;
       if (trimestreSeleccionado) urlStats += `&trimestre=${trimestreSeleccionado}`;
       const resStats = await fetch(urlStats);
@@ -129,17 +128,13 @@ function ProgresoTab({ docenteId, establecimientoId }) {
 
       if (!dataStats.success) throw new Error(dataStats.error || 'Error en estadisticas');
 
-      // 2. Obtener Notas Detalladas para el Grafico de Evolucion
-      // Usamos el endpoint de VerNotasTab para obtener la matriz completa
       const urlNotas = `${config.apiBaseUrl}/docente/${docenteId}/notas/por-asignatura?establecimiento_id=${establecimientoId}&curso_id=${cursoSeleccionado}&asignatura_id=${asignaturaSeleccionada}`;
       const resNotas = await fetch(urlNotas);
       const dataNotas = await resNotas.json();
 
       if (dataStats.success) {
         setEstadisticas(dataStats.data);
-        if (dataNotas.success) {
-          setNotasDetalladas(dataNotas.data);
-        }
+        if (dataNotas.success) setNotasDetalladas(dataNotas.data);
       }
     } catch (err) {
       console.error('Error al analizar progreso:', err);
@@ -149,19 +144,19 @@ function ProgresoTab({ docenteId, establecimientoId }) {
     }
   };
 
-  // Calcular evolucion detallada nota a nota
   const chartEvolucionData = useMemo(() => {
     if (!notasDetalladas || notasDetalladas.length === 0) return null;
 
     const labels = [];
     const dataPoints = [];
+    const pointColors = [];
+    const pointRadii = [];
 
-    // Helper para calcular promedio de una columna
     const calcPromedioColumna = (trimestreKey, notaIndex) => {
       let suma = 0;
       let count = 0;
       notasDetalladas.forEach(alumno => {
-        const notasTrim = alumno[trimestreKey]; // notas_t1, etc
+        const notasTrim = alumno[trimestreKey];
         if (notasTrim && notasTrim[notaIndex]) {
           const valor = parseFloat(notasTrim[notaIndex].nota);
           if (!isNaN(valor) && !notasTrim[notaIndex].es_pendiente) {
@@ -174,12 +169,9 @@ function ProgresoTab({ docenteId, establecimientoId }) {
     };
 
     const calcPromedioFinalTrimestre = (trimestreNum) => {
-      // Usar el promedio ya calculado por el backend si existe, o calcularlo
-      // En notasDetalladas no viene el promedio final explicito facil, mejor calcularlo
       let suma = 0;
       let count = 0;
       notasDetalladas.forEach(alumno => {
-        // Replicar logica de VerNotasTab para promedio alumno
         const notas = alumno[`notas_t${trimestreNum}`];
         const validas = notas.filter(n => n.nota !== null && !n.es_pendiente).map(n => parseFloat(n.nota));
         if (validas.length > 0) {
@@ -191,46 +183,98 @@ function ProgresoTab({ docenteId, establecimientoId }) {
       return count > 0 ? (suma / count) : null;
     };
 
-    // Generar puntos para T1, T2, T3
     [1, 2, 3].forEach(t => {
-      // Si hay seleccion de trimestre, filtrar
       if (trimestreSeleccionado && trimestreSeleccionado !== t.toString()) return;
 
-      // Notas 1 a 8
       for (let i = 0; i < 8; i++) {
         const prom = calcPromedioColumna(`notas_t${t}`, i);
         if (prom !== null) {
           labels.push(`T${t} N${i + 1}`);
           dataPoints.push(prom);
+          pointColors.push(chartColors.primary);
+          pointRadii.push(4);
         }
       }
-      // Promedio Final Trimestre
       const promFinal = calcPromedioFinalTrimestre(t);
       if (promFinal !== null) {
         labels.push(`T${t} Final`);
         dataPoints.push(promFinal);
+        // DESTACAR PUNTO FINAL (Color diferente: Rojo/Naranja)
+        pointColors.push('#f97316'); // Naranja brillante
+        pointRadii.push(6);
       }
     });
 
     return {
       labels,
       datasets: [{
-        label: 'Promedio Curso (Evolución Nota a Nota)',
+        label: 'Promedio Curso',
         data: dataPoints,
         borderColor: chartColors.primary,
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         fill: true,
         tension: 0.3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        borderWidth: 2
+        borderWidth: 2,
+        pointBackgroundColor: pointColors,
+        pointRadius: pointRadii,
+        pointHoverRadius: 8
       }]
     };
 
   }, [notasDetalladas, trimestreSeleccionado]);
 
+  // Opciones grafico evolucion
+  const evolucionChartOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        callbacks: {
+          label: (context) => `Promedio: ${Number(context.raw).toFixed(1)}`
+        }
+      }
+    },
+    scales: {
+      y: {
+        min: 1.0,
+        max: 7.0,
+        grid: { color: '#f1f5f9' },
+        ticks: { stepSize: 0.5 }
+      },
+      x: {
+        grid: { display: false },
+        ticks: {
+          font: { size: 10 },
+          autoSkip: false,
+          maxRotation: 0,
+          callback: function (val, index, values) {
+            const label = this.getLabelForValue(val);
+            const currentTrim = label.split(' ')[0];
 
-  // KPIs / Distribucion / Top5 siguen usando 'estadisticas'
+            // LOGICA CAMBIADA: Mostrar etiqueta al FINAL del bloque
+            if (index === values.length - 1) return currentTrim.replace('T', 'Trimestre ');
+
+            const nextLabel = this.getLabelForValue(values[index + 1].value);
+            const nextTrim = nextLabel.split(' ')[0];
+
+            if (currentTrim !== nextTrim) {
+              return currentTrim.replace('T', 'Trimestre ');
+            }
+            return '';
+          }
+        }
+      }
+    },
+    interaction: {
+      mode: 'nearest',
+      axis: 'x',
+      intersect: false
+    }
+  }), []);
+
   const chartDistribucion = useMemo(() => ({
     labels: ['1.0-3.9', '4.0-4.9', '5.0-5.9', '6.0-7.0'],
     datasets: [{
@@ -263,58 +307,6 @@ function ProgresoTab({ docenteId, establecimientoId }) {
     }]
   }), [estadisticas]);
 
-  // Opciones especificas para el grafico de evolucion
-  const evolucionChartOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        mode: 'index',
-        intersect: false,
-        callbacks: {
-          label: (context) => `Promedio: ${Number(context.raw).toFixed(1)}`
-        }
-      }
-    },
-    scales: {
-      y: {
-        min: 1.0,
-        max: 7.0,
-        grid: { color: '#f1f5f9' },
-        ticks: { stepSize: 0.5 }
-      },
-      x: {
-        grid: { display: false },
-        ticks: {
-          font: { size: 10 }, // Letra mas chica como solictado
-          autoSkip: false,
-          maxRotation: 0,
-          callback: function (val, index, values) {
-            const label = this.getLabelForValue(val);
-            const currentTrim = label.split(' ')[0]; // "T1"
-
-            // Mostrar etiqueta solo al inicio de cada bloque de trimestre
-            if (index === 0) return currentTrim.replace('T', 'Trimestre ');
-
-            const prevLabel = this.getLabelForValue(values[index - 1].value);
-            const prevTrim = prevLabel.split(' ')[0];
-
-            if (currentTrim !== prevTrim) {
-              return currentTrim.replace('T', 'Trimestre ');
-            }
-            return '';
-          }
-        }
-      }
-    },
-    interaction: {
-      mode: 'nearest',
-      axis: 'x',
-      intersect: false
-    }
-  }), []);
-
   if (cargandoCursos) {
     return (
       <div className="tab-panel active">
@@ -335,28 +327,40 @@ function ProgresoTab({ docenteId, establecimientoId }) {
             alignItems: isMobile ? 'stretch' : 'flex-end',
             marginBottom: '10px'
           }}>
-            <div className="filtro-grupo" style={{ flex: isMobile ? 'auto' : '1' }}>
-              <label className="filtro-label" style={{ marginBottom: '5px', display: 'block', fontWeight: '500' }}>Curso</label>
-              <select className="form-control" value={cursoSeleccionado} onChange={handleCursoChange} style={{ width: '100%' }}>
-                <option value="">Seleccionar curso</option>
-                {cursos.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-              </select>
+            <div style={{ flex: isMobile ? 'auto' : '1' }}>
+              <SelectNativo
+                label="Curso"
+                value={cursoSeleccionado}
+                onChange={handleCursoChange}
+                options={cursos}
+                placeholder="Seleccionar curso"
+              />
             </div>
-            <div className="filtro-grupo" style={{ flex: isMobile ? 'auto' : '1' }}>
-              <label className="filtro-label" style={{ marginBottom: '5px', display: 'block', fontWeight: '500' }}>Asignatura</label>
-              <select className="form-control" value={asignaturaSeleccionada} onChange={handleAsignaturaChange} disabled={!cursoSeleccionado} style={{ width: '100%' }}>
-                <option value="">Seleccionar asignatura</option>
-                {asignaturas.map(a => <option key={a.asignatura_id} value={a.asignatura_id}>{a.asignatura_nombre}</option>)}
-              </select>
+            <div style={{ flex: isMobile ? 'auto' : '1' }}>
+              <SelectNativo
+                label="Asignatura"
+                value={asignaturaSeleccionada}
+                onChange={handleAsignaturaChange}
+                options={asignaturas}
+                placeholder="Seleccionar asignatura"
+                disabled={!cursoSeleccionado}
+              />
             </div>
-            <div className="filtro-grupo" style={{ flex: isMobile ? 'auto' : '1' }}>
-              <label className="filtro-label" style={{ marginBottom: '5px', display: 'block', fontWeight: '500' }}>Trimestre</label>
-              <select className="form-control" value={trimestreSeleccionado} onChange={handleTrimestreChange} style={{ width: '100%' }}>
-                {trimestres.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
-              </select>
+            <div style={{ flex: isMobile ? 'auto' : '1' }}>
+              <SelectNativo
+                label="Trimestre"
+                value={trimestreSeleccionado}
+                onChange={handleTrimestreChange}
+                options={trimestres}
+              />
             </div>
-            <div className="filtro-accion" style={{ flex: isMobile ? 'auto' : '0 0 auto' }}>
-              <button className="btn btn-primary" onClick={analizarProgreso} disabled={!cursoSeleccionado || !asignaturaSeleccionada || cargandoEstadisticas} style={{ width: isMobile ? '100%' : 'auto', minWidth: '120px' }}>
+            <div className="filtro-accion" style={{ flex: isMobile ? 'auto' : '0 0 auto', marginBottom: '15px' }}>
+              <button
+                className="btn btn-primary"
+                onClick={analizarProgreso}
+                disabled={!cursoSeleccionado || !asignaturaSeleccionada || cargandoEstadisticas}
+                style={{ width: isMobile ? '100%' : 'auto', minWidth: '120px', height: '38px' }}
+              >
                 {cargandoEstadisticas ? 'Analizando...' : 'Analizar'}
               </button>
             </div>
@@ -385,7 +389,6 @@ function ProgresoTab({ docenteId, establecimientoId }) {
               <div className="card-header"><h3>Distribucion de Notas</h3></div>
               <div className="card-body docente-chart-container"><Bar data={chartDistribucion} options={baseChartOptions} /></div>
             </div>
-            {/* GRAFICO EVOLUCION REEMPLAZA AL DE TRIMESTRE */}
             <div className="card docente-chart-card">
               <div className="card-header"><h3>Evolucion de Notas (Nota a Nota)</h3></div>
               <div className="card-body docente-chart-container">

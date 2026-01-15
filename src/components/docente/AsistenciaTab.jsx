@@ -171,7 +171,9 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
         return;
       }
 
-      setAlumnos(dataAlumnos.data);
+      // Ordenar alfabeticamente por apellido
+      const alumnosOrdenados = dataAlumnos.data.sort((a, b) => (a.apellidos || '').localeCompare(b.apellidos || ''));
+      setAlumnos(alumnosOrdenados);
 
       // Verificar si ya existe asistencia para hoy
       const responseAsistencia = await fetch(
@@ -182,7 +184,7 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
       if (dataAsistencia.success && dataAsistencia.existe) {
         // Cargar asistencia existente
         const asistenciaInicial = {};
-        dataAlumnos.data.forEach(alumno => {
+        alumnosOrdenados.forEach(alumno => {
           const registro = dataAsistencia.data[alumno.id];
           asistenciaInicial[alumno.id] = {
             estado: registro?.estado || 'presente',
@@ -195,7 +197,7 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
       } else {
         // Nueva asistencia - todos presentes por defecto
         const asistenciaInicial = {};
-        dataAlumnos.data.forEach(alumno => {
+        alumnosOrdenados.forEach(alumno => {
           asistenciaInicial[alumno.id] = {
             estado: 'presente',
             observacion: ''
@@ -301,12 +303,8 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
   };
 
   const formatearNombreAlumno = (alumno) => {
-    const nombresArr = alumno.nombres.split(' ');
-    const apellidosArr = alumno.apellidos.split(' ');
-    const primerApellido = apellidosArr[0] || '';
-    const segundoApellido = apellidosArr[1] || '';
-    const inicialPrimerNombre = nombresArr[0] ? `${nombresArr[0].charAt(0)}.` : '';
-    return `${primerApellido} ${segundoApellido} ${inicialPrimerNombre}`.replace(/\s+/g, ' ').trim();
+    const primerNombre = alumno.nombres.split(' ')[0];
+    return `${alumno.apellidos} ${primerNombre}`.toUpperCase();
   };
 
   const formatearFechaLarga = (fecha) => {
@@ -329,25 +327,14 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
       <div className="card" style={{ overflow: 'visible' }}>
         <div className="card-header"><h3>Registro de Asistencia</h3></div>
         <div className="card-body" style={{ overflow: 'visible' }}>
-          <div className="docente-asistencia-filtros">
-            <div className="docente-asistencia-filtros-row">
+          <div className="docente-asistencia-filtros" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-end', gap: '15px' }}>
+            {/* Grupo Curso */}
+            <div style={{ flex: isMobile ? 'auto' : '0 0 250px' }}>
               {cargandoCursos ? (
-                <div className="form-group">
-                  <label>Curso</label>
-                  <div style={{ padding: '8px', color: '#64748b' }}>Cargando cursos...</div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ fontSize: '13px', marginBottom: '4px' }}>Curso</label>
+                  <div style={{ padding: '4px 8px', fontSize: '13px', border: '1px solid #ced4da', borderRadius: '4px', height: '30px' }}>Cargando...</div>
                 </div>
-              ) : isMobile ? (
-                <SelectMovil
-                  label="Curso"
-                  value={cursoSeleccionado}
-                  valueName={cursoNombre}
-                  onChange={handleCursoChange}
-                  options={cursos}
-                  placeholder="Seleccionar..."
-                  isOpen={dropdownAbierto === 'curso'}
-                  onToggle={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
-                  onClose={() => setDropdownAbierto(null)}
-                />
               ) : (
                 <SelectNativo
                   label="Curso"
@@ -360,24 +347,30 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
                   placeholder="Seleccionar"
                 />
               )}
-              <div className="form-group">
-                <label>Fecha</label>
+            </div>
+
+            {/* Grupo Fecha */}
+            <div style={{ flex: isMobile ? 'auto' : '0 0 150px' }}>
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', fontSize: '13px' }}>Fecha</label>
                 <input
                   type="date"
                   className="form-control"
                   value={fechaHoy}
                   disabled
-                  style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }}
+                  style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed', height: '30px', fontSize: '13px', padding: '0 8px' }}
                 />
               </div>
             </div>
-            <div className="docente-filtros-actions">
-              <button className="btn btn-secondary" onClick={limpiarFiltros} style={{ height: '30px', fontSize: '13px', padding: '0 12px', display: 'flex', alignItems: 'center' }}>Limpiar</button>
+
+            {/* Botones a la derecha */}
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingBottom: '15px' }}>
+              <button className="btn btn-secondary" onClick={limpiarFiltros} style={{ height: '30px', fontSize: '13px', padding: '0 15px', display: 'flex', alignItems: 'center' }}>Limpiar</button>
               <button
                 className="btn btn-primary"
                 onClick={handleCargarLista}
                 disabled={cargandoAlumnos || !cursoSeleccionado}
-                style={{ height: '30px', fontSize: '13px', padding: '0 12px', display: 'flex', alignItems: 'center' }}
+                style={{ height: '30px', fontSize: '13px', padding: '0 15px', display: 'flex', alignItems: 'center' }}
               >
                 {cargandoAlumnos ? 'Cargando...' : 'Cargar Lista'}
               </button>
@@ -389,110 +382,74 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
       {mostrarLista && (
         <div className="card" style={{ marginTop: '20px' }}>
           {!isMobile && (
-            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>
-                Lista de Asistencia - {formatearFechaLarga(fechaHoy)}
-                {asistenciaExistente && !modoEdicion && (
-                  <span style={{ marginLeft: '10px', fontSize: '12px', color: '#10b981', fontWeight: 'normal' }}>(Guardada)</span>
-                )}
-                {modoEdicion && (
-                  <span style={{ marginLeft: '10px', fontSize: '12px', color: '#f59e0b', fontWeight: 'normal' }}>(Editando)</span>
-                )}
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 15px' }}>
+              <h3 style={{ fontSize: '16px', margin: 0 }}>
+                {formatearFechaLarga(fechaHoy)}
+                {asistenciaExistente && !modoEdicion && <span style={{ marginLeft: '10px', fontSize: '12px', color: '#10b981' }}>(Guardada)</span>}
+                {modoEdicion && <span style={{ marginLeft: '10px', fontSize: '12px', color: '#f59e0b' }}>(Editando)</span>}
               </h3>
-              <div style={{ display: 'flex', gap: '16px', fontSize: '12px' }}>
-                <span style={{ color: '#10b981' }}>Presentes: {conteo.presente}</span>
-                <span style={{ color: '#ef4444' }}>Ausentes: {conteo.ausente}</span>
-                <span style={{ color: '#f59e0b' }}>Tardios: {conteo.tardio}</span>
-                <span style={{ color: '#3b82f6' }}>Justificados: {conteo.justificado}</span>
+              <div style={{ display: 'flex', gap: '12px', fontSize: '12px' }}>
+                <span style={{ color: '#10b981' }}>P: {conteo.presente}</span>
+                <span style={{ color: '#ef4444' }}>A: {conteo.ausente}</span>
+                <span style={{ color: '#f59e0b' }}>T: {conteo.tardio}</span>
+                <span style={{ color: '#3b82f6' }}>J: {conteo.justificado}</span>
               </div>
             </div>
           )}
-          <div className="card-body">
-            {isMobile && (
-              <div className="docente-asistencia-info-movil">
-                <p className="docente-asistencia-titulo-movil">
-                  Lista de Asistencia - {formatearFechaLarga(fechaHoy)}
-                  {asistenciaExistente && !modoEdicion && (
-                    <span style={{ marginLeft: '6px', color: '#10b981' }}>(Guardada)</span>
-                  )}
-                  {modoEdicion && (
-                    <span style={{ marginLeft: '6px', color: '#f59e0b' }}>(Editando)</span>
-                  )}
-                </p>
-                <div className="docente-asistencia-conteo-movil">
-                  <span style={{ color: '#10b981' }}>Presentes: {conteo.presente}</span>
-                  <span style={{ color: '#ef4444' }}>Ausentes: {conteo.ausente}</span>
-                  <span style={{ color: '#f59e0b' }}>Tardios: {conteo.tardio}</span>
-                  <span style={{ color: '#3b82f6' }}>Justificados: {conteo.justificado}</span>
-                </div>
-              </div>
-            )}
-            {alumnos.length === 0 ? (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
-                No hay alumnos en este curso
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="data-table docente-tabla-asistencia">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '30px', textAlign: 'center' }}>N</th>
-                      <th style={{ minWidth: isMobile ? '100px' : '200px' }}>Alumno</th>
-                      <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center' }}>{isMobile ? 'P' : 'Presente'}</th>
-                      <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center' }}>{isMobile ? 'A' : 'Ausente'}</th>
-                      <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center' }}>{isMobile ? 'T' : 'Tardio'}</th>
-                      <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center' }}>{isMobile ? 'J' : 'Justificado'}</th>
+
+          <div className="card-body" style={{ padding: '0' }}>
+            <div className="table-container-scroll" style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '4px' }}>
+              <table className="data-table docente-tabla-asistencia" style={{ width: '100%', marginBottom: 0 }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#f8fafc', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                  <tr>
+                    <th style={{ width: '30px', textAlign: 'center', padding: '6px 8px', fontSize: '12px' }}>N</th>
+                    <th style={{ minWidth: isMobile ? '100px' : '200px', padding: '6px 8px', fontSize: '12px' }}>Alumno</th>
+                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px' }}>{isMobile ? 'P' : 'Presente'}</th>
+                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px' }}>{isMobile ? 'A' : 'Ausente'}</th>
+                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px' }}>{isMobile ? 'T' : 'Tardio'}</th>
+                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px' }}>{isMobile ? 'J' : 'Justificado'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {alumnos.map((alumno, index) => (
+                    <tr key={alumno.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ textAlign: 'center', padding: '4px 8px', fontSize: '13px' }}>{index + 1}</td>
+                      <td style={{ padding: '4px 8px', fontSize: '13px' }}>
+                        {formatearNombreAlumno(alumno)}
+                        {asistencia[alumno.id]?.estado === 'justificado' && asistencia[alumno.id]?.observacion && (
+                          <span title={asistencia[alumno.id].observacion} style={{ marginLeft: '6px', color: '#3b82f6', cursor: 'help' }}>(i)</span>
+                        )}
+                      </td>
+                      {estados.map(estado => (
+                        <AsistenciaRadio
+                          key={estado}
+                          alumnoId={alumno.id}
+                          estado={estado}
+                          estadoActual={asistencia[alumno.id]?.estado}
+                          onChange={handleAsistenciaChange}
+                          disabled={!modoEdicion}
+                        />
+                      ))}
                     </tr>
-                  </thead>
-                  <tbody>
-                    {alumnos.map((alumno, index) => (
-                      <tr key={alumno.id}>
-                        <td style={{ textAlign: 'center' }}>{index + 1}</td>
-                        <td>
-                          {formatearNombreAlumno(alumno)}
-                          {asistencia[alumno.id]?.estado === 'justificado' && asistencia[alumno.id]?.observacion && (
-                            <span
-                              title={asistencia[alumno.id].observacion}
-                              style={{ marginLeft: '8px', cursor: 'help', color: '#3b82f6' }}
-                            >
-                              (i)
-                            </span>
-                          )}
-                        </td>
-                        {estados.map(estado => (
-                          <AsistenciaRadio
-                            key={estado}
-                            alumnoId={alumno.id}
-                            estado={estado}
-                            estadoActual={asistencia[alumno.id]?.estado}
-                            onChange={handleAsistenciaChange}
-                            disabled={!modoEdicion}
-                          />
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            <div className="docente-asistencia-acciones">
-              {asistenciaExistente && !modoEdicion ? (
-                <button className="btn btn-secondary" onClick={handleModificarAsistencia}>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="docente-asistencia-acciones" style={{ padding: '10px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', backgroundColor: '#f8fafc' }}>
+              {asistenciaExistente && !modoEdicion && (
+                <button className="btn btn-secondary" onClick={handleModificarAsistencia} style={{ height: '30px', fontSize: '13px', display: 'flex', alignItems: 'center', padding: '0 15px' }}>
                   {isMobile ? 'Modificar' : 'Modificar Asistencia'}
                 </button>
-              ) : null}
+              )}
               {modoEdicion && (
                 <button
                   className="btn btn-primary"
                   onClick={handleGuardarAsistencia}
                   disabled={guardando}
+                  style={{ height: '30px', fontSize: '13px', display: 'flex', alignItems: 'center', padding: '0 15px' }}
                 >
-                  {guardando
-                    ? 'Guardando...'
-                    : asistenciaExistente
-                      ? (isMobile ? 'Actualizar' : 'Actualizar Asistencia')
-                      : (isMobile ? 'Guardar' : 'Guardar Asistencia')
-                  }
+                  {guardando ? 'Guardando...' : (asistenciaExistente ? 'Actualizar' : 'Guardar')}
                 </button>
               )}
             </div>

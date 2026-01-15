@@ -117,39 +117,39 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
 
   const formatearCurso = (nombre) => {
     if (!nombre) return '-';
-    // Ejemplo: "CUARTO MEDIO A" -> "4°M A"
-    // Ejemplo: "PRIMERO BASICO B" -> "1°B B"
+    // Normalizar
+    const upper = nombre.toUpperCase();
 
-    let nivel = '';
-    let grado = '';
+    // Extrar letra final (ej: "Cuarto Medio A" -> "A")
+    // Logica: Si termina en espacio + letra unica
     let letra = '';
-
-    const parts = nombre.toUpperCase().split(' ');
-
-    // Intentar extraer letra (usualmente al final)
-    if (parts.length > 0 && parts[parts.length - 1].length === 1) {
-      letra = parts.pop();
+    const matchLetra = upper.match(/\s([A-Z])$/);
+    if (matchLetra) {
+      letra = matchLetra[1];
     }
 
-    const resto = parts.join(' ');
+    let nivel = '';
+    // Detectar numeros escritos
+    if (upper.includes('PRIMERO') || upper.includes('1RO')) nivel = '1°';
+    else if (upper.includes('SEGUNDO') || upper.includes('2DO')) nivel = '2°';
+    else if (upper.includes('TERCERO') || upper.includes('3RO')) nivel = '3°';
+    else if (upper.includes('CUARTO') || upper.includes('4TO')) nivel = '4°';
+    else if (upper.includes('QUINTO') || upper.includes('5TO')) nivel = '5°';
+    else if (upper.includes('SEXTO') || upper.includes('6TO')) nivel = '6°';
+    else if (upper.includes('SEPTIMO') || upper.includes('7MO')) nivel = '7°';
+    else if (upper.includes('OCTAVO') || upper.includes('8VO')) nivel = '8°';
+    else if (upper.includes('KINDER')) return 'Kinder ' + letra;
+    else if (upper.includes('PRE')) return 'PK ' + letra;
 
-    if (resto.includes('PRIMERO')) nivel = '1°';
-    else if (resto.includes('SEGUNDO')) nivel = '2°';
-    else if (resto.includes('TERCERO')) nivel = '3°';
-    else if (resto.includes('CUARTO')) nivel = '4°';
-    else if (resto.includes('QUINTO')) nivel = '5°';
-    else if (resto.includes('SEXTO')) nivel = '6°';
-    else if (resto.includes('SEPTIMO')) nivel = '7°';
-    else if (resto.includes('OCTAVO')) nivel = '8°';
-    else if (resto.includes('KINDER')) return 'KINDER ' + letra;
-    else if (resto.includes('PRE')) return 'PK ' + letra;
+    let ciclo = '';
+    if (upper.includes('MEDIO') || upper.includes('MEDIA')) ciclo = 'M';
+    else if (upper.includes('BASICO') || upper.includes('BASICA') || upper.includes('BÁSICO')) ciclo = 'B';
 
-    if (resto.includes('MEDIO')) grado = 'M';
-    else if (resto.includes('BASICO') || resto.includes('BÁSICO')) grado = 'B';
+    if (nivel && ciclo) return `${nivel}${ciclo} ${letra}`;
 
-    if (nivel && grado) return `${nivel}${grado} ${letra}`;
-
-    return nombre; // Fallback
+    // Si falla la lógica anterior, intentar reemplazo directo simple
+    let simple = upper.replace('MEDIO', 'M').replace('BASICO', 'B').replace('BÁSICO', 'B');
+    return simple;
   };
 
   // Cargar cursos del docente

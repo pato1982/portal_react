@@ -468,6 +468,9 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
         showMonthDropdown
         showYearDropdown
         dropdownMode="select"
+        portalId="root"
+        popperPlacement="bottom-end"
+        popperClassName="datepicker-portal"
       />
     </div>
   );
@@ -572,9 +575,9 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
         }
       `}</style>
 
-      <div className="card">
+      <div className="card" style={{ overflow: 'visible' }}>
         <div className="card-header"><h3>Buscar Nota</h3></div>
-        <div className="card-body">
+        <div className="card-body" style={{ overflow: 'visible' }}>
           {/* Añadir overflow visible a las filas de filtros y mayor z-index */}
           {isMobile ? (
             <>
@@ -635,7 +638,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
             </>
           ) : (
             // Desktop Layout
-            <div className="docente-filtros-row" style={{ gridTemplateColumns: '1fr 1fr 1.5fr 1fr auto', overflow: 'visible' }}>
+            <div className="docente-filtros-row" style={{ gridTemplateColumns: '1fr 1fr 1.5fr 1fr auto', overflow: 'visible', position: 'relative', zIndex: 10 }}>
               {cargandoCursos ? (
                 <div className="form-group">
                   <label>Curso</label>

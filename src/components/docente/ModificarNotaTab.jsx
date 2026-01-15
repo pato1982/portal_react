@@ -152,7 +152,9 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
   const [notaEliminar, setNotaEliminar] = useState(null);
   const [eliminando, setEliminando] = useState(false);
 
-  const { isMobile } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
+  const showMobile = isMobile;
+  const isNormalSize = !isMobile;
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
   // Cargar cursos del docente
@@ -580,7 +582,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
         <div className="card-header"><h3>Buscar Nota</h3></div>
         <div className="card-body" style={{ overflow: 'visible' }}>
           {/* Añadir overflow visible a las filas de filtros y mayor z-index */}
-          {isMobile ? (
+          {showMobile ? (
             <>
               <div className="form-row-movil">
                 {cargandoCursos ? (
@@ -638,8 +640,14 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
               </div>
             </>
           ) : (
-            // Desktop Layout
-            <div className="docente-filtros-row" style={{ gridTemplateColumns: '1fr 1fr 1.5fr 1fr auto', overflow: 'visible', position: 'relative', zIndex: 10 }}>
+            // Layout para Tablet y Desktop (Normal)
+            <div className="docente-filtros-row" style={{
+              gridTemplateColumns: isTablet ? '1fr 1fr' : 'repeat(4, 1fr) auto',
+              gap: '15px',
+              overflow: 'visible',
+              position: 'relative',
+              zIndex: 10
+            }}>
               {cargandoCursos ? (
                 <div className="form-group">
                   <label>Curso</label>
@@ -685,9 +693,9 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
 
               <DatePickerCustom />
 
-              <div className="docente-filtros-actions">
-                <button type="button" className="btn btn-secondary" onClick={limpiarBusqueda}>Limpiar</button>
-                <button type="button" className="btn btn-primary" onClick={buscarNotas} disabled={buscando || !filtroCurso}>
+              <div className="docente-filtros-actions" style={{ gridColumn: isTablet ? '1 / -1' : 'auto', justifyContent: isTablet ? 'center' : 'flex-end', marginTop: isTablet ? '10px' : '0' }}>
+                <button type="button" className="btn btn-secondary" onClick={limpiarBusqueda} style={{ height: '30px', fontSize: '12px', padding: '0 15px' }}>Limpiar</button>
+                <button type="button" className="btn btn-primary" onClick={buscarNotas} disabled={buscando || !filtroCurso} style={{ height: '30px', fontSize: '12px', padding: '0 15px' }}>
                   {buscando ? 'Buscando...' : 'Buscar'}
                 </button>
               </div>
@@ -702,11 +710,11 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
         </div>
         <div className="card-body">
           <div className="table-responsive table-scroll">
-            <table className={`data-table ${isMobile ? 'tabla-compacta-movil' : ''}`}>
+            <table className={`data-table ${showMobile ? 'tabla-compacta-movil' : ''}`}>
               <thead>
                 <tr>
                   <th>Alumno</th>
-                  {!isMobile && <th>Asignatura</th>}
+                  {isNormalSize && <th>Asignatura</th>}
                   <th>Nota</th>
                   <th>Trim.</th>
                   <th>Fecha</th>
@@ -715,14 +723,14 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
               </thead>
               <tbody>
                 {buscando ? (
-                  <tr><td colSpan={isMobile ? 5 : 6} className="text-center text-muted">Buscando...</td></tr>
+                  <tr><td colSpan={isNormalSize ? 6 : 5} className="text-center text-muted">Buscando...</td></tr>
                 ) : resultados.length > 0 ? resultados.map(nota => (
                   <tr key={nota.id}>
                     <td>
-                      {nota.alumno_apellidos}, {isMobile ? nota.alumno_nombres?.split(' ')[0] : nota.alumno_nombres}
-                      {isMobile && <div style={{ fontSize: '11px', color: '#64748b' }}>{nota.asignatura_nombre}</div>}
+                      {nota.alumno_apellidos}, {isNormalSize ? nota.alumno_nombres : nota.alumno_nombres?.split(' ')[0]}
+                      {!isNormalSize && <div style={{ fontSize: '11px', color: '#64748b' }}>{nota.asignatura_nombre}</div>}
                     </td>
-                    {!isMobile && <td>{nota.asignatura_nombre}</td>}
+                    {isNormalSize && <td>{nota.asignatura_nombre}</td>}
                     <td>
                       <span className={`docente-nota-badge ${getNotaClass(nota.nota, nota.es_pendiente)}`}>
                         {nota.es_pendiente ? 'Pend.' : (nota.nota !== null ? Number(nota.nota).toFixed(1) : '-')}
@@ -749,7 +757,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={isMobile ? 5 : 6} className="text-center text-muted">
+                    <td colSpan={isNormalSize ? 6 : 5} className="text-center text-muted">
                       {buscado ? 'No se encontraron notas con los filtros seleccionados' : 'Seleccione un curso y presione Buscar'}
                     </td>
                   </tr>

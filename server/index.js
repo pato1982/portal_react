@@ -1589,7 +1589,8 @@ app.post('/api/notas/registrar', async (req, res) => {
         );
 
         // El año académico es el del periodo activo, o el de la fecha si no hay activo
-        const anioAcademico = periodoActivo.length > 0 ? periodoActivo[0].anio : (fecha_evaluacion ? new Date(fecha_evaluacion).getUTCFullYear() : new Date().getFullYear());
+        const fechaParaAnio = fecha_evaluacion || new Date().toISOString().split('T')[0];
+        const anioAcademico = new Date(fechaParaAnio).getUTCFullYear();
 
         // Obtener nombres para el log
         const [alumnoRow] = await connection.query('SELECT nombres, apellidos FROM tb_alumnos WHERE id = ?', [alumno_id]);
@@ -2121,7 +2122,7 @@ app.post('/api/asistencia/registrar', async (req, res) => {
         );
 
         // El año académico es el del periodo activo, o el de la fecha si no hay activo
-        const anioAcademico = periodoActivo.length > 0 ? periodoActivo[0].anio : new Date(fecha).getUTCFullYear();
+        const anioAcademico = new Date(fecha).getUTCFullYear();
 
         // Calcular trimestre (lógica chilena estándar pero robustecida)
         const mes = new Date(fecha).getUTCMonth() + 1; // Usar UTC para parsear "YYYY-MM-DD" correctamente

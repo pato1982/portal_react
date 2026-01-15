@@ -9,7 +9,7 @@ function NotasPorCursoTab() {
   const [filtros, setFiltros] = useState({
     cursoId: '',
     asignaturaId: '',
-    trimestre: ''
+    trimestre: 'todas'
   });
 
   // Datos de la BD
@@ -37,7 +37,7 @@ function NotasPorCursoTab() {
       cargarAsignaturasPorCurso(filtros.cursoId);
     } else {
       setAsignaturasDB([]);
-      setFiltros(prev => ({ ...prev, asignaturaId: '', trimestre: '' }));
+      setFiltros(prev => ({ ...prev, asignaturaId: '', trimestre: 'todas' }));
     }
   }, [filtros.cursoId]);
 
@@ -105,7 +105,7 @@ function NotasPorCursoTab() {
     setFiltros({
       cursoId: e.target.value,
       asignaturaId: '',
-      trimestre: ''
+      trimestre: 'todas'
     });
   };
 
@@ -113,7 +113,7 @@ function NotasPorCursoTab() {
     setFiltros({
       ...filtros,
       asignaturaId: e.target.value,
-      trimestre: ''
+      trimestre: 'todas'
     });
   };
 
@@ -215,7 +215,6 @@ function NotasPorCursoTab() {
                 onChange={handleTrimestreChange}
                 disabled={!filtros.asignaturaId}
               >
-                <option value="">Todos los trimestres</option>
                 <option value="todas">Todas (Ver todos)</option>
                 {trimestres.map(trim => (
                   <option key={trim.id} value={trim.id}>

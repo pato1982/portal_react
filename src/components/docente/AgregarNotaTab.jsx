@@ -73,9 +73,9 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   const [alumnosFiltro, setAlumnosFiltro] = useState([]);
 
   const [pestanaActiva, setPestanaActiva] = useState('registro');
-
   const { isMobile, isTablet } = useResponsive();
-  const showTabs = isMobile || isTablet;
+  const showTabs = isMobile; // Solo móvil usa el selector de pestañas
+  const isStacked = isMobile || isTablet; // Móvil y Tablet apilan las columnas
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
   const trimestres = [
@@ -712,7 +712,7 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   );
 
   return (
-    <div className="tab-panel active" style={{ height: (showTabs) ? 'auto' : 'calc(100vh - 140px)', minHeight: '500px' }}>
+    <div className="tab-panel active" style={{ height: isStacked ? 'auto' : 'calc(100vh - 140px)', minHeight: '500px' }}>
       {showTabs && (
         <div className="mobile-subtabs">
           <button
@@ -730,10 +730,10 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
         </div>
       )}
 
-      {/* Two columns with specific height to allow scrolling */}
-      <div className={showTabs ? "" : "two-columns"} style={{ height: '100%', alignItems: 'stretch', display: showTabs ? 'block' : 'grid' }}>
+      {/* Two columns layout */}
+      <div className={isStacked ? "" : "two-columns"} style={{ height: '100%', alignItems: 'stretch', display: isStacked ? 'block' : 'grid' }}>
         {(!showTabs || pestanaActiva === 'registro') && (
-          <div className="column" style={{ height: 'auto' }}>
+          <div className="column" style={{ height: 'auto', marginBottom: isTablet ? '24px' : '0' }}>
             <div className="card">
               <div className="card-header">
                 <h3>Registro de Calificacion</h3>
@@ -783,7 +783,10 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
         )}
 
         {(!showTabs || pestanaActiva === 'ultimas') && (
-          <div className="column" style={{ height: showTabs ? 'auto' : '100%', overflow: 'hidden' }}>
+          <div className="column" style={{
+            height: isTablet ? '500px' : (isMobile ? 'auto' : '100%'),
+            overflow: 'hidden'
+          }}>
             <TablaUltimasNotas />
           </div>
         )}

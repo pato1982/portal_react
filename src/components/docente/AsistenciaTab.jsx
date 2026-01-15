@@ -398,7 +398,7 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
           )}
 
           <div className="card-body" style={{ padding: '0' }}>
-            <div className="table-container-scroll" style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '4px' }}>
+            <div className="table-container-scroll" style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '4px' }}>
               <table className="data-table docente-tabla-asistencia" style={{ width: '100%', marginBottom: 0 }}>
                 <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#f8fafc', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                   <tr>
@@ -414,7 +414,7 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
                   {alumnos.map((alumno, index) => (
                     <tr key={alumno.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                       <td style={{ textAlign: 'center', padding: '4px 8px', fontSize: '13px' }}>{index + 1}</td>
-                      <td style={{ padding: '4px 8px', fontSize: '13px' }}>
+                      <td style={{ padding: '4px 8px', fontSize: isMobile ? '11px' : '13px' }}>
                         {formatearNombreAlumno(alumno)}
                         {asistencia[alumno.id]?.estado === 'justificado' && asistencia[alumno.id]?.observacion && (
                           <span title={asistencia[alumno.id].observacion} style={{ marginLeft: '6px', color: '#3b82f6', cursor: 'help' }}>(i)</span>

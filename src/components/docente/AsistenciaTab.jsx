@@ -402,12 +402,12 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
               <table className="data-table docente-tabla-asistencia" style={{ width: '100%', marginBottom: 0 }}>
                 <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#f8fafc', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                   <tr>
-                    <th style={{ width: '30px', textAlign: 'center', padding: '6px 8px', fontSize: '12px' }}>N</th>
-                    <th style={{ minWidth: isMobile ? '100px' : '200px', padding: '6px 8px', fontSize: '12px' }}>Alumno</th>
-                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px' }}>{isMobile ? 'P' : 'Presente'}</th>
-                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px' }}>{isMobile ? 'A' : 'Ausente'}</th>
-                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px' }}>{isMobile ? 'T' : 'Tardio'}</th>
-                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px' }}>{isMobile ? 'J' : 'Justificado'}</th>
+                    <th style={{ width: '30px', textAlign: 'center', padding: '6px 8px', fontSize: '12px', color: '#1e293b', fontWeight: '600' }}>N</th>
+                    <th style={{ minWidth: isMobile ? '100px' : '200px', padding: '6px 8px', fontSize: '12px', color: '#1e293b', fontWeight: '600' }}>Alumno</th>
+                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px', color: '#1e293b', fontWeight: '600' }}>{isMobile ? 'P' : 'Presente'}</th>
+                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px', color: '#1e293b', fontWeight: '600' }}>{isMobile ? 'A' : 'Ausente'}</th>
+                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px', color: '#1e293b', fontWeight: '600' }}>{isMobile ? 'T' : 'Tardio'}</th>
+                    <th style={{ width: isMobile ? '40px' : '80px', textAlign: 'center', padding: '6px 8px', fontSize: '12px', color: '#1e293b', fontWeight: '600' }}>{isMobile ? 'J' : 'Justificado'}</th>
                   </tr>
                 </thead>
                 <tbody>

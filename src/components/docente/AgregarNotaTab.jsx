@@ -3,7 +3,37 @@ import { useResponsive, useDropdown } from '../../hooks';
 import { SelectNativo, SelectMovil, AutocompleteAlumno } from './shared';
 import config from '../../config/env';
 
-function AgregarNotaTab({ docenteId, establecimientoId, usuarioId }) {
+// Simple Error Boundary for this component
+class ComponentErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Error en AgregarNotaTab:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, color: 'red', border: '1px solid red' }}>
+          <h3>Error crítico en el componente</h3>
+          <p>{this.state.error && this.state.error.toString()}</p>
+          <pre style={{ maxWidth: '100%', overflow: 'auto' }}>{this.state.error && this.state.error.stack}</pre>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   // Estados para datos cargados desde API
   const [cursos, setCursos] = useState([]);
   const [asignaturas, setAsignaturas] = useState([]);
@@ -593,7 +623,9 @@ function AgregarNotaTab({ docenteId, establecimientoId, usuarioId }) {
                     <td>{isMobile ? n.asignatura_nombre?.substring(0, 10) : n.asignatura_nombre}</td>
                     <td style={{ textAlign: 'center' }}>{n.trimestre}°</td>
                     <td style={{ textAlign: 'center', fontWeight: '600', color: n.es_pendiente ? '#f59e0b' : (n.nota >= 4.0 ? '#10b981' : '#ef4444') }}>
-                      {n.es_pendiente ? 'Pend.' : n.nota?.toFixed(1)}
+                      {n.es_pendiente ? 'Pend.' : (
+                        Number(n.nota) ? Number(n.nota).toFixed(1) : '-'
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -685,4 +717,11 @@ function AgregarNotaTab({ docenteId, establecimientoId, usuarioId }) {
   );
 }
 
-export default AgregarNotaTab;
+// Exportar el componente envuelto en el Error Boundary
+export default function AgregarNotaTab(props) {
+  return (
+    <ComponentErrorBoundary>
+      <AgregarNotaTabInternal {...props} />
+    </ComponentErrorBoundary>
+  );
+}

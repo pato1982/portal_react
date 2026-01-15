@@ -6,7 +6,8 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #1a365d 0%, #2c5282 50%, #3182ce 100%);
-  padding: 12px 12px; /* reducido verticalmente para evitar scroll */
+  padding: 12px 12px;
+  /* reducido verticalmente para evitar scroll */
 }
 
 .login-page .login-container {
@@ -24,7 +25,8 @@
 /* Header */
 .login-page .login-header {
   text-align: center;
-  padding: 28px 60px 18px; /* menos alto en escritorio */
+  padding: 28px 60px 18px;
+  /* menos alto en escritorio */
   background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
   border-bottom: 1px solid #e2e8f0;
 }
@@ -37,7 +39,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 8px; /* reducir espacio bajo logo */
+  margin: 0 auto 8px;
+  /* reducir espacio bajo logo */
   box-shadow: 0 4px 15px rgba(26, 54, 93, 0.3);
 }
 
@@ -51,7 +54,8 @@
   color: #1a365d;
   font-size: 24px;
   font-weight: 700;
-  margin: 0 0 2px; /* pequeño ajuste */
+  margin: 0 0 2px;
+  /* pequeño ajuste */
 }
 
 .login-page .login-header p {
@@ -62,7 +66,8 @@
 
 /* Formulario */
 .login-page .login-form {
-  padding: 30px 60px; /* reducir alto del formulario */
+  padding: 30px 60px;
+  /* reducir alto del formulario */
 }
 
 .login-page .login-error {
@@ -107,7 +112,8 @@
 
 .login-page .input-icon-wrapper input {
   width: 100%;
-  padding: 12px 14px 12px 40px;
+  padding: 12px 40px 12px 40px;
+  /* Padding derecho aumentado para el icono del ojo */
   font-size: 14px;
   font-family: inherit;
   border: 1px solid #d1d5db;
@@ -129,7 +135,9 @@
 
 .login-page .toggle-password {
   position: absolute;
-  right: 12px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
@@ -139,6 +147,7 @@
   align-items: center;
   justify-content: center;
   transition: color 0.2s;
+  z-index: 10;
 }
 
 .login-page .toggle-password:hover {
@@ -202,7 +211,8 @@
 
 /* Footer */
 .login-page .login-footer {
-  padding: 14px 60px 16px; /* reducir alto del footer */
+  padding: 14px 60px 16px;
+  /* reducir alto del footer */
   text-align: center;
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
@@ -349,7 +359,7 @@
   .login-page input[type="password"],
   .login-page input[type="text"] {
     font-size: 11px;
-    padding: 8px 6px 8px 34px;
+    padding: 8px 30px 8px 34px;
   }
 
   .login-page .form-group label {
@@ -360,15 +370,18 @@
 /* ========== MODO ESCRITORIO (1101px en adelante) - reducir altura para evitar scroll ========== */
 @media (min-width: 1101px) {
   .login-page {
-    padding: 8px 12px; /* menos espacio alrededor */
+    padding: 8px 12px;
+    /* menos espacio alrededor */
   }
 
   .login-page .login-header {
-    padding: 18px 40px 12px; /* reducir header verticalmente */
+    padding: 18px 40px 12px;
+    /* reducir header verticalmente */
   }
 
   .login-page .login-logo {
-    margin: 0 auto 6px; /* menos margen inferior */
+    margin: 0 auto 6px;
+    /* menos margen inferior */
   }
 
   .login-page .login-header h1 {
@@ -376,16 +389,19 @@
   }
 
   .login-page .login-form {
-    padding: 18px 40px; /* formulario más compacto */
+    padding: 18px 40px;
+    /* formulario más compacto */
   }
 
   .login-page .input-icon-wrapper input {
-    padding: 10px 12px 10px 36px; /* inputs menos altos */
+    padding: 10px 40px 10px 36px;
+    /* inputs menos altos */
     font-size: 13px;
   }
 
   .login-page .login-tipo-btn {
-    padding: 10px 8px; /* botones tipo más compactos */
+    padding: 10px 8px;
+    /* botones tipo más compactos */
   }
 
   .login-page .login-tipo-btn span {
@@ -393,11 +409,13 @@
   }
 
   .login-page .btn-login {
-    padding: 12px; /* botón ligeramente más pequeño */
+    padding: 12px;
+    /* botón ligeramente más pequeño */
     font-size: 14px;
   }
 
   .login-page .login-footer {
-    padding: 10px 40px 12px; /* footer más compacto */
+    padding: 10px 40px 12px;
+    /* footer más compacto */
   }
 }

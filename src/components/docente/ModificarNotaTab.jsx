@@ -4,6 +4,7 @@ import es from 'date-fns/locale/es';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useResponsive, useDropdown } from '../../hooks';
 import { SelectNativo, SelectMovil, AutocompleteAlumno } from './shared';
+import { ordenarCursos } from './shared/utils';
 import config from '../../config/env';
 
 // Registrar locale español
@@ -168,7 +169,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
         );
         const data = await response.json();
         if (data.success) {
-          setCursos(data.data);
+          setCursos(ordenarCursos(data.data));
         }
       } catch (error) {
         console.error('Error al cargar cursos:', error);

@@ -10,8 +10,9 @@ import {
   trimestrePlugin,
   chartColors,
   formatearNombreCompleto,
-  SelectNativo // Nuevo import del componente customizado
+  SelectNativo
 } from './shared';
+import { ordenarCursos } from './shared/utils';
 import config from '../../config/env';
 
 function ProgresoTab({ docenteId, establecimientoId }) {
@@ -50,7 +51,7 @@ function ProgresoTab({ docenteId, establecimientoId }) {
           `${config.apiBaseUrl}/docente/${docenteId}/cursos?establecimiento_id=${establecimientoId}`
         );
         const data = await response.json();
-        if (data.success) setCursos(data.data || []);
+        if (data.success) setCursos(ordenarCursos(data.data || []));
         else setError('Error al cargar cursos');
       } catch (err) {
         console.error('Error al cargar cursos:', err);

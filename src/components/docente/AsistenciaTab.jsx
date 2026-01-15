@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useResponsive, useDropdown } from '../../hooks';
 import { SelectNativo, SelectMovil } from './shared';
+import { ordenarCursos } from './shared/utils';
 import config from '../../config/env';
 
 // Componente radio para asistencia
@@ -133,7 +134,7 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
         const data = await response.json();
 
         if (data.success) {
-          setCursos(data.data);
+          setCursos(ordenarCursos(data.data));
         }
       } catch (error) {
         console.error('Error al cargar cursos:', error);

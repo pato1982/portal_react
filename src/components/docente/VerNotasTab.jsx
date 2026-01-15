@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useResponsive, useDropdown } from '../../hooks';
 import { SelectNativo, SelectMovil, AutocompleteAlumno } from './shared';
+import { ordenarCursos } from './shared/utils';
 import config from '../../config/env';
 
 // Simple Error Boundary
@@ -114,7 +115,7 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
         );
         const data = await response.json();
         if (data.success) {
-          setCursos(data.data || []);
+          setCursos(ordenarCursos(data.data || []));
         }
       } catch (error) {
         console.error('Error al cargar cursos:', error);

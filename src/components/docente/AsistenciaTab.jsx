@@ -116,8 +116,12 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
   const { isMobile } = useResponsive();
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
-  // Fecha de hoy (solo lectura)
-  const fechaHoy = new Date().toISOString().split('T')[0];
+  // Fecha de hoy (formato local YYYY-MM-DD para evitar desfase UTC)
+  const getFechaLocal = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const fechaHoy = getFechaLocal();
 
   // Cargar cursos del docente
   useEffect(() => {

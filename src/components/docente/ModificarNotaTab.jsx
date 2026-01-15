@@ -311,7 +311,10 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
       if (filtroAsignatura) url += `&asignatura_id=${filtroAsignatura}`;
       if (filtroAlumnoId) url += `&alumno_id=${filtroAlumnoId}`;
       if (filtroFecha) {
-        const fechaStr = filtroFecha.toISOString().split('T')[0];
+        const year = filtroFecha.getFullYear();
+        const month = String(filtroFecha.getMonth() + 1).padStart(2, '0');
+        const day = String(filtroFecha.getDate()).padStart(2, '0');
+        const fechaStr = `${year}-${month}-${day}`;
         url += `&fecha=${fechaStr}`;
       }
 

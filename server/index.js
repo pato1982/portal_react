@@ -1582,7 +1582,14 @@ app.post('/api/notas/registrar', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const anio = fecha_evaluacion ? new Date(fecha_evaluacion).getFullYear() : new Date().getFullYear();
+        // Obtener el periodo académico activo del establecimiento
+        const [periodoActivo] = await connection.query(
+            'SELECT anio FROM tb_periodos_academicos WHERE establecimiento_id = ? AND activo = 1 LIMIT 1',
+            [establecimiento_id]
+        );
+
+        // El año académico es el del periodo activo, o el de la fecha si no hay activo
+        const anioAcademico = periodoActivo.length > 0 ? periodoActivo[0].anio : (fecha_evaluacion ? new Date(fecha_evaluacion).getUTCFullYear() : new Date().getFullYear());
 
         // Obtener nombres para el log
         const [alumnoRow] = await connection.query('SELECT nombres, apellidos FROM tb_alumnos WHERE id = ?', [alumno_id]);
@@ -1604,7 +1611,7 @@ app.post('/api/notas/registrar', async (req, res) => {
             AND trimestre = ?
             AND anio_academico = ?
             AND activo = 1
-        `, [alumno_id, asignatura_id, curso_id, trimestre, anio]);
+        `, [alumno_id, asignatura_id, curso_id, trimestre, anioAcademico]);
 
         const numeroEvaluacion = maxEval[0].siguiente;
 
@@ -1622,7 +1629,7 @@ app.post('/api/notas/registrar', async (req, res) => {
             curso_id,
             docente_id || null,
             tipo_evaluacion_id || null,
-            anio,
+            anioAcademico,
             trimestre,
             numeroEvaluacion,
             es_pendiente ? null : nota,
@@ -2107,9 +2114,18 @@ app.post('/api/asistencia/registrar', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        const anio = new Date(fecha).getFullYear();
-        const mes = new Date(fecha).getMonth() + 1;
-        const trimestre = mes <= 4 ? 1 : mes <= 8 ? 2 : 3;
+        // Obtener el periodo académico activo del establecimiento
+        const [periodoActivo] = await connection.query(
+            'SELECT anio FROM tb_periodos_academicos WHERE establecimiento_id = ? AND activo = 1 LIMIT 1',
+            [establecimiento_id]
+        );
+
+        // El año académico es el del periodo activo, o el de la fecha si no hay activo
+        const anioAcademico = periodoActivo.length > 0 ? periodoActivo[0].anio : new Date(fecha).getUTCFullYear();
+
+        // Calcular trimestre (lógica chilena estándar pero robustecida)
+        const mes = new Date(fecha).getUTCMonth() + 1; // Usar UTC para parsear "YYYY-MM-DD" correctamente
+        const trimestre = mes <= 5 ? 1 : mes <= 8 ? 2 : 3;
 
         // Obtener nombres para el log
         const [userRow] = await connection.query('SELECT nombres, apellidos, tipo_usuario FROM tb_usuarios u LEFT JOIN tb_docentes d ON u.id = d.usuario_id WHERE u.id = ?', [registrado_por]);
@@ -2120,14 +2136,14 @@ app.post('/api/asistencia/registrar', async (req, res) => {
         const nombreCurso = cursoRow.length > 0 ? cursoRow[0].nombre : `ID ${curso_id}`;
 
         // Contar asistencias existentes para el log
-        const [existentes] = await connection.query('SELECT COUNT(*) as count FROM tb_asistencia WHERE curso_id = ? AND fecha = ?', [curso_id, fecha]);
+        const [existentes] = await connection.query('SELECT COUNT(*) as count FROM tb_asistencia WHERE curso_id = ? AND fecha = ? AND establecimiento_id = ?', [curso_id, fecha, establecimiento_id]);
         const esModificacion = existentes[0].count > 0;
 
-        // Eliminar asistencia existente para esa fecha y curso (si existe)
+        // Eliminar asistencia existente para esa fecha, curso y establecimiento (seguridad++)
         await connection.query(`
             DELETE FROM tb_asistencia
-            WHERE curso_id = ? AND fecha = ?
-        `, [curso_id, fecha]);
+            WHERE curso_id = ? AND fecha = ? AND establecimiento_id = ?
+        `, [curso_id, fecha, establecimiento_id]);
 
         // Insertar nueva asistencia
         for (const [alumnoId, datos] of Object.entries(asistencia)) {
@@ -2144,7 +2160,7 @@ app.post('/api/asistencia/registrar', async (req, res) => {
                 alumnoId,
                 curso_id,
                 fecha,
-                anio,
+                anioAcademico,
                 trimestre,
                 estadoDB,
                 datos.observacion || null,

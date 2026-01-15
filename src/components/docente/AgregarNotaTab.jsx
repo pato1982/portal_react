@@ -53,7 +53,11 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   const [tipoEvaluacion, setTipoEvaluacion] = useState('');
   const [tipoEvaluacionNombre, setTipoEvaluacionNombre] = useState('');
   const [nota, setNota] = useState('');
-  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
+  const getFechaLocal = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const [fecha, setFecha] = useState(getFechaLocal());
   const [comentario, setComentario] = useState('');
   const [notaPendiente, setNotaPendiente] = useState(false);
   const [busquedaAlumno, setBusquedaAlumno] = useState('');
@@ -334,7 +338,7 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
     setTipoEvaluacion('');
     setTipoEvaluacionNombre('');
     setNota('');
-    setFecha(new Date().toISOString().split('T')[0]);
+    setFecha(getFechaLocal());
     setComentario('');
     setNotaPendiente(false);
     setBusquedaAlumno('');

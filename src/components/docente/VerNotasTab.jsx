@@ -3,10 +3,38 @@ import { useResponsive, useDropdown } from '../../hooks';
 import { SelectNativo, SelectMovil, AutocompleteAlumno } from './shared';
 import config from '../../config/env';
 
+// Simple Error Boundary
+class ComponentErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Error en VerNotasTab:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, color: 'red', border: '1px solid red' }}>
+          <h3>Error al cargar las notas</h3>
+          <p>{this.state.error && this.state.error.toString()}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // Función para obtener clase de nota según valor
 const getNotaClass = (nota) => {
   if (nota === null || nota === undefined) return '';
-  return nota >= 4.0 ? 'nota-aprobada' : 'nota-reprobada';
+  return Number(nota) >= 4.0 ? 'nota-aprobada' : 'nota-reprobada';
 };
 
 // Renderizar celdas de notas para un trimestre (8 notas máximo)
@@ -22,7 +50,8 @@ const renderNotasCeldas = (notas) => {
         valor = 'P';
         clase = 'nota-pendiente';
       } else if (notaObj.nota !== null) {
-        valor = notaObj.nota.toFixed(1);
+        // CORRECCION CRITICA: Convertir a Number antes de toFixed
+        valor = Number(notaObj.nota).toFixed(1);
         clase = getNotaClass(notaObj.nota);
       }
     }
@@ -46,7 +75,7 @@ const NotasHeaders = () => (
   </>
 );
 
-function VerNotasTab({ docenteId, establecimientoId }) {
+function VerNotasTabInternal({ docenteId, establecimientoId }) {
   // Estados para datos de API
   const [cursos, setCursos] = useState([]);
   const [asignaturas, setAsignaturas] = useState([]);
@@ -85,7 +114,7 @@ function VerNotasTab({ docenteId, establecimientoId }) {
         );
         const data = await response.json();
         if (data.success) {
-          setCursos(data.data);
+          setCursos(data.data || []);
         }
       } catch (error) {
         console.error('Error al cargar cursos:', error);
@@ -112,7 +141,7 @@ function VerNotasTab({ docenteId, establecimientoId }) {
         );
         const data = await response.json();
         if (data.success) {
-          setAsignaturas(data.data);
+          setAsignaturas(data.data || []);
         }
       } catch (error) {
         console.error('Error al cargar asignaturas:', error);
@@ -137,7 +166,7 @@ function VerNotasTab({ docenteId, establecimientoId }) {
         const response = await fetch(`${config.apiBaseUrl}/curso/${cursoSeleccionado}/alumnos`);
         const data = await response.json();
         if (data.success) {
-          setAlumnos(data.data);
+          setAlumnos(data.data || []);
         }
       } catch (error) {
         console.error('Error al cargar alumnos:', error);
@@ -188,7 +217,7 @@ function VerNotasTab({ docenteId, establecimientoId }) {
       const data = await response.json();
 
       if (data.success) {
-        setDatosNotas(data.data);
+        setDatosNotas(data.data || []);
       } else {
         alert(data.error || 'Error al consultar notas');
       }
@@ -219,7 +248,7 @@ function VerNotasTab({ docenteId, establecimientoId }) {
       const calcularPromedio = (notas) => {
         const notasValidas = notas
           .filter(n => !n.es_pendiente && n.nota !== null)
-          .map(n => n.nota);
+          .map(n => Number(n.nota)); // asegurar number
         if (notasValidas.length === 0) return null;
         return notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length;
       };
@@ -252,7 +281,7 @@ function VerNotasTab({ docenteId, establecimientoId }) {
 
   const formatearNota = (nota) => {
     if (nota === null || nota === undefined) return '-';
-    return nota.toFixed(1);
+    return Number(nota).toFixed(1);
   };
 
   const formatearNombreAlumno = (nombres, apellidos) => {
@@ -266,9 +295,25 @@ function VerNotasTab({ docenteId, establecimientoId }) {
 
   return (
     <div className="tab-panel active">
-      <div className="card">
+      {/* Fix para Autocomplete Dropdown z-index y scroll */}
+      <style>{`
+        .autocomplete-suggestions { 
+            z-index: 1500 !important; 
+            max-height: 200px !important;
+            overflow-y: auto !important;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        /* Asegurar que el input del alumno tenga posicion relativa para el dropdown */
+        .autocomplete-container {
+            position: relative;
+            z-index: 1100; /* Mayor que otros inputs */
+        }
+      `}</style>
+
+      <div className="card" style={{ overflow: 'visible' }}>
         <div className="card-header"><h3>Filtros</h3></div>
-        <div className="card-body">
+        <div className="card-body" style={{ overflow: 'visible' }}>
           {isMobile ? (
             <>
               <div className="form-row-movil">
@@ -303,16 +348,18 @@ function VerNotasTab({ docenteId, establecimientoId }) {
                   onClose={() => setDropdownAbierto(null)}
                 />
               </div>
-              <AutocompleteAlumno
-                alumnos={alumnos}
-                alumnoSeleccionado={filtroAlumnoId}
-                busqueda={filtroAlumno}
-                onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
-                onSeleccionar={handleSeleccionarAlumno}
-                disabled={!cursoSeleccionado || cargandoAlumnos}
-                placeholder={cargandoAlumnos ? 'Cargando...' : 'Todos'}
-                onDropdownOpen={() => setDropdownAbierto(null)}
-              />
+              <div style={{ position: 'relative', zIndex: 1001 }}>
+                <AutocompleteAlumno
+                  alumnos={alumnos}
+                  alumnoSeleccionado={filtroAlumnoId}
+                  busqueda={filtroAlumno}
+                  onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
+                  onSeleccionar={handleSeleccionarAlumno}
+                  disabled={!cursoSeleccionado || cargandoAlumnos}
+                  placeholder={cargandoAlumnos ? 'Cargando...' : 'Todos'}
+                  onDropdownOpen={() => setDropdownAbierto(null)}
+                />
+              </div>
               <div className="form-actions form-actions-movil">
                 <button className="btn btn-secondary" onClick={limpiarFiltros}>Limpiar</button>
                 <button className="btn btn-primary" onClick={consultar} disabled={consultando || !cursoSeleccionado || !asignaturaSeleccionada}>
@@ -321,7 +368,7 @@ function VerNotasTab({ docenteId, establecimientoId }) {
               </div>
             </>
           ) : (
-            <div className="docente-filtros-row" style={{ gridTemplateColumns: '1fr 1fr 1fr auto' }}>
+            <div className="docente-filtros-row" style={{ gridTemplateColumns: '1fr 1fr 1fr auto', overflow: 'visible', position: 'relative', zIndex: 10 }}>
               {cargandoCursos ? (
                 <div className="form-group">
                   <label>Curso</label>
@@ -351,15 +398,17 @@ function VerNotasTab({ docenteId, establecimientoId }) {
                 placeholder={cargandoAsignaturas ? 'Cargando...' : (cursoSeleccionado ? 'Seleccionar' : 'Primero seleccione curso')}
                 disabled={!cursoSeleccionado || cargandoAsignaturas}
               />
-              <AutocompleteAlumno
-                alumnos={alumnos}
-                alumnoSeleccionado={filtroAlumnoId}
-                busqueda={filtroAlumno}
-                onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
-                onSeleccionar={handleSeleccionarAlumno}
-                disabled={!cursoSeleccionado || cargandoAlumnos}
-                placeholder={cargandoAlumnos ? 'Cargando...' : (cursoSeleccionado ? 'Todos los alumnos' : 'Primero seleccione curso')}
-              />
+              <div className="autocomplete-container" style={{ position: 'relative', zIndex: 100 }}>
+                <AutocompleteAlumno
+                  alumnos={alumnos}
+                  alumnoSeleccionado={filtroAlumnoId}
+                  busqueda={filtroAlumno}
+                  onBusquedaChange={(val) => { setFiltroAlumno(val); setFiltroAlumnoId(''); }}
+                  onSeleccionar={handleSeleccionarAlumno}
+                  disabled={!cursoSeleccionado || cargandoAlumnos}
+                  placeholder={cargandoAlumnos ? 'Cargando...' : (cursoSeleccionado ? 'Todos los alumnos' : 'Primero seleccione curso')}
+                />
+              </div>
               <div className="docente-filtros-actions">
                 <button className="btn btn-secondary" onClick={limpiarFiltros}>Limpiar</button>
                 <button className="btn btn-primary" onClick={consultar} disabled={consultando || !cursoSeleccionado || !asignaturaSeleccionada}>
@@ -371,7 +420,7 @@ function VerNotasTab({ docenteId, establecimientoId }) {
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: '20px' }}>
+      <div className="card" style={{ marginTop: '20px', zIndex: 1 }}>
         <div className="card-header">
           <h3>Calificaciones del Curso {consultado && asignaturaNombre && `- ${asignaturaNombre}`}</h3>
         </div>
@@ -432,6 +481,15 @@ function VerNotasTab({ docenteId, establecimientoId }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// Export default wrapper
+function VerNotasTab(props) {
+  return (
+    <ComponentErrorBoundary>
+      <VerNotasTabInternal {...props} />
+    </ComponentErrorBoundary>
   );
 }
 

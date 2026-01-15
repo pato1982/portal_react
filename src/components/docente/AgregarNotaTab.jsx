@@ -61,6 +61,7 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   const [comentario, setComentario] = useState('');
   const [notaPendiente, setNotaPendiente] = useState(false);
   const [busquedaAlumno, setBusquedaAlumno] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'fecha_creacion', direction: 'desc' });
 
   // Estados de carga
   const [cargandoCursos, setCargandoCursos] = useState(true);
@@ -680,16 +681,47 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
             <table className="data-table">
               <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8fafc', zIndex: 1 }}>
                 <tr>
-                  <th style={{ width: '50px' }}>Fecha</th>
-                  <th style={{ width: 'auto' }}>Alumno</th>
+                  <th style={{ width: '70px', whiteSpace: 'nowrap' }}>
+                    Fecha
+                    <div style={{ display: 'inline-flex', marginLeft: '4px', gap: '2px', verticalAlign: 'middle' }}>
+                      <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'asc' ? '#3b82f6' : '#94a3b8' }}>▲</span>
+                      <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'desc' ? '#3b82f6' : '#94a3b8' }}>▼</span>
+                    </div>
+                  </th>
+                  <th style={{ width: 'auto', whiteSpace: 'nowrap' }}>
+                    Alumno
+                    <div style={{ display: 'inline-flex', marginLeft: '4px', gap: '2px', verticalAlign: 'middle' }}>
+                      <span onClick={() => setSortConfig({ key: 'alumno_apellidos', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'alumno_apellidos' && sortConfig.direction === 'asc' ? '#3b82f6' : '#94a3b8' }}>▲</span>
+                      <span onClick={() => setSortConfig({ key: 'alumno_apellidos', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'alumno_apellidos' && sortConfig.direction === 'desc' ? '#3b82f6' : '#94a3b8' }}>▼</span>
+                    </div>
+                  </th>
                   {!showTabs && <th style={{ width: '60px' }}>Curso</th>}
                   <th style={{ width: '60px' }}>Asig.</th>
                   <th style={{ width: '40px' }}>Tri.</th>
-                  <th style={{ width: '45px' }}>Nota</th>
+                  <th style={{ width: '55px', whiteSpace: 'nowrap' }}>
+                    Nota
+                    <div style={{ display: 'inline-flex', marginLeft: '4px', gap: '2px', verticalAlign: 'middle' }}>
+                      <span onClick={() => setSortConfig({ key: 'nota', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'nota' && sortConfig.direction === 'asc' ? '#3b82f6' : '#94a3b8' }}>▲</span>
+                      <span onClick={() => setSortConfig({ key: 'nota', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'nota' && sortConfig.direction === 'desc' ? '#3b82f6' : '#94a3b8' }}>▼</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {notasRecientes.map(n => (
+                {[...notasRecientes].sort((a, b) => {
+                  if (!sortConfig.key) return 0;
+                  let valA = a[sortConfig.key];
+                  let valB = b[sortConfig.key];
+
+                  if (sortConfig.key === 'nota') {
+                    valA = a.es_pendiente ? -1 : parseFloat(a.nota);
+                    valB = b.es_pendiente ? -1 : parseFloat(b.nota);
+                  }
+
+                  if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                  if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                  return 0;
+                }).map(n => (
                   <tr key={n.id}>
                     <td style={{ fontSize: '12px' }}>{formatearFecha(n.fecha_evaluacion)}</td>
                     <td style={{ fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
@@ -697,10 +729,7 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
                     </td>
                     {!showTabs && <td style={{ fontSize: '12px' }}>{formatearCurso(n.curso_nombre)}</td>}
                     <td style={{ fontSize: '12px' }}>
-                      {showTabs ?
-                        abreviarAsignatura(n.asignatura_nombre) :
-                        abreviarAsignatura(n.asignatura_nombre)
-                      }
+                      {abreviarAsignatura(n.asignatura_nombre)}
                     </td>
                     <td style={{ textAlign: 'center', fontSize: '12px' }}>{n.trimestre}°</td>
                     <td style={{ textAlign: 'center', fontWeight: '600', fontSize: '13px', color: n.es_pendiente ? '#f59e0b' : (n.nota >= 4.0 ? '#10b981' : '#ef4444') }}>

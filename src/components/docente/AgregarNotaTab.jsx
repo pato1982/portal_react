@@ -681,9 +681,9 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
             <table className="data-table">
               <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8fafc', zIndex: 1 }}>
                 <tr>
-                  <th style={{ width: '80px', whiteSpace: 'nowrap' }}>
+                  <th style={{ width: isMobile ? '65px' : '80px', whiteSpace: 'nowrap' }}>
                     Fecha
-                    <div style={{ display: 'inline-flex', marginLeft: '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
+                    <div style={{ display: 'inline-flex', marginLeft: isMobile ? '2px' : '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
                       <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'asc' ? '#3b82f6' : '#cbd5e1' }}>▲</span>
                       <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'desc' ? '#3b82f6' : '#cbd5e1' }}>▼</span>
                     </div>

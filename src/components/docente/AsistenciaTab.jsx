@@ -334,7 +334,7 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
         <div className="card-body" style={{ overflow: 'visible' }}>
           <div className="docente-asistencia-filtros" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-end', gap: '15px' }}>
             {/* Contenedor Curso y Fecha lado a lado en móvil */}
-            <div style={{ display: 'flex', flexDirection: 'row', gap: '15px', flex: isMobile ? 'auto' : '0 0 auto', width: isMobile ? '100%' : 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '15px', flex: isMobile ? 'auto' : '0 0 auto', width: isMobile ? '100%' : 'auto', alignItems: 'flex-end' }}>
               {/* Grupo Curso */}
               <div style={{ flex: isMobile ? 1 : '0 0 250px' }}>
                 {cargandoCursos ? (
@@ -358,8 +358,8 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
 
               {/* Grupo Fecha */}
               <div style={{ flex: isMobile ? 1 : '0 0 150px' }}>
-                <div className="form-group" style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', fontSize: '13px' }}>Fecha</label>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontWeight: '500', fontSize: '13px' }}>Fecha</label>
                   <input
                     type="date"
                     className="form-control"

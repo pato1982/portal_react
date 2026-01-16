@@ -321,50 +321,99 @@ function ProgresoTab({ docenteId, establecimientoId }) {
       <div className="card" style={{ overflow: 'visible' }}>
         <div className="card-header"><h3>Parametros de Analisis</h3></div>
         <div className="card-body" style={{ overflow: 'visible' }}>
-          <div className="filtros-progreso-container" style={{
-            display: 'flex',
-            flexDirection: isMobile ? 'column' : 'row',
-            gap: '15px',
-            alignItems: isMobile ? 'stretch' : 'flex-end',
-            marginBottom: '10px'
-          }}>
-            <div style={{ flex: isMobile ? 'auto' : '1' }}>
-              <SelectNativo
-                label="Curso"
-                value={cursoSeleccionado}
-                onChange={handleCursoChange}
-                options={cursos}
-                placeholder="Seleccionar curso"
-              />
-            </div>
-            <div style={{ flex: isMobile ? 'auto' : '1' }}>
-              <SelectNativo
-                label="Asignatura"
-                value={asignaturaSeleccionada}
-                onChange={handleAsignaturaChange}
-                options={asignaturas}
-                placeholder="Seleccionar asignatura"
-                disabled={!cursoSeleccionado}
-              />
-            </div>
-            <div style={{ flex: isMobile ? 'auto' : '1' }}>
-              <SelectNativo
-                label="Trimestre"
-                value={trimestreSeleccionado}
-                onChange={handleTrimestreChange}
-                options={trimestres}
-              />
-            </div>
-            <div className="filtro-accion" style={{ flex: isMobile ? 'auto' : '0 0 auto', marginBottom: '15px' }}>
-              <button
-                className="btn btn-primary"
-                onClick={analizarProgreso}
-                disabled={!cursoSeleccionado || !asignaturaSeleccionada || cargandoEstadisticas}
-                style={{ width: isMobile ? '100%' : 'auto', minWidth: '100px', height: '30px', fontSize: '13px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              >
-                {cargandoEstadisticas ? 'Analizando...' : 'Analizar'}
-              </button>
-            </div>
+          <div className="filtros-progreso-container" style={{ marginBottom: '10px' }}>
+            {isMobile ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {/* Fila 1: Curso y Asignatura */}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ flex: 1 }}>
+                    <SelectNativo
+                      label="Curso"
+                      value={cursoSeleccionado}
+                      onChange={handleCursoChange}
+                      options={cursos}
+                      placeholder="Curso"
+                      containerStyle={{ marginBottom: 0 }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <SelectNativo
+                      label="Asignatura"
+                      value={asignaturaSeleccionada}
+                      onChange={handleAsignaturaChange}
+                      options={asignaturas}
+                      placeholder="Asignatura"
+                      disabled={!cursoSeleccionado}
+                      containerStyle={{ marginBottom: 0 }}
+                    />
+                  </div>
+                </div>
+
+                {/* Fila 2: Trimestre y Botón */}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                  <div style={{ flex: 1 }}>
+                    <SelectNativo
+                      label="Trimestre"
+                      value={trimestreSeleccionado}
+                      onChange={handleTrimestreChange}
+                      options={trimestres}
+                      containerStyle={{ marginBottom: 0 }}
+                    />
+                  </div>
+                  <div style={{ width: '100px' }}>
+                    <button
+                      className="btn btn-primary"
+                      onClick={analizarProgreso}
+                      disabled={!cursoSeleccionado || !asignaturaSeleccionada || cargandoEstadisticas}
+                      style={{ width: '100%', height: '30px', fontSize: '13px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      {cargandoEstadisticas ? '...' : 'Analizar'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Layout Desktop/Tablet Original */
+              <div style={{ display: 'flex', flexDirection: 'row', gap: '15px', alignItems: 'flex-end' }}>
+                <div style={{ flex: 1 }}>
+                  <SelectNativo
+                    label="Curso"
+                    value={cursoSeleccionado}
+                    onChange={handleCursoChange}
+                    options={cursos}
+                    placeholder="Seleccionar curso"
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <SelectNativo
+                    label="Asignatura"
+                    value={asignaturaSeleccionada}
+                    onChange={handleAsignaturaChange}
+                    options={asignaturas}
+                    placeholder="Seleccionar asignatura"
+                    disabled={!cursoSeleccionado}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <SelectNativo
+                    label="Trimestre"
+                    value={trimestreSeleccionado}
+                    onChange={handleTrimestreChange}
+                    options={trimestres}
+                  />
+                </div>
+                <div className="filtro-accion" style={{ flex: '0 0 auto', marginBottom: '15px' }}>
+                  <button
+                    className="btn btn-primary"
+                    onClick={analizarProgreso}
+                    disabled={!cursoSeleccionado || !asignaturaSeleccionada || cargandoEstadisticas}
+                    style={{ minWidth: '100px', height: '30px', fontSize: '13px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    {cargandoEstadisticas ? 'Analizando...' : 'Analizar'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           {error && <div className="alert alert-danger mt-3">{error}</div>}
         </div>

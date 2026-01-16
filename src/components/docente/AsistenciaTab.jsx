@@ -333,38 +333,41 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
         <div className="card-header"><h3>Registro de Asistencia</h3></div>
         <div className="card-body" style={{ overflow: 'visible' }}>
           <div className="docente-asistencia-filtros" style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-end', gap: '15px' }}>
-            {/* Grupo Curso */}
-            <div style={{ flex: isMobile ? 'auto' : '0 0 250px' }}>
-              {cargandoCursos ? (
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '13px', marginBottom: '4px' }}>Curso</label>
-                  <div style={{ padding: '4px 8px', fontSize: '13px', border: '1px solid #ced4da', borderRadius: '4px', height: '30px' }}>Cargando...</div>
-                </div>
-              ) : (
-                <SelectNativo
-                  label="Curso"
-                  value={cursoSeleccionado}
-                  onChange={(e) => {
-                    const curso = cursos.find(c => c.id.toString() === e.target.value);
-                    handleCursoChange(e.target.value, curso?.nombre || '');
-                  }}
-                  options={cursos}
-                  placeholder="Seleccionar"
-                />
-              )}
-            </div>
+            {/* Contenedor Curso y Fecha lado a lado en móvil */}
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '15px', flex: isMobile ? 'auto' : '0 0 auto', width: isMobile ? '100%' : 'auto' }}>
+              {/* Grupo Curso */}
+              <div style={{ flex: isMobile ? 1 : '0 0 250px' }}>
+                {cargandoCursos ? (
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '13px', marginBottom: '4px' }}>Curso</label>
+                    <div style={{ padding: '4px 8px', fontSize: '13px', border: '1px solid #ced4da', borderRadius: '4px', height: '30px' }}>Cargando...</div>
+                  </div>
+                ) : (
+                  <SelectNativo
+                    label="Curso"
+                    value={cursoSeleccionado}
+                    onChange={(e) => {
+                      const curso = cursos.find(c => c.id.toString() === e.target.value);
+                      handleCursoChange(e.target.value, curso?.nombre || '');
+                    }}
+                    options={cursos}
+                    placeholder="Seleccionar"
+                  />
+                )}
+              </div>
 
-            {/* Grupo Fecha */}
-            <div style={{ flex: isMobile ? 'auto' : '0 0 150px' }}>
-              <div className="form-group" style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', fontSize: '13px' }}>Fecha</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  value={fechaHoy}
-                  disabled
-                  style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed', height: '30px', fontSize: '13px', padding: '0 8px' }}
-                />
+              {/* Grupo Fecha */}
+              <div style={{ flex: isMobile ? 1 : '0 0 150px' }}>
+                <div className="form-group" style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', fontSize: '13px' }}>Fecha</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={fechaHoy}
+                    disabled
+                    style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed', height: '30px', fontSize: '13px', padding: '0 8px', width: '100%' }}
+                  />
+                </div>
               </div>
             </div>
 

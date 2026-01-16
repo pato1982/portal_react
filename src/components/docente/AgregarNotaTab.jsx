@@ -842,7 +842,7 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
 
         {(!showTabs || pestanaActiva === 'ultimas') && (
           <div className="column" style={{
-            height: isTablet ? '500px' : (isMobile ? 'auto' : '100%'),
+            height: isTablet ? '500px' : (isMobile ? 'calc(100vh - 200px)' : '100%'),
             overflow: 'hidden'
           }}>
             <TablaUltimasNotas />

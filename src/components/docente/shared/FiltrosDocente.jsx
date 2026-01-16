@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 // Componente de select nativo para desktop (Customizado para scroll y estilo)
-export function SelectNativo({ label, value, onChange, options, placeholder, disabled }) {
+export function SelectNativo({ label, value, onChange, options, placeholder, disabled, containerStyle = {} }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -25,7 +25,7 @@ export function SelectNativo({ label, value, onChange, options, placeholder, dis
   };
 
   return (
-    <div className="form-group" ref={containerRef} style={{ position: 'relative', marginBottom: '15px' }}>
+    <div className="form-group" ref={containerRef} style={{ position: 'relative', marginBottom: '15px', ...containerStyle }}>
       <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>{label}</label>
       <div
         className={`form-control ${disabled ? 'disabled' : ''}`}

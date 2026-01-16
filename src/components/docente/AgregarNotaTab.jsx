@@ -681,28 +681,28 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
             <table className="data-table">
               <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8fafc', zIndex: 1 }}>
                 <tr>
-                  <th style={{ width: '70px', whiteSpace: 'nowrap' }}>
+                  <th style={{ width: '80px', whiteSpace: 'nowrap' }}>
                     Fecha
-                    <div style={{ display: 'inline-flex', marginLeft: '4px', gap: '2px', verticalAlign: 'middle' }}>
-                      <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'asc' ? '#3b82f6' : '#94a3b8' }}>▲</span>
-                      <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'desc' ? '#3b82f6' : '#94a3b8' }}>▼</span>
+                    <div style={{ display: 'inline-flex', marginLeft: '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
+                      <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'asc' ? '#3b82f6' : '#cbd5e1' }}>▲</span>
+                      <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'desc' ? '#3b82f6' : '#cbd5e1' }}>▼</span>
                     </div>
                   </th>
                   <th style={{ width: 'auto', whiteSpace: 'nowrap' }}>
                     Alumno
-                    <div style={{ display: 'inline-flex', marginLeft: '4px', gap: '2px', verticalAlign: 'middle' }}>
-                      <span onClick={() => setSortConfig({ key: 'alumno_apellidos', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'alumno_apellidos' && sortConfig.direction === 'asc' ? '#3b82f6' : '#94a3b8' }}>▲</span>
-                      <span onClick={() => setSortConfig({ key: 'alumno_apellidos', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'alumno_apellidos' && sortConfig.direction === 'desc' ? '#3b82f6' : '#94a3b8' }}>▼</span>
+                    <div style={{ display: 'inline-flex', marginLeft: '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
+                      <span onClick={() => setSortConfig({ key: 'alumno_apellidos', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'alumno_apellidos' && sortConfig.direction === 'asc' ? '#3b82f6' : '#cbd5e1' }}>▲</span>
+                      <span onClick={() => setSortConfig({ key: 'alumno_apellidos', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'alumno_apellidos' && sortConfig.direction === 'desc' ? '#3b82f6' : '#cbd5e1' }}>▼</span>
                     </div>
                   </th>
                   {!showTabs && <th style={{ width: '60px' }}>Curso</th>}
                   <th style={{ width: '60px' }}>Asig.</th>
                   <th style={{ width: '40px' }}>Tri.</th>
-                  <th style={{ width: '55px', whiteSpace: 'nowrap' }}>
+                  <th style={{ width: '65px', whiteSpace: 'nowrap' }}>
                     Nota
-                    <div style={{ display: 'inline-flex', marginLeft: '4px', gap: '2px', verticalAlign: 'middle' }}>
-                      <span onClick={() => setSortConfig({ key: 'nota', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'nota' && sortConfig.direction === 'asc' ? '#3b82f6' : '#94a3b8' }}>▲</span>
-                      <span onClick={() => setSortConfig({ key: 'nota', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '9px', color: sortConfig.key === 'nota' && sortConfig.direction === 'desc' ? '#3b82f6' : '#94a3b8' }}>▼</span>
+                    <div style={{ display: 'inline-flex', marginLeft: '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
+                      <span onClick={() => setSortConfig({ key: 'nota', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'nota' && sortConfig.direction === 'asc' ? '#3b82f6' : '#cbd5e1' }}>▲</span>
+                      <span onClick={() => setSortConfig({ key: 'nota', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'nota' && sortConfig.direction === 'desc' ? '#3b82f6' : '#cbd5e1' }}>▼</span>
                     </div>
                   </th>
                 </tr>

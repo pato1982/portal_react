@@ -325,7 +325,41 @@ export const obtenerCursosDocente = async (docenteId, establecimientoId) => {
  */
 export const obtenerAlumnosCurso = async (cursoId, docenteUsuarioId) => {
   if (config.isDemoMode()) {
-    return { success: true, data: [] };
+    return {
+      success: true,
+      data: [
+        {
+          alumno_id: 101,
+          nombre_alumno: 'Ana Gonzalez',
+          apoderado_id: 1,
+          apoderado_usuario_id: 10,
+          apoderado_activo: 1,
+          nombre_apoderado: 'Maria Gonzalez',
+          foto_apoderado: null,
+          mensajes_no_leidos: 2
+        },
+        {
+          alumno_id: 102,
+          nombre_alumno: 'Pedro Perez',
+          apoderado_id: 2,
+          apoderado_usuario_id: 11,
+          apoderado_activo: 0,
+          nombre_apoderado: 'Juan Perez',
+          foto_apoderado: null,
+          mensajes_no_leidos: 0
+        },
+        {
+          alumno_id: 103,
+          nombre_alumno: 'Luisa Martinez',
+          apoderado_id: 3,
+          apoderado_usuario_id: 12,
+          apoderado_activo: 1,
+          nombre_apoderado: 'Carlos Martinez',
+          foto_apoderado: null,
+          mensajes_no_leidos: 5
+        }
+      ]
+    };
   }
   try {
     const response = await fetch(`${config.apiBaseUrl}/chat/curso/${cursoId}/alumnos-chat?usuario_id=${docenteUsuarioId}`, {

@@ -59,9 +59,24 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
   }, [pupilos]);
 
   const cargarMisPupilos = async () => {
+    console.log('--- DEBUG CARGAR PUPILOS ---');
+    console.log('Apoderado Actual:', apoderadoActual);
+    if (!apoderadoActual.id) {
+      console.error('ALERTA: El apoderado no tiene ID definido.');
+      return;
+    }
+
     try {
-      const response = await fetch(`${config.apiBaseUrl}/apoderado/mis-pupilos/${apoderadoActual.id}`);
+      // Usar apoderado_id si existe (login real), o id si es demo/legacy
+      const idParaConsulta = apoderadoActual.apoderado_id || apoderadoActual.id;
+      const url = `${config.apiBaseUrl}/apoderado/mis-pupilos/${idParaConsulta}`;
+      console.log('Fetching URL:', url);
+
+      const response = await fetch(url);
       const data = await response.json();
+
+      console.log('Respuesta API Pupilos:', data);
+
       if (data.success) {
         setPupilos(data.data || []);
       }

@@ -1,0 +1,978 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  obtenerContactos,
+  obtenerMensajes,
+  crearConversacion,
+  enviarMensaje,
+  marcarConversacionLeida,
+  obtenerNoLeidos,
+  obtenerNuevosMensajes,
+  obtenerCursosDocente,
+  obtenerAlumnosCurso,
+  habilitarRespuesta,
+  enviarMensajeMasivo,
+  obtenerConversaciones
+} from '../services/chatService';
+
+function ChatDocenteV2({ usuario, establecimientoId }) {
+  // Estados principales
+  const [chatAbierto, setChatAbierto] = useState(false);
+  const [vistaActiva, setVistaActiva] = useState('todos'); // todos, institucional, cursos
+  const [busqueda, setBusqueda] = useState('');
+
+  // Estados de datos
+  const [conversaciones, setConversaciones] = useState([]);
+  const [contactos, setContactos] = useState([]);
+  const [cursos, setCursos] = useState([]);
+  const [cursoSeleccionado, setCursoSeleccionado] = useState(null);
+  const [alumnos, setAlumnos] = useState([]);
+
+  // Estados de chat activo
+  const [conversacionActual, setConversacionActual] = useState(null);
+  const [contactoActual, setContactoActual] = useState(null);
+  const [mensajes, setMensajes] = useState([]);
+  const [mensajeInput, setMensajeInput] = useState('');
+
+  // Estados de UI
+  const [cargando, setCargando] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [totalNoLeidos, setTotalNoLeidos] = useState(0);
+  const [ultimoTimestamp, setUltimoTimestamp] = useState(null);
+  const [respuestaHabilitada, setRespuestaHabilitada] = useState(true);
+
+  // Estados para mensajes masivos y selección múltiple
+  const [esMensajeMasivo, setEsMensajeMasivo] = useState(false);
+  const [destinatariosMasivos, setDestinatariosMasivos] = useState([]);
+  const [modoSeleccion, setModoSeleccion] = useState(false); // Modo de selección múltiple
+  const [apoderadosSeleccionados, setApoderadosSeleccionados] = useState([]); // IDs de apoderados seleccionados
+
+  // Estados de panel móvil
+  const [mostrarListaMobile, setMostrarListaMobile] = useState(true);
+
+  const mensajesRef = useRef(null);
+  const pollingRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Verificar permisos
+  const puedeUsarChat = usuario &&
+    (usuario.tipo === 'docente' || usuario.tipo === 'administrador' || usuario.tipo === 'admin');
+
+  // ==================== CARGA DE DATOS ====================
+
+  const cargarContactos = useCallback(async () => {
+    if (!usuario?.id || !establecimientoId) return;
+    try {
+      const resultado = await obtenerContactos(usuario.id, establecimientoId);
+      if (resultado.success) {
+        setContactos(resultado.data || []);
+      }
+    } catch (error) {
+      console.error('Error al cargar contactos:', error);
+    }
+  }, [usuario?.id, establecimientoId]);
+
+  const cargarConversaciones = useCallback(async () => {
+    if (!usuario?.id || !establecimientoId) return;
+    try {
+      const resultado = await obtenerConversaciones(usuario.id, establecimientoId);
+      if (resultado.success) {
+        setConversaciones(resultado.data || []);
+      }
+    } catch (error) {
+      console.error('Error al cargar conversaciones:', error);
+    }
+  }, [usuario?.id, establecimientoId]);
+
+  const cargarCursos = useCallback(async () => {
+    if (!usuario?.id || !establecimientoId) return;
+    try {
+      const resultado = await obtenerCursosDocente(usuario.id, establecimientoId);
+      if (resultado.success) {
+        setCursos(resultado.data || []);
+      }
+    } catch (error) {
+      console.error('Error al cargar cursos:', error);
+    }
+  }, [usuario?.id, establecimientoId]);
+
+  const cargarAlumnos = async (cursoId) => {
+    setCargando(true);
+    setAlumnos([]);
+    setApoderadosSeleccionados([]); // Limpiar selección al cambiar de curso
+    setModoSeleccion(false);
+    try {
+      const resultado = await obtenerAlumnosCurso(cursoId, usuario.id);
+      if (resultado.success) {
+        setAlumnos(resultado.data || []);
+      }
+    } catch (error) {
+      console.error('Error al cargar alumnos:', error);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const cargarMensajes = useCallback(async (conversacionId) => {
+    if (!conversacionId || !usuario?.id) return;
+    setCargando(true);
+    try {
+      const resultado = await obtenerMensajes(conversacionId, usuario.id);
+      if (resultado.success) {
+        setMensajes(resultado.data || []);
+        await marcarConversacionLeida(conversacionId, usuario.id);
+        setUltimoTimestamp(new Date().toISOString());
+      }
+    } catch (error) {
+      console.error('Error al cargar mensajes:', error);
+    } finally {
+      setCargando(false);
+    }
+  }, [usuario?.id]);
+
+  const actualizarNoLeidos = useCallback(async () => {
+    if (!usuario?.id || !establecimientoId) return;
+    try {
+      const resultado = await obtenerNoLeidos(usuario.id, establecimientoId);
+      if (resultado.success) {
+        setTotalNoLeidos(resultado.data?.total_no_leidos || 0);
+      }
+    } catch (error) {
+      console.error('Error al obtener no leidos:', error);
+    }
+  }, [usuario?.id, establecimientoId]);
+
+  // ==================== POLLING ====================
+
+  const verificarNuevosMensajes = useCallback(async () => {
+    if (!usuario?.id || !establecimientoId || !chatAbierto) return;
+    try {
+      const resultado = await obtenerNuevosMensajes(usuario.id, establecimientoId, ultimoTimestamp);
+      if (resultado.success && resultado.data?.length > 0) {
+        if (conversacionActual && typeof conversacionActual === 'number') {
+          const nuevosParaConversacion = resultado.data.filter(
+            m => m.conversacion_id === conversacionActual
+          );
+          if (nuevosParaConversacion.length > 0) {
+            setMensajes(prev => [...prev, ...nuevosParaConversacion.map(m => ({
+              ...m,
+              direccion: 'recibido'
+            }))]);
+          }
+        }
+        actualizarNoLeidos();
+        cargarConversaciones();
+      }
+      if (resultado.timestamp) {
+        setUltimoTimestamp(resultado.timestamp);
+      }
+    } catch (error) {
+      console.error('Error en polling:', error);
+    }
+  }, [usuario?.id, establecimientoId, chatAbierto, ultimoTimestamp, conversacionActual, actualizarNoLeidos, cargarConversaciones]);
+
+  // ==================== EFECTOS ====================
+
+  useEffect(() => {
+    if (chatAbierto && puedeUsarChat) {
+      cargarContactos();
+      cargarCursos();
+      cargarConversaciones();
+      actualizarNoLeidos();
+    }
+  }, [chatAbierto, puedeUsarChat, cargarContactos, cargarCursos, cargarConversaciones, actualizarNoLeidos]);
+
+  useEffect(() => {
+    if (chatAbierto && puedeUsarChat && conversacionActual && typeof conversacionActual === 'number') {
+      pollingRef.current = setInterval(verificarNuevosMensajes, 5000);
+    }
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [chatAbierto, puedeUsarChat, verificarNuevosMensajes, conversacionActual]);
+
+  useEffect(() => {
+    if (puedeUsarChat) {
+      actualizarNoLeidos();
+      const interval = setInterval(actualizarNoLeidos, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [puedeUsarChat, actualizarNoLeidos]);
+
+  useEffect(() => {
+    if (mensajesRef.current) {
+      mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
+    }
+  }, [mensajes]);
+
+  useEffect(() => {
+    if (contactoActual && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [contactoActual]);
+
+  // ==================== HANDLERS ====================
+
+  const toggleChat = () => {
+    setChatAbierto(!chatAbierto);
+    if (!chatAbierto) {
+      setContactoActual(null);
+      setConversacionActual(null);
+      setMensajes([]);
+      setCursoSeleccionado(null);
+      setMostrarListaMobile(true);
+      setModoSeleccion(false);
+      setApoderadosSeleccionados([]);
+    }
+  };
+
+  const seleccionarContacto = async (contacto, tipo = 'institucional') => {
+    // Si estamos en modo selección, no abrir chat individual
+    if (modoSeleccion) return;
+
+    setContactoActual({
+      ...contacto,
+      nombre_completo: contacto.nombre_completo || contacto.nombre_apoderado || contacto.nombre_alumno,
+      tipoContacto: tipo
+    });
+    setEsMensajeMasivo(false);
+    setMostrarListaMobile(false);
+    setCargando(true);
+
+    try {
+      const resultado = await crearConversacion(
+        usuario.id,
+        contacto.usuario_id || contacto.apoderado_usuario_id,
+        establecimientoId
+      );
+
+      if (resultado.success) {
+        setConversacionActual(resultado.data.id);
+        if (resultado.data.respuesta_habilitada !== undefined) {
+          setRespuestaHabilitada(resultado.data.respuesta_habilitada === 1);
+        } else {
+          setRespuestaHabilitada(true);
+        }
+        await cargarMensajes(resultado.data.id);
+        actualizarNoLeidos();
+      }
+    } catch (error) {
+      console.error('Error al seleccionar contacto:', error);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const seleccionarCurso = (curso) => {
+    setCursoSeleccionado(curso);
+    cargarAlumnos(curso.id);
+  };
+
+  // Toggle selección de un apoderado
+  const toggleSeleccionApoderado = (alumno) => {
+    const apoderadoId = alumno.apoderado_usuario_id;
+    setApoderadosSeleccionados(prev => {
+      if (prev.find(a => a.id === apoderadoId)) {
+        return prev.filter(a => a.id !== apoderadoId);
+      } else {
+        return [...prev, {
+          id: apoderadoId,
+          nombre_alumno: alumno.nombre_alumno,
+          nombre_apoderado: alumno.nombre_apoderado
+        }];
+      }
+    });
+  };
+
+  // Seleccionar todos los apoderados
+  const seleccionarTodosApoderados = () => {
+    if (apoderadosSeleccionados.length === alumnos.length) {
+      // Si ya están todos seleccionados, deseleccionar todos
+      setApoderadosSeleccionados([]);
+    } else {
+      // Seleccionar todos
+      setApoderadosSeleccionados(alumnos.map(a => ({
+        id: a.apoderado_usuario_id,
+        nombre_alumno: a.nombre_alumno,
+        nombre_apoderado: a.nombre_apoderado
+      })));
+    }
+  };
+
+  // Iniciar mensaje a seleccionados (puede ser uno, varios o todos)
+  const iniciarMensajeASeleccionados = () => {
+    if (apoderadosSeleccionados.length === 0) return;
+
+    const ids = apoderadosSeleccionados.map(a => a.id);
+    setDestinatariosMasivos(ids);
+
+    if (apoderadosSeleccionados.length === 1) {
+      // Si es solo uno, buscar el alumno y abrir chat individual
+      const alumno = alumnos.find(a => a.apoderado_usuario_id === ids[0]);
+      if (alumno) {
+        setModoSeleccion(false);
+        setApoderadosSeleccionados([]);
+        seleccionarContacto(alumno, 'apoderado');
+        return;
+      }
+    }
+
+    // Mensaje a múltiples destinatarios
+    setEsMensajeMasivo(true);
+    const nombresAlumnos = apoderadosSeleccionados.map(a => a.nombre_alumno);
+    let titulo = '';
+    if (apoderadosSeleccionados.length === alumnos.length) {
+      titulo = `${cursoSeleccionado.grado}° ${cursoSeleccionado.letra} - Todos (${alumnos.length})`;
+    } else {
+      titulo = `${cursoSeleccionado.grado}° ${cursoSeleccionado.letra} - ${apoderadosSeleccionados.length} seleccionados`;
+    }
+
+    setContactoActual({
+      nombre_completo: titulo,
+      tipo: 'masivo',
+      tipoContacto: 'masivo',
+      detalleDestinatarios: nombresAlumnos
+    });
+    setConversacionActual('masivo');
+    setMensajes([]);
+    setMostrarListaMobile(false);
+    setModoSeleccion(false);
+  };
+
+  // Cancelar modo selección
+  const cancelarModoSeleccion = () => {
+    setModoSeleccion(false);
+    setApoderadosSeleccionados([]);
+  };
+
+  const handleEnviarMensaje = async () => {
+    if (!mensajeInput.trim() || !conversacionActual || enviando) return;
+
+    const textoMensaje = mensajeInput.trim();
+    setMensajeInput('');
+    setEnviando(true);
+
+    const mensajeOptimista = {
+      id: `temp-${Date.now()}`,
+      mensaje: textoMensaje,
+      direccion: 'enviado',
+      fecha_envio: new Date().toISOString(),
+      enviando: true
+    };
+    setMensajes(prev => [...prev, mensajeOptimista]);
+
+    try {
+      let resultado;
+      if (esMensajeMasivo) {
+        resultado = await enviarMensajeMasivo(
+          usuario.id,
+          destinatariosMasivos,
+          textoMensaje,
+          establecimientoId
+        );
+      } else {
+        resultado = await enviarMensaje(conversacionActual, usuario.id, textoMensaje);
+      }
+
+      if (resultado.success) {
+        setMensajes(prev => prev.map(m =>
+          m.id === mensajeOptimista.id
+            ? { ...(resultado.data || m), direccion: 'enviado', enviando: false }
+            : m
+        ));
+        setUltimoTimestamp(new Date().toISOString());
+        cargarConversaciones();
+      } else {
+        setMensajes(prev => prev.map(m =>
+          m.id === mensajeOptimista.id
+            ? { ...m, error: true, enviando: false }
+            : m
+        ));
+      }
+    } catch (error) {
+      console.error('Error al enviar mensaje:', error);
+      setMensajes(prev => prev.map(m =>
+        m.id === mensajeOptimista.id
+          ? { ...m, error: true, enviando: false }
+          : m
+      ));
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const toggleRespuestaHabilitada = async () => {
+    if (!conversacionActual || esMensajeMasivo) return;
+    const nuevoEstado = !respuestaHabilitada;
+    setRespuestaHabilitada(nuevoEstado);
+
+    const resultado = await habilitarRespuesta(conversacionActual, nuevoEstado);
+    if (!resultado.success) {
+      setRespuestaHabilitada(!nuevoEstado);
+    }
+  };
+
+  const volverALista = () => {
+    setContactoActual(null);
+    setConversacionActual(null);
+    setMensajes([]);
+    setMostrarListaMobile(true);
+    setApoderadosSeleccionados([]);
+  };
+
+  // ==================== HELPERS ====================
+
+  const formatearHora = (fecha) => {
+    if (!fecha) return '';
+    const date = new Date(fecha);
+    return date.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatearFechaRelativa = (fecha) => {
+    if (!fecha) return '';
+    const date = new Date(fecha);
+    const hoy = new Date();
+    const ayer = new Date(hoy);
+    ayer.setDate(ayer.getDate() - 1);
+
+    if (date.toDateString() === hoy.toDateString()) {
+      return formatearHora(fecha);
+    } else if (date.toDateString() === ayer.toDateString()) {
+      return 'Ayer';
+    } else {
+      return date.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' });
+    }
+  };
+
+  const formatearFechaSeparador = (fecha) => {
+    if (!fecha) return '';
+    const date = new Date(fecha);
+    const hoy = new Date();
+    const ayer = new Date(hoy);
+    ayer.setDate(ayer.getDate() - 1);
+
+    if (date.toDateString() === hoy.toDateString()) {
+      return 'Hoy';
+    } else if (date.toDateString() === ayer.toDateString()) {
+      return 'Ayer';
+    } else {
+      return date.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+  };
+
+  const getIniciales = (nombre) => {
+    if (!nombre) return '?';
+    const partes = nombre.split(' ');
+    if (partes.length >= 2) {
+      return (partes[0][0] + partes[1][0]).toUpperCase();
+    }
+    return nombre.substring(0, 2).toUpperCase();
+  };
+
+  // Filtrar lista según vista y búsqueda
+  const getListaFiltrada = () => {
+    let lista = [];
+
+    if (vistaActiva === 'todos' || vistaActiva === 'institucional') {
+      lista = contactos.map(c => ({
+        ...c,
+        tipo_lista: 'institucional'
+      }));
+    }
+
+    if (busqueda) {
+      lista = lista.filter(item =>
+        (item.nombre_completo || '').toLowerCase().includes(busqueda.toLowerCase())
+      );
+    }
+
+    return lista;
+  };
+
+  // Verificar si un apoderado está seleccionado
+  const estaSeleccionado = (apoderadoId) => {
+    return apoderadosSeleccionados.some(a => a.id === apoderadoId);
+  };
+
+  // ==================== RENDER ====================
+
+  if (!puedeUsarChat) return null;
+
+  return (
+    <>
+      {/* FAB Button */}
+      <button className="chatv2-fab" onClick={toggleChat}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        {totalNoLeidos > 0 && (
+          <span className="chatv2-fab-badge">{totalNoLeidos > 99 ? '99+' : totalNoLeidos}</span>
+        )}
+      </button>
+
+      {/* Overlay */}
+      {chatAbierto && <div className="chatv2-overlay" onClick={toggleChat}></div>}
+
+      {/* Modal Principal */}
+      <div className={`chatv2-modal ${chatAbierto ? 'active' : ''}`}>
+
+        {/* Header del Modal */}
+        <div className="chatv2-header">
+          <div className="chatv2-header-left">
+            <svg className="chatv2-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span className="chatv2-header-title">Mensajes</span>
+            {totalNoLeidos > 0 && (
+              <span className="chatv2-header-badge">{totalNoLeidos}</span>
+            )}
+          </div>
+          <button className="chatv2-close-btn" onClick={toggleChat}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        {/* Contenido Principal - 3 columnas */}
+        <div className="chatv2-content">
+
+          {/* Columna 1: Navegación */}
+          <div className={`chatv2-nav ${!mostrarListaMobile ? 'hidden-mobile' : ''}`}>
+            <button
+              className={`chatv2-nav-item ${vistaActiva === 'todos' ? 'active' : ''}`}
+              onClick={() => { setVistaActiva('todos'); setCursoSeleccionado(null); setModoSeleccion(false); }}
+              title="Todos"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Todos</span>
+            </button>
+            <button
+              className={`chatv2-nav-item ${vistaActiva === 'institucional' ? 'active' : ''}`}
+              onClick={() => { setVistaActiva('institucional'); setCursoSeleccionado(null); setModoSeleccion(false); }}
+              title="Institucional"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span>Equipo</span>
+            </button>
+            <button
+              className={`chatv2-nav-item ${vistaActiva === 'cursos' ? 'active' : ''}`}
+              onClick={() => { setVistaActiva('cursos'); setModoSeleccion(false); }}
+              title="Cursos"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+              <span>Cursos</span>
+            </button>
+          </div>
+
+          {/* Columna 2: Lista de Contactos/Conversaciones */}
+          <div className={`chatv2-list ${!mostrarListaMobile ? 'hidden-mobile' : ''}`}>
+
+            {/* Barra de búsqueda */}
+            <div className="chatv2-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                type="text"
+                placeholder="Buscar..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+            </div>
+
+            {/* Lista según vista activa */}
+            <div className="chatv2-list-items">
+
+              {/* Vista: Institucional o Todos */}
+              {(vistaActiva === 'todos' || vistaActiva === 'institucional') && (
+                <>
+                  {cargando ? (
+                    <div className="chatv2-loading">
+                      <div className="chatv2-spinner"></div>
+                      <span>Cargando...</span>
+                    </div>
+                  ) : getListaFiltrada().length === 0 ? (
+                    <div className="chatv2-empty-list">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                      </svg>
+                      <span>Sin contactos</span>
+                    </div>
+                  ) : (
+                    getListaFiltrada().map(contacto => (
+                      <div
+                        key={contacto.usuario_id}
+                        className={`chatv2-list-item ${contactoActual?.usuario_id === contacto.usuario_id ? 'active' : ''}`}
+                        onClick={() => seleccionarContacto(contacto)}
+                      >
+                        <div className={`chatv2-avatar ${contacto.es_admin ? 'admin' : ''}`}>
+                          {contacto.foto_url ? (
+                            <img src={contacto.foto_url} alt="" />
+                          ) : (
+                            getIniciales(contacto.nombre_completo)
+                          )}
+                          {contacto.mensajes_no_leidos > 0 && (
+                            <span className="chatv2-avatar-badge"></span>
+                          )}
+                        </div>
+                        <div className="chatv2-list-item-info">
+                          <div className="chatv2-list-item-header">
+                            <span className="chatv2-list-item-name">
+                              {contacto.nombre_completo}
+                              {contacto.es_admin === 1 && <span className="chatv2-tag admin">Admin</span>}
+                            </span>
+                            <span className="chatv2-list-item-time">
+                              {contacto.ultimo_mensaje_fecha && formatearFechaRelativa(contacto.ultimo_mensaje_fecha)}
+                            </span>
+                          </div>
+                          <div className="chatv2-list-item-preview">
+                            <span className="chatv2-list-item-role">
+                              {contacto.tipo === 'administrador' ? 'Administración' : 'Docente'}
+                            </span>
+                          </div>
+                        </div>
+                        {contacto.mensajes_no_leidos > 0 && (
+                          <span className="chatv2-unread-badge">{contacto.mensajes_no_leidos}</span>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </>
+              )}
+
+              {/* Vista: Cursos */}
+              {vistaActiva === 'cursos' && (
+                <>
+                  {cursoSeleccionado ? (
+                    <>
+                      {/* Header con botón volver y acciones */}
+                      <div className="chatv2-curso-header">
+                        <div className="chatv2-list-back" onClick={() => { setCursoSeleccionado(null); setModoSeleccion(false); setApoderadosSeleccionados([]); }}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                          </svg>
+                          <span>Volver</span>
+                        </div>
+                        <div className="chatv2-curso-titulo">
+                          {cursoSeleccionado.grado}° {cursoSeleccionado.letra}
+                        </div>
+                      </div>
+
+                      {/* Barra de acciones de selección */}
+                      <div className="chatv2-seleccion-bar">
+                        {!modoSeleccion ? (
+                          <button
+                            className="chatv2-btn-seleccionar"
+                            onClick={() => setModoSeleccion(true)}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                              <polyline points="9 11 12 14 22 4"></polyline>
+                            </svg>
+                            Seleccionar destinatarios
+                          </button>
+                        ) : (
+                          <div className="chatv2-seleccion-acciones">
+                            <button
+                              className={`chatv2-btn-todos ${apoderadosSeleccionados.length === alumnos.length ? 'active' : ''}`}
+                              onClick={seleccionarTodosApoderados}
+                            >
+                              {apoderadosSeleccionados.length === alumnos.length ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                            </button>
+                            <span className="chatv2-seleccion-count">
+                              {apoderadosSeleccionados.length} seleccionado{apoderadosSeleccionados.length !== 1 ? 's' : ''}
+                            </span>
+                            <button className="chatv2-btn-cancelar" onClick={cancelarModoSeleccion}>
+                              Cancelar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Botón enviar a seleccionados */}
+                      {modoSeleccion && apoderadosSeleccionados.length > 0 && (
+                        <div className="chatv2-enviar-seleccionados">
+                          <button
+                            className="chatv2-btn-enviar-grupo"
+                            onClick={iniciarMensajeASeleccionados}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <line x1="22" y1="2" x2="11" y2="13"></line>
+                              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                            Enviar mensaje a {apoderadosSeleccionados.length} apoderado{apoderadosSeleccionados.length !== 1 ? 's' : ''}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Lista de alumnos */}
+                      {cargando ? (
+                        <div className="chatv2-loading">
+                          <div className="chatv2-spinner"></div>
+                        </div>
+                      ) : alumnos.length === 0 ? (
+                        <div className="chatv2-empty-list">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                          </svg>
+                          <span>Sin alumnos en este curso</span>
+                        </div>
+                      ) : (
+                        alumnos.map(alumno => (
+                          <div
+                            key={alumno.alumno_id}
+                            className={`chatv2-list-item alumno ${modoSeleccion ? 'selectable' : ''} ${estaSeleccionado(alumno.apoderado_usuario_id) ? 'selected' : ''} ${contactoActual?.apoderado_usuario_id === alumno.apoderado_usuario_id ? 'active' : ''}`}
+                            onClick={() => modoSeleccion ? toggleSeleccionApoderado(alumno) : seleccionarContacto(alumno, 'apoderado')}
+                          >
+                            {/* Checkbox en modo selección */}
+                            {modoSeleccion && (
+                              <div className={`chatv2-checkbox ${estaSeleccionado(alumno.apoderado_usuario_id) ? 'checked' : ''}`}>
+                                {estaSeleccionado(alumno.apoderado_usuario_id) && (
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                  </svg>
+                                )}
+                              </div>
+                            )}
+                            <div className="chatv2-avatar estudiante">
+                              {getIniciales(alumno.nombre_alumno)}
+                            </div>
+                            <div className="chatv2-list-item-info">
+                              <div className="chatv2-list-item-header">
+                                <span className="chatv2-list-item-name">{alumno.nombre_alumno}</span>
+                              </div>
+                              <div className="chatv2-list-item-preview">
+                                <span>Apod: {alumno.nombre_apoderado}</span>
+                              </div>
+                            </div>
+                            {!modoSeleccion && alumno.mensajes_no_leidos > 0 && (
+                              <span className="chatv2-unread-badge">{alumno.mensajes_no_leidos}</span>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {/* Lista de cursos */}
+                      {cargando ? (
+                        <div className="chatv2-loading">
+                          <div className="chatv2-spinner"></div>
+                        </div>
+                      ) : cursos.length === 0 ? (
+                        <div className="chatv2-empty-list">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                          </svg>
+                          <span>Sin cursos asignados</span>
+                        </div>
+                      ) : cursos.map(curso => (
+                        <div
+                          key={curso.id}
+                          className="chatv2-list-item curso"
+                          onClick={() => seleccionarCurso(curso)}
+                        >
+                          <div className="chatv2-avatar curso">
+                            {curso.grado}°{curso.letra}
+                          </div>
+                          <div className="chatv2-list-item-info">
+                            <div className="chatv2-list-item-header">
+                              <span className="chatv2-list-item-name">{curso.grado}° {curso.letra}</span>
+                            </div>
+                            <div className="chatv2-list-item-preview">
+                              <span>{curso.nivel} - {curso.nombre}</span>
+                            </div>
+                          </div>
+                          <svg className="chatv2-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                          </svg>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Columna 3: Área de Chat */}
+          <div className={`chatv2-chat ${mostrarListaMobile ? 'hidden-mobile' : ''}`}>
+
+            {contactoActual ? (
+              <>
+                {/* Header del Chat */}
+                <div className="chatv2-chat-header">
+                  <button className="chatv2-back-btn" onClick={volverALista}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                  </button>
+                  <div className={`chatv2-avatar small ${contactoActual.tipoContacto === 'masivo' ? 'masivo' : ''}`}>
+                    {contactoActual.tipoContacto === 'masivo' ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                    ) : (
+                      getIniciales(contactoActual.nombre_completo)
+                    )}
+                  </div>
+                  <div className="chatv2-chat-header-info">
+                    <span className="chatv2-chat-header-name">{contactoActual.nombre_completo}</span>
+                    <span className="chatv2-chat-header-status">
+                      {esMensajeMasivo ? (
+                        contactoActual.detalleDestinatarios?.length > 3
+                          ? `${contactoActual.detalleDestinatarios.slice(0, 3).join(', ')}...`
+                          : contactoActual.detalleDestinatarios?.join(', ') || 'Mensaje grupal'
+                      ) : (contactoActual.tipo || 'Chat')}
+                    </span>
+                  </div>
+
+                  {/* Acciones del header */}
+                  <div className="chatv2-chat-header-actions">
+                    {!esMensajeMasivo && (
+                      <div className="chatv2-toggle-wrapper" title="Permitir respuestas del apoderado">
+                        <span className="chatv2-toggle-label">Respuestas</span>
+                        <button
+                          className={`chatv2-toggle ${respuestaHabilitada ? 'active' : ''}`}
+                          onClick={toggleRespuestaHabilitada}
+                        >
+                          <span className="chatv2-toggle-slider"></span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Área de Mensajes */}
+                <div className="chatv2-messages" ref={mensajesRef}>
+                  {cargando ? (
+                    <div className="chatv2-loading">
+                      <div className="chatv2-spinner"></div>
+                      <span>Cargando mensajes...</span>
+                    </div>
+                  ) : mensajes.length === 0 ? (
+                    <div className="chatv2-empty-chat">
+                      <div className="chatv2-empty-chat-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                      </div>
+                      <p>Inicia la conversación</p>
+                      <span>
+                        {esMensajeMasivo
+                          ? `Envía un mensaje a ${destinatariosMasivos.length} apoderados`
+                          : `Envía un mensaje a ${contactoActual.nombre_completo.split(' ')[0]}`
+                        }
+                      </span>
+                    </div>
+                  ) : (
+                    mensajes.map((msg, index) => {
+                      const mostrarFecha = index === 0 ||
+                        formatearFechaSeparador(msg.fecha_envio) !== formatearFechaSeparador(mensajes[index - 1]?.fecha_envio);
+
+                      return (
+                        <React.Fragment key={msg.id}>
+                          {mostrarFecha && (
+                            <div className="chatv2-date-separator">
+                              <span>{formatearFechaSeparador(msg.fecha_envio)}</span>
+                            </div>
+                          )}
+                          <div className={`chatv2-message ${msg.direccion} ${msg.enviando ? 'sending' : ''} ${msg.error ? 'error' : ''}`}>
+                            <div className="chatv2-message-bubble">
+                              <p>{msg.mensaje}</p>
+                              <div className="chatv2-message-meta">
+                                <span className="chatv2-message-time">{formatearHora(msg.fecha_envio)}</span>
+                                {msg.direccion === 'enviado' && !msg.enviando && !msg.error && (
+                                  <span className="chatv2-message-status">
+                                    {msg.leido === 1 ? (
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                        <polyline points="20 12 9 23 4 18"></polyline>
+                                      </svg>
+                                    ) : (
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                      </svg>
+                                    )}
+                                  </span>
+                                )}
+                                {msg.enviando && (
+                                  <span className="chatv2-message-sending">
+                                    <div className="chatv2-mini-spinner"></div>
+                                  </span>
+                                )}
+                                {msg.error && (
+                                  <span className="chatv2-message-error" title="Error al enviar">!</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </React.Fragment>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Input de Mensaje */}
+                <div className="chatv2-input-area">
+                  <div className="chatv2-input-wrapper">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      placeholder={esMensajeMasivo ? `Mensaje para ${destinatariosMasivos.length} apoderados...` : "Escribe un mensaje..."}
+                      value={mensajeInput}
+                      onChange={(e) => setMensajeInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleEnviarMensaje()}
+                      disabled={enviando}
+                    />
+                  </div>
+                  <button
+                    className="chatv2-send-btn"
+                    onClick={handleEnviarMensaje}
+                    disabled={enviando || !mensajeInput.trim()}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* Placeholder cuando no hay chat seleccionado */
+              <div className="chatv2-placeholder">
+                <div className="chatv2-placeholder-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                  </svg>
+                </div>
+                <h3>Selecciona una conversación</h3>
+                <p>Elige un contacto del panel izquierdo para comenzar a chatear</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default ChatDocenteV2;

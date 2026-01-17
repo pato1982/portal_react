@@ -402,7 +402,6 @@ function ChatFlotante({ usuario, establecimientoId }) {
     return null;
   }
 
-
   return (
     <>
       {/* Boton flotante */}
@@ -415,33 +414,26 @@ function ChatFlotante({ usuario, establecimientoId }) {
         )}
       </button>
 
-      {/* Overlay para cerrar al hacer clic fuera */}
+      {/* Overlay */}
       {chatAbierto && (
         <div className="chat-overlay" onClick={toggleChat}></div>
       )}
 
-      {/* Modal del chat estilo WhatsApp */}
+      {/* Modal del chat - Nuevo Diseño Profesional */}
       <div className={`chat-modal ${chatAbierto ? 'active' : ''}`}>
 
-        {/* Cabecera Principal */}
-        <div className="chat-header">
-          <div className="chat-header-title">Chat Docente</div>
-          <button className="chat-close-btn" onClick={toggleChat}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
+        {/* === SIDEBAR (Izquierda) === */}
+        <div className={`chat-contacts-full ${contactoActual ? 'hidden-mobile' : ''}`}>
 
-        <div className={`chat-body ${contactoActual ? 'chat-mobile-view-messages' : 'chat-mobile-view-sidebar'}`}>
-          {/* Columna Izquierda: Tabs y Listas */}
-          <div className="chat-contacts-full">
+          {/* Header del Sidebar */}
+          <div className="chat-sidebar-header">
+            <div className="chat-sidebar-title">Mensajes</div>
+            {/* Tabs de navegación */}
             <div className="chat-tabs">
               <button
                 className={`chat-tab ${activeTab === 'chat' ? 'active' : ''}`}
                 onClick={() => setActiveTab('chat')}
-              >Chat</button>
+              >Activos</button>
               <button
                 className={`chat-tab ${activeTab === 'institucional' ? 'active' : ''}`}
                 onClick={() => setActiveTab('institucional')}
@@ -451,14 +443,13 @@ function ChatFlotante({ usuario, establecimientoId }) {
                 onClick={() => setActiveTab('cursos')}
               >Cursos</button>
             </div>
+          </div>
 
-            <div className="chat-students-list">
-              {activeTab === 'institucional' && (
-                cargando ? (
-                  <div className="chat-loading">Cargando colegas...</div>
-                ) : contactos.length === 0 ? (
-                  <div className="chat-empty">No hay colegas disponibles</div>
-                ) : (
+          {/* Lista de Contactos */}
+          <div className="chat-students-list">
+            {activeTab === 'institucional' && (
+              cargando ? (<div className="chat-loading">Cargando...</div>) :
+                contactos.length === 0 ? (<div className="chat-empty">Sin contactos</div>) : (
                   contactos.map(contacto => (
                     <div
                       key={contacto.usuario_id}
@@ -466,191 +457,183 @@ function ChatFlotante({ usuario, establecimientoId }) {
                       onClick={() => seleccionarContacto(contacto)}
                     >
                       <div className="chat-contact-avatar">
-                        {contacto.foto_url ? (
-                          <img src={contacto.foto_url} alt={contacto.nombre_completo} />
-                        ) : (
-                          <span>{contacto.nombre_completo?.charAt(0)?.toUpperCase() || '?'}</span>
-                        )}
+                        {contacto.foto_url ? <img src={contacto.foto_url} alt="" /> : (contacto.nombre_completo?.charAt(0) || '?')}
                       </div>
                       <div className="chat-contact-info">
                         <div className="chat-contact-name">
                           {contacto.nombre_completo}
                           {contacto.es_admin === 1 && <span className="chat-admin-badge">Admin</span>}
                         </div>
-                        <div className="chat-contact-tipo">
-                          {contacto.tipo === 'administrador' ? 'Administrador' : 'Docente'}
-                        </div>
+                        <div className="chat-contact-tipo">{contacto.tipo === 'administrador' ? 'Administración' : 'Docente'}</div>
                       </div>
                     </div>
                   ))
                 )
-              )}
+            )}
 
-              {activeTab === 'cursos' && (
-                cursoSeleccionado ? (
-                  // Lista de Alumnos del curso
-                  cargando ? <div className="chat-loading">Cargando alumnos...</div> :
-                    <>
-                      <button className="chat-back-sub" onClick={() => setCursoSeleccionado(null)}>
-                        ← Volver a cursos
-                      </button>
-                      <div className="chat-contact-item special-row" onClick={() => iniciarMensajeMasivo(cursoSeleccionado, alumnos)}>
-                        <div className="chat-contact-avatar all-avatar">T</div>
-                        <div className="chat-contact-info">
-                          <div className="chat-contact-name">Todos</div>
-                          <div className="chat-contact-tipo">Enviar a todos los apoderados</div>
-                        </div>
-                      </div>
-                      {alumnos.map(alumno => (
-                        <div
-                          key={alumno.alumno_id}
-                          className={`chat-contact-item ${contactoActual?.apoderado_usuario_id === alumno.apoderado_usuario_id ? 'active' : ''}`}
-                          onClick={() => seleccionarContacto(alumno, 'apoderado')}
-                        >
-                          <div className="chat-contact-avatar">
-                            <span>{alumno.nombre_alumno.charAt(0)}</span>
-                          </div>
-                          <div className="chat-contact-info">
-                            <div className="chat-contact-name">{alumno.nombre_alumno}</div>
-                            <div className="chat-contact-tipo">Apoderado: {alumno.nombre_apoderado}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                ) : (
-                  // Lista de Cursos
-                  cargando ? <div className="chat-loading">Cargando cursos...</div> :
-                    cursos.map(curso => (
-                      <div key={curso.id} className="chat-contact-item" onClick={() => seleccionarCurso(curso)}>
-                        <div className="chat-contact-avatar course-avatar">
-                          {curso.grado}{curso.letra}
-                        </div>
-                        <div className="chat-contact-info">
-                          <div className="chat-contact-name">{curso.grado}° {curso.letra} {curso.nivel}</div>
-                          <div className="chat-contact-tipo">{curso.nombre}</div>
-                        </div>
-                      </div>
-                    ))
-                )
-              )}
-
-              {activeTab === 'chat' && (
-                <div className="chat-empty">
-                  <p style={{ textAlign: 'center', marginTop: 20 }}>Selecciona Institucional o Cursos para iniciar</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Columna Derecha: Area de Mensajes */}
-          <div className="chat-messages-area">
-            {contactoActual ? (
-              <>
-                {/* Header especifico del contacto */}
-                <div style={{ padding: '10px 16px', borderBottom: '1px solid #e5e7eb', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontWeight: 600, fontSize: '14px' }}>{contactoActual.nombre_completo}</span>
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>{contactoActual.tipo === 'curso' ? 'Difusión masiva' : contactoActual.tipo || 'Chat'}</span>
+            {activeTab === 'cursos' && (
+              cursoSeleccionado ? (
+                <>
+                  <div className="chat-contact-item" onClick={() => setCursoSeleccionado(null)} style={{ background: '#f1f5f9', justifyContent: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600 }}>← Volver a Cursos</span>
                   </div>
-                  {/* Boton volver en movil solo */}
-                  <button
-                    className="chat-back-sub"
-                    style={{ border: 'none', background: 'none', display: 'none' }} // Hidden on desktop logic via CSS media query if needed
-                    onClick={() => {
-                      setContactoActual(null);
-                      setConversacionActual(null);
-                    }}
-                  >
-                    ✕
+
+                  <div className="chat-contact-item" onClick={() => iniciarMensajeMasivo(cursoSeleccionado, alumnos)} style={{ borderLeft: '3px solid #10b981' }}>
+                    <div className="chat-contact-avatar" style={{ background: '#10b981', color: 'white' }}>T</div>
+                    <div className="chat-contact-info">
+                      <div className="chat-contact-name">Todos los Apoderados</div>
+                      <div className="chat-contact-tipo">Enviar mensaje masivo</div>
+                    </div>
+                  </div>
+
+                  {alumnos.map(alumno => (
+                    <div
+                      key={alumno.alumno_id}
+                      className={`chat-contact-item ${contactoActual?.apoderado_usuario_id === alumno.apoderado_usuario_id ? 'active' : ''}`}
+                      onClick={() => seleccionarContacto(alumno, 'apoderado')}
+                    >
+                      <div className="chat-contact-avatar" style={{ background: '#6366f1', color: 'white' }}>
+                        {alumno.nombre_alumno.charAt(0)}
+                      </div>
+                      <div className="chat-contact-info">
+                        <div className="chat-contact-name">{alumno.nombre_alumno}</div>
+                        <div className="chat-contact-tipo">Apoderado: {alumno.nombre_apoderado}</div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                cargando ? <div className="chat-loading">Cargando...</div> :
+                  cursos.map(curso => (
+                    <div key={curso.id} className="chat-contact-item" onClick={() => seleccionarCurso(curso)}>
+                      <div className="chat-contact-avatar" style={{ background: '#f59e0b', color: 'white', fontSize: '11px' }}>
+                        {curso.grado}{curso.letra}
+                      </div>
+                      <div className="chat-contact-info">
+                        <div className="chat-contact-name">{curso.grado}° {curso.letra} {curso.nivel}</div>
+                        <div className="chat-contact-tipo">{curso.nombre}</div>
+                      </div>
+                    </div>
+                  ))
+              )
+            )}
+
+            {activeTab === 'chat' && (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                Selecciona una pestaña arriba para buscar contactos.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* === CHAT AREA (Derecha) === */}
+        <div className={`chat-messages-area ${!contactoActual ? 'hidden-mobile' : ''}`}>
+
+          {contactoActual ? (
+            <>
+              {/* Header Principal del Chat */}
+              <div className="chat-main-header">
+                <div className="chat-header-user-info">
+                  <div className="chat-header-name">{contactoActual.nombre_completo}</div>
+                  <div className="chat-header-subtitle">
+                    {esMensajeMasivo ? 'Difusión a todo el curso' : (contactoActual.tipo || 'Chat')}
+                  </div>
+                </div>
+
+                <div className="chat-header-actions">
+                  {/* Toggle Permisos (Solo si es apoderado indiv y no masivo) */}
+                  {!esMensajeMasivo && (
+                    <div className="header-toggle-container" title="Permitir que el apoderado responda">
+                      <span className="header-toggle-label">Respuestas</span>
+                      <div
+                        className={`modern-switch ${respuestaHabilitada ? 'checked' : ''}`}
+                        onClick={toggleRespuestaHabilitada}
+                      ></div>
+                    </div>
+                  )}
+
+                  {/* Botón Cerrar / Info / Volver (Movil) */}
+                  <button className="chat-close-btn-modern" onClick={toggleChat} title="Cerrar Chat">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                   </button>
                 </div>
+              </div>
 
-                <div className="chat-messages" ref={mensajesRef}>
-                  {cargando ? (
-                    <div className="chat-loading">Cargando mensajes...</div>
-                  ) : mensajes.length === 0 ? (
+              {/* Lista de Mensajes */}
+              <div className="chat-messages" ref={mensajesRef}>
+                {cargando ? (<div className="chat-loading">Cargando historial...</div>) :
+                  mensajes.length === 0 ? (
                     <div className="chat-empty">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                      </svg>
-                      <p>Inicia la conversacion</p>
+                      <div style={{ opacity: 0.5, marginBottom: 10 }}>👋</div>
+                      <p>Comienza la conversación con {contactoActual.nombre_completo.split(' ')[0]}</p>
                     </div>
                   ) : (
                     mensajes.map((msg, index) => {
-                      const mostrarFecha = index === 0 ||
-                        formatearFecha(msg.fecha_envio) !== formatearFecha(mensajes[index - 1]?.fecha_envio);
-
+                      const mostrarFecha = index === 0 || formatearFecha(msg.fecha_envio) !== formatearFecha(mensajes[index - 1]?.fecha_envio);
                       return (
                         <React.Fragment key={msg.id}>
                           {mostrarFecha && (
-                            <div className="chat-fecha-separador">
+                            <div className="chat-fecha-separador" style={{ alignSelf: 'center', background: 'rgba(0,0,0,0.05)', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', margin: '10px 0' }}>
                               {formatearFecha(msg.fecha_envio)}
                             </div>
                           )}
-                          <div className={`chat-message ${msg.direccion} ${msg.enviando ? 'enviando' : ''} ${msg.error ? 'error' : ''}`}>
-                            <div className="chat-message-content">
-                              {msg.mensaje}
-                            </div>
+                          <div className={`chat-message ${msg.direccion} ${msg.enviando ? 'enviando' : ''}`}>
+                            <div className="chat-message-content">{msg.mensaje}</div>
                             <div className="chat-message-time">
                               {formatearHora(msg.fecha_envio)}
-                              {msg.enviando && <span className="chat-sending-indicator">...</span>}
-                              {msg.error && <span className="chat-error-indicator">!</span>}
-                              {msg.direccion === 'enviado' && msg.leido === 1 && (
-                                <span className="chat-read-indicator">✓✓</span>
-                              )}
+                              {msg.direccion === 'enviado' && msg.leido === 1 && <span>✓✓</span>}
                             </div>
                           </div>
                         </React.Fragment>
                       );
                     })
                   )}
-                </div>
-
-                {!esMensajeMasivo && (
-                  <div className="chat-permissions">
-                    <button
-                      className={`perm-btn ${respuestaHabilitada ? 'active' : ''}`}
-                      onClick={toggleRespuestaHabilitada}
-                      title={respuestaHabilitada ? "Apoderado puede responder" : "Apoderado no puede responder"}
-                    >
-                      {respuestaHabilitada ? "Respuesta Habilitada" : "Habilitar respuesta"}
-                      <div className={`toggle-switch ${respuestaHabilitada ? 'on' : 'off'}`}></div>
-                    </button>
-                  </div>
-                )}
-
-                <div className="chat-input-area">
-                  <input
-                    type="text"
-                    className="chat-input"
-                    placeholder="Escribe un mensaje..."
-                    value={mensajeInput}
-                    onChange={(e) => setMensajeInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleEnviarMensaje()}
-                    disabled={enviando}
-                  />
-                  <button
-                    className="chat-send-btn"
-                    onClick={handleEnviarMensaje}
-                    disabled={enviando || !mensajeInput.trim()}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="22" y1="2" x2="11" y2="13"></line>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="chat-placeholder">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                </svg>
-                <p>Selecciona un contacto para comenzar a chatear</p>
               </div>
-            )}
-          </div>
+
+              {/* Input Area */}
+              <div className="chat-input-area">
+                <input
+                  type="text"
+                  className="chat-input"
+                  placeholder={!respuestaHabilitada && !esMensajeMasivo ? "Respuestas deshabilitadas (aún puedes enviar)..." : "Escribe tu mensaje..."}
+                  value={mensajeInput}
+                  onChange={(e) => setMensajeInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleEnviarMensaje()}
+                  disabled={enviando}
+                />
+                <button
+                  className="chat-send-btn"
+                  onClick={handleEnviarMensaje}
+                  disabled={enviando || !mensajeInput.trim()}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </div>
+
+            </>
+          ) : (
+            /* Estado Vacio (Placeholder) */
+            <div className="chat-placeholder">
+              <svg className="chat-placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+              <div className="chat-placeholder-text">Selecciona un chat para comenzar</div>
+              <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '8px' }}>Gestiona la comunicación con apoderados y colegas.</p>
+
+              {/* Boton cerrar global si no hay chat (opcional) */}
+              <button onClick={toggleChat} style={{ marginTop: '40px', background: 'none', border: '1px solid #cbd5e1', padding: '8px 16px', borderRadius: '8px', color: '#64748b', cursor: 'pointer' }}>
+                Cerrar Ventana
+              </button>
+            </div>
+          )}
         </div>
+
       </div>
     </>
   );

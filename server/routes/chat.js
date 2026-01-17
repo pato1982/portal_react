@@ -848,13 +848,14 @@ router.get('/curso/:id/alumnos-chat', async (req, res) => {
                 CONCAT(al.nombres, ' ', al.apellidos) AS nombre_alumno,
                 ap.id AS apoderado_id,
                 ap.usuario_id AS apoderado_usuario_id,
+                u_ap.activo AS apoderado_activo,
                 CONCAT(ap.nombres, ' ', ap.apellidos) AS nombre_apoderado,
                 ap.foto_url AS foto_apoderado
             FROM tb_matriculas m
             INNER JOIN tb_alumnos al ON m.alumno_id = al.id
             INNER JOIN tb_apoderados ap ON m.apoderado_id = ap.id
-            INNER JOIN tb_usuarios u_ap ON ap.usuario_id = u_ap.id
-            WHERE m.curso_asignado_id = ? AND m.activo = 1 AND u_ap.activo = 1
+            LEFT JOIN tb_usuarios u_ap ON ap.usuario_id = u_ap.id
+            WHERE m.curso_asignado_id = ? AND m.activo = 1
             ORDER BY al.apellidos, al.nombres
         `, [id]);
 

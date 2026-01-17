@@ -736,7 +736,17 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                           <div
                             key={alumno.alumno_id}
                             className={`chatv2-list-item alumno ${modoSeleccion ? 'selectable' : ''} ${estaSeleccionado(alumno.apoderado_usuario_id) ? 'selected' : ''} ${contactoActual?.apoderado_usuario_id === alumno.apoderado_usuario_id ? 'active' : ''}`}
-                            onClick={() => modoSeleccion ? toggleSeleccionApoderado(alumno) : seleccionarContacto(alumno, 'apoderado')}
+                            onClick={() => {
+                              if (modoSeleccion) {
+                                toggleSeleccionApoderado(alumno);
+                              } else {
+                                if (alumno.apoderado_activo) {
+                                  seleccionarContacto(alumno, 'apoderado');
+                                } else {
+                                  alert('El apoderado no tiene habilitada la aplicación');
+                                }
+                              }
+                            }}
                           >
                             {/* Checkbox en modo selección */}
                             {modoSeleccion && (
@@ -756,7 +766,10 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                                 <span className="chatv2-list-item-name">{alumno.nombre_alumno}</span>
                               </div>
                               <div className="chatv2-list-item-preview">
-                                <span>Apod: {alumno.nombre_apoderado}</span>
+                                <span>
+                                  Apod: {alumno.nombre_apoderado}
+                                  {!alumno.apoderado_activo && <span style={{ color: '#ef4444', marginLeft: '4px', fontSize: '0.85em' }}>(No App)</span>}
+                                </span>
                               </div>
                             </div>
                             {!modoSeleccion && alumno.mensajes_no_leidos > 0 && (

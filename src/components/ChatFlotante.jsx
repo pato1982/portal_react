@@ -402,6 +402,7 @@ function ChatFlotante({ usuario, establecimientoId }) {
     return null;
   }
 
+
   return (
     <>
       {/* Boton flotante */}
@@ -419,52 +420,12 @@ function ChatFlotante({ usuario, establecimientoId }) {
         <div className="chat-overlay" onClick={toggleChat}></div>
       )}
 
-      {/* Modal del chat */}
+      {/* Modal del chat estilo WhatsApp */}
       <div className={`chat-modal ${chatAbierto ? 'active' : ''}`}>
+
+        {/* Cabecera Principal */}
         <div className="chat-header">
-          <div className="chat-header-title">
-            {contactoActual ? (
-              <>
-                <button
-                  className="chat-back-btn"
-                  onClick={() => {
-                    setContactoActual(null);
-                    setConversacionActual(null);
-                    setMensajes([]);
-                    if (esMensajeMasivo) {
-                      setEsMensajeMasivo(false);
-                      setContenidoAlumnos(true); // Just a flag logic hint
-                    }
-                  }}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <div className="chat-header-info-col">
-                  <span>{contactoActual.nombre_completo}</span>
-                  <span className="chat-header-tipo">
-                    {contactoActual.tipo || (esMensajeMasivo ? 'Difusión' : 'Chat')}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div className="chat-tabs">
-                <button
-                  className={`chat-tab ${activeTab === 'chat' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('chat')}
-                >Chat</button>
-                <button
-                  className={`chat-tab ${activeTab === 'institucional' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('institucional')}
-                >Institucional</button>
-                <button
-                  className={`chat-tab ${activeTab === 'cursos' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('cursos')}
-                >Cursos</button>
-              </div>
-            )}
-          </div>
+          <div className="chat-header-title">Chat Docente</div>
           <button className="chat-close-btn" onClick={toggleChat}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -473,10 +434,25 @@ function ChatFlotante({ usuario, establecimientoId }) {
           </button>
         </div>
 
-        <div className="chat-body">
-          {!contactoActual ? (
-            /* Vistas segun TABS */
-            <div className="chat-contacts-full">
+        <div className={`chat-body ${contactoActual ? 'chat-mobile-view-messages' : 'chat-mobile-view-sidebar'}`}>
+          {/* Columna Izquierda: Tabs y Listas */}
+          <div className="chat-contacts-full">
+            <div className="chat-tabs">
+              <button
+                className={`chat-tab ${activeTab === 'chat' ? 'active' : ''}`}
+                onClick={() => setActiveTab('chat')}
+              >Chat</button>
+              <button
+                className={`chat-tab ${activeTab === 'institucional' ? 'active' : ''}`}
+                onClick={() => setActiveTab('institucional')}
+              >Institucional</button>
+              <button
+                className={`chat-tab ${activeTab === 'cursos' ? 'active' : ''}`}
+                onClick={() => setActiveTab('cursos')}
+              >Cursos</button>
+            </div>
+
+            <div className="chat-students-list">
               {activeTab === 'institucional' && (
                 cargando ? (
                   <div className="chat-loading">Cargando colegas...</div>
@@ -486,7 +462,7 @@ function ChatFlotante({ usuario, establecimientoId }) {
                   contactos.map(contacto => (
                     <div
                       key={contacto.usuario_id}
-                      className={`chat-contact-item ${contacto.es_admin ? 'admin-contact' : ''}`}
+                      className={`chat-contact-item ${contacto.es_admin ? 'admin-contact' : ''} ${contactoActual?.usuario_id === contacto.usuario_id ? 'active' : ''}`}
                       onClick={() => seleccionarContacto(contacto)}
                     >
                       <div className="chat-contact-avatar">
@@ -514,7 +490,7 @@ function ChatFlotante({ usuario, establecimientoId }) {
                 cursoSeleccionado ? (
                   // Lista de Alumnos del curso
                   cargando ? <div className="chat-loading">Cargando alumnos...</div> :
-                    <div className="chat-students-list">
+                    <>
                       <button className="chat-back-sub" onClick={() => setCursoSeleccionado(null)}>
                         ← Volver a cursos
                       </button>
@@ -526,7 +502,11 @@ function ChatFlotante({ usuario, establecimientoId }) {
                         </div>
                       </div>
                       {alumnos.map(alumno => (
-                        <div key={alumno.alumno_id} className="chat-contact-item" onClick={() => seleccionarContacto(alumno, 'apoderado')}>
+                        <div
+                          key={alumno.alumno_id}
+                          className={`chat-contact-item ${contactoActual?.apoderado_usuario_id === alumno.apoderado_usuario_id ? 'active' : ''}`}
+                          onClick={() => seleccionarContacto(alumno, 'apoderado')}
+                        >
                           <div className="chat-contact-avatar">
                             <span>{alumno.nombre_alumno.charAt(0)}</span>
                           </div>
@@ -536,7 +516,7 @@ function ChatFlotante({ usuario, establecimientoId }) {
                           </div>
                         </div>
                       ))}
-                    </div>
+                    </>
                 ) : (
                   // Lista de Cursos
                   cargando ? <div className="chat-loading">Cargando cursos...</div> :
@@ -560,87 +540,116 @@ function ChatFlotante({ usuario, establecimientoId }) {
                 </div>
               )}
             </div>
-          ) : (
-            /* Conversacion */
-            <>
-              <div className="chat-messages" ref={mensajesRef}>
-                {cargando ? (
-                  <div className="chat-loading">Cargando mensajes...</div>
-                ) : mensajes.length === 0 ? (
-                  <div className="chat-empty">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                    <p>Inicia la conversacion</p>
+          </div>
+
+          {/* Columna Derecha: Area de Mensajes */}
+          <div className="chat-messages-area">
+            {contactoActual ? (
+              <>
+                {/* Header especifico del contacto */}
+                <div style={{ padding: '10px 16px', borderBottom: '1px solid #e5e7eb', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontWeight: 600, fontSize: '14px' }}>{contactoActual.nombre_completo}</span>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>{contactoActual.tipo === 'curso' ? 'Difusión masiva' : contactoActual.tipo || 'Chat'}</span>
                   </div>
-                ) : (
-                  mensajes.map((msg, index) => {
-                    const mostrarFecha = index === 0 ||
-                      formatearFecha(msg.fecha_envio) !== formatearFecha(mensajes[index - 1]?.fecha_envio);
-
-                    return (
-                      <React.Fragment key={msg.id}>
-                        {mostrarFecha && (
-                          <div className="chat-fecha-separador">
-                            {formatearFecha(msg.fecha_envio)}
-                          </div>
-                        )}
-                        <div className={`chat-message ${msg.direccion} ${msg.enviando ? 'enviando' : ''} ${msg.error ? 'error' : ''}`}>
-                          <div className="chat-message-content">
-                            {msg.mensaje}
-                          </div>
-                          <div className="chat-message-time">
-                            {formatearHora(msg.fecha_envio)}
-                            {msg.enviando && <span className="chat-sending-indicator">...</span>}
-                            {msg.error && <span className="chat-error-indicator">!</span>}
-                            {msg.direccion === 'enviado' && msg.leido === 1 && (
-                              <span className="chat-read-indicator">✓✓</span>
-                            )}
-                          </div>
-                        </div>
-                      </React.Fragment>
-                    );
-                  })
-                )}
-              </div>
-
-              {/* Boton habilitar respuesta (solo si no es masivo) */}
-              {!esMensajeMasivo && (
-                <div className="chat-permissions">
+                  {/* Boton volver en movil solo */}
                   <button
-                    className={`perm-btn ${respuestaHabilitada ? 'active' : ''}`}
-                    onClick={toggleRespuestaHabilitada}
-                    title={respuestaHabilitada ? "Apoderado puede responder" : "Apoderado no puede responder"}
+                    className="chat-back-sub"
+                    style={{ border: 'none', background: 'none', display: 'none' }} // Hidden on desktop logic via CSS media query if needed
+                    onClick={() => {
+                      setContactoActual(null);
+                      setConversacionActual(null);
+                    }}
                   >
-                    {respuestaHabilitada ? "Respuesta Habilitada" : "Habilitar respuesta"}
-                    <div className={`toggle-switch ${respuestaHabilitada ? 'on' : 'off'}`}></div>
+                    ✕
                   </button>
                 </div>
-              )}
 
-              <div className="chat-input-area">
-                <input
-                  type="text"
-                  className="chat-input"
-                  placeholder="Escribe un mensaje..."
-                  value={mensajeInput}
-                  onChange={(e) => setMensajeInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleEnviarMensaje()}
-                  disabled={enviando}
-                />
-                <button
-                  className="chat-send-btn"
-                  onClick={handleEnviarMensaje}
-                  disabled={enviando || !mensajeInput.trim()}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
-                </button>
+                <div className="chat-messages" ref={mensajesRef}>
+                  {cargando ? (
+                    <div className="chat-loading">Cargando mensajes...</div>
+                  ) : mensajes.length === 0 ? (
+                    <div className="chat-empty">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                      </svg>
+                      <p>Inicia la conversacion</p>
+                    </div>
+                  ) : (
+                    mensajes.map((msg, index) => {
+                      const mostrarFecha = index === 0 ||
+                        formatearFecha(msg.fecha_envio) !== formatearFecha(mensajes[index - 1]?.fecha_envio);
+
+                      return (
+                        <React.Fragment key={msg.id}>
+                          {mostrarFecha && (
+                            <div className="chat-fecha-separador">
+                              {formatearFecha(msg.fecha_envio)}
+                            </div>
+                          )}
+                          <div className={`chat-message ${msg.direccion} ${msg.enviando ? 'enviando' : ''} ${msg.error ? 'error' : ''}`}>
+                            <div className="chat-message-content">
+                              {msg.mensaje}
+                            </div>
+                            <div className="chat-message-time">
+                              {formatearHora(msg.fecha_envio)}
+                              {msg.enviando && <span className="chat-sending-indicator">...</span>}
+                              {msg.error && <span className="chat-error-indicator">!</span>}
+                              {msg.direccion === 'enviado' && msg.leido === 1 && (
+                                <span className="chat-read-indicator">✓✓</span>
+                              )}
+                            </div>
+                          </div>
+                        </React.Fragment>
+                      );
+                    })
+                  )}
+                </div>
+
+                {!esMensajeMasivo && (
+                  <div className="chat-permissions">
+                    <button
+                      className={`perm-btn ${respuestaHabilitada ? 'active' : ''}`}
+                      onClick={toggleRespuestaHabilitada}
+                      title={respuestaHabilitada ? "Apoderado puede responder" : "Apoderado no puede responder"}
+                    >
+                      {respuestaHabilitada ? "Respuesta Habilitada" : "Habilitar respuesta"}
+                      <div className={`toggle-switch ${respuestaHabilitada ? 'on' : 'off'}`}></div>
+                    </button>
+                  </div>
+                )}
+
+                <div className="chat-input-area">
+                  <input
+                    type="text"
+                    className="chat-input"
+                    placeholder="Escribe un mensaje..."
+                    value={mensajeInput}
+                    onChange={(e) => setMensajeInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleEnviarMensaje()}
+                    disabled={enviando}
+                  />
+                  <button
+                    className="chat-send-btn"
+                    onClick={handleEnviarMensaje}
+                    disabled={enviando || !mensajeInput.trim()}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="chat-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+                <p>Selecciona un contacto para comenzar a chatear</p>
               </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </>

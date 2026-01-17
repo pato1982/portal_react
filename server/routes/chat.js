@@ -798,5 +798,72 @@ router.post('/mensaje-masivo', async (req, res) => {
     }
 });
 
+
+// ============================================
+// GET /api/chat/docente/:id/cursos - Obtener cursos del docente
+// ============================================
+router.get('/docente/:id/cursos', async (req, res) => {
+    const { id } = req.params; // usuario_id del docente (en tb_usuarios)
+    const { establecimiento_id } = req.query;
+
+    if (!establecimiento_id) {
+        return res.status(400).json({ success: false, message: 'establecimiento_id requerido' });
+    }
+
+    try {
+        // Obtenemos el ID de docente desde la tabla tb_docentes usando el usuario_id
+        const [docente] = await pool.query('SELECT id FROM tb_docentes WHERE usuario_id = ?', [id]);
+
+        if (docente.length === 0) {
+            return res.status(404).json({ success: false, message: 'Docente no encontrado' });
+        }
+        const docenteId = docente[0].id;
+
+        const [cursos] = await pool.query(`
+            SELECT DISTINCT c.id, c.nombre, c.grado, c.letra, c.nivel
+            FROM tb_cursos c
+            INNER JOIN tb_asignaciones a ON c.id = a.curso_id
+            WHERE a.docente_id = ? AND a.establecimiento_id = ? AND c.activo = 1 AND a.activo = 1
+            ORDER BY c.grado, c.letra
+        `, [docenteId, establecimiento_id]);
+
+        res.json({ success: true, data: cursos });
+    } catch (error) {
+        console.error('Error al obtener cursos del docente:', error);
+        res.status(500).json({ success: false, message: 'Error interno' });
+    }
+});
+
+// ============================================
+// GET /api/chat/curso/:id/alumnos-chat - Obtener alumnos y apoderados para chat
+// ============================================
+router.get('/curso/:id/alumnos-chat', async (req, res) => {
+    const { id } = req.params; // curso_id
+    const { usuario_id } = req.query; // Para verificar mensajes no leidos (opcional, o futura mejora)
+
+    try {
+        const [alumnos] = await pool.query(`
+            SELECT
+                al.id AS alumno_id,
+                CONCAT(al.nombres, ' ', al.apellidos) AS nombre_alumno,
+                ap.id AS apoderado_id,
+                ap.usuario_id AS apoderado_usuario_id,
+                CONCAT(ap.nombres, ' ', ap.apellidos) AS nombre_apoderado,
+                ap.foto_url AS foto_apoderado
+            FROM tb_matriculas m
+            INNER JOIN tb_alumnos al ON m.alumno_id = al.id
+            INNER JOIN tb_apoderados ap ON m.apoderado_id = ap.id
+            INNER JOIN tb_usuarios u_ap ON ap.usuario_id = u_ap.id
+            WHERE m.curso_asignado_id = ? AND m.activo = 1 AND u_ap.activo = 1
+            ORDER BY al.apellidos, al.nombres
+        `, [id]);
+
+        res.json({ success: true, data: alumnos });
+    } catch (error) {
+        console.error('Error al obtener alumnos del curso:', error);
+        res.status(500).json({ success: false, message: 'Error interno' });
+    }
+});
+
 module.exports = router;
 

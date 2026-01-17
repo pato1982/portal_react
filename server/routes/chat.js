@@ -8,8 +8,7 @@ const router = express.Router();
 // ============================================
 
 // ============================================
-// GET /api/chat/contactos - Obtener lista de contactos
-// Solo docentes y administradores del mismo establecimiento
+// Solamente docentes y administradores pueden iniciar chats
 // Admin siempre aparece primero para los docentes
 // ============================================
 router.get('/contactos', async (req, res) => {
@@ -151,6 +150,7 @@ router.get('/conversaciones', async (req, res) => {
                 c.mensajes_count,
                 c.ultimo_mensaje_fecha,
                 c.fecha_creacion,
+                c.respuesta_habilitada,
                 CASE
                     WHEN c.usuario1_id = ? THEN c.usuario2_id
                     ELSE c.usuario1_id
@@ -223,6 +223,76 @@ router.get('/conversaciones', async (req, res) => {
         });
     }
 });
+
+// ============================================
+// GET /api/chat/docente/:id/cursos - Obtener cursos del docente
+// ============================================
+router.get('/docente/:id/cursos', async (req, res) => {
+    const { id } = req.params;
+    const { establecimiento_id } = req.query;
+
+    try {
+        const [cursos] = await pool.query(`
+            SELECT DISTINCT c.id, c.nombre, c.grado, c.letra, c.nivel
+            FROM tb_cursos c
+            INNER JOIN tb_asignaciones a ON c.id = a.curso_id
+            WHERE a.docente_id = (SELECT id FROM tb_docentes WHERE usuario_id = ?)
+            AND c.establecimiento_id = ?
+            AND c.activo = 1
+            AND a.activo = 1
+            ORDER BY c.nivel, c.grado, c.letra
+        `, [id, establecimiento_id]);
+
+        res.json({ success: true, data: cursos });
+    } catch (error) {
+        console.error('Error al obtener cursos:', error);
+        res.status(500).json({ success: false, message: 'Error interno' });
+    }
+});
+
+// ============================================
+// GET /api/chat/curso/:id/alumnos-chat - Obtener alumnos y apoderados para chat
+// ============================================
+router.get('/curso/:id/alumnos-chat', async (req, res) => {
+    const { id } = req.params;
+    const { usuario_id } = req.query; // ID del docente solicitante
+
+    try {
+        const [alumnos] = await pool.query(`
+            SELECT 
+                a.id AS alumno_id,
+                CONCAT(a.nombres, ' ', a.apellidos) AS nombre_alumno,
+                ap.id AS apoderado_id,
+                ap.usuario_id AS apoderado_usuario_id,
+                CONCAT(ap.nombres, ' ', ap.apellidos) AS nombre_apoderado,
+                ap.foto_url AS foto_apoderado,
+                (
+                    SELECT COUNT(*)
+                    FROM tb_chat_mensajes m
+                    INNER JOIN tb_chat_conversaciones c ON m.conversacion_id = c.id
+                    WHERE c.activo = 1
+                    AND ((c.usuario1_id = ? AND c.usuario2_id = ap.usuario_id) OR (c.usuario2_id = ? AND c.usuario1_id = ap.usuario_id))
+                    AND m.remitente_id = ap.usuario_id
+                    AND m.leido = 0
+                ) AS mensajes_no_leidos
+            FROM tb_matriculas m
+            INNER JOIN tb_alumnos a ON m.alumno_id = a.id
+            INNER JOIN tb_apoderados ap ON m.apoderado_id = ap.id
+            WHERE m.curso_asignado_id = ?
+            AND m.activo = 1
+            AND a.activo = 1
+            AND ap.activo = 1
+            ORDER BY a.apellidos, a.nombres
+        `, [usuario_id, usuario_id, id]);
+
+        res.json({ success: true, data: alumnos });
+    } catch (error) {
+        console.error('Error al obtener alumnos:', error);
+        res.status(500).json({ success: false, message: 'Error interno' });
+    }
+});
+
+
 
 // ============================================
 // GET /api/chat/conversacion/:id/mensajes - Obtener mensajes de una conversación
@@ -319,15 +389,23 @@ router.post('/conversacion', async (req, res) => {
             });
         }
 
-        const tiposValidos = ['docente', 'administrador'];
+        const tiposValidos = ['docente', 'administrador', 'apoderado'];
+        let esChatConApoderado = false;
+
         for (const u of usuarios) {
             if (!tiposValidos.includes(u.tipo_usuario)) {
                 return res.status(403).json({
                     success: false,
-                    message: 'El chat solo está disponible para docentes y administradores'
+                    message: 'Tipo de usuario no permitido en el chat'
                 });
             }
+            if (u.tipo_usuario === 'apoderado') {
+                esChatConApoderado = true;
+            }
         }
+
+        // Si hay un apoderado, respuesta_habilitada inicia en 0 (false), si no 1 (true)
+        const respuestaHabilitadaInicial = esChatConApoderado ? 0 : 1;
 
         // Buscar conversación existente (ordenando los IDs para evitar duplicados)
         const [u1, u2] = [usuario_id, otro_usuario_id].sort((a, b) => a - b);
@@ -359,9 +437,9 @@ router.post('/conversacion', async (req, res) => {
         // Crear nueva conversación
         const [resultado] = await pool.query(`
             INSERT INTO tb_chat_conversaciones
-            (establecimiento_id, usuario1_id, usuario2_id, asunto, contexto_tipo, contexto_id, iniciada_por)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [establecimiento_id, u1, u2, asunto || null, contexto_tipo || 'general', contexto_id || null, usuario_id]);
+            (establecimiento_id, usuario1_id, usuario2_id, asunto, contexto_tipo, contexto_id, iniciada_por, respuesta_habilitada)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, [establecimiento_id, u1, u2, asunto || null, contexto_tipo || 'general', contexto_id || null, usuario_id, respuestaHabilitadaInicial]);
 
         res.json({
             success: true,
@@ -403,6 +481,21 @@ router.post('/mensaje', async (req, res) => {
                 success: false,
                 message: 'Conversación no encontrada o no tienes acceso'
             });
+        }
+
+        const conversacion = conv[0];
+
+        // Verificar permisos de respuesta si el remitente es apoderado
+        // Necesitamos saber el tipo de usuario del remitente
+        const [remitente] = await pool.query('SELECT tipo_usuario FROM tb_usuarios WHERE id = ?', [remitente_id]);
+
+        if (remitente.length > 0 && remitente[0].tipo_usuario === 'apoderado') {
+            if (conversacion.respuesta_habilitada === 0) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'No tienes permiso para responder en esta conversación hasta que el docente lo habilite.'
+                });
+            }
         }
 
         // Insertar mensaje
@@ -623,4 +716,87 @@ router.get('/nuevos-mensajes', async (req, res) => {
     }
 });
 
+// ============================================
+// PUT /api/chat/conversacion/:id/habilitar-respuesta - Habilitar/Deshabilitar respuesta
+// ============================================
+router.put('/conversacion/:id/habilitar-respuesta', async (req, res) => {
+    const { id } = req.params;
+    const { habilitado } = req.body; // true o false
+
+    try {
+        await pool.query('UPDATE tb_chat_conversaciones SET respuesta_habilitada = ? WHERE id = ?', [habilitado ? 1 : 0, id]);
+        res.json({ success: true, message: 'Permiso de respuesta actualizado' });
+    } catch (error) {
+        console.error('Error al actualizar permiso:', error);
+        res.status(500).json({ success: false, message: 'Error interno' });
+    }
+});
+
+// ============================================
+// POST /api/chat/mensaje-masivo - Enviar mensaje a múltiples destinatarios
+// ============================================
+router.post('/mensaje-masivo', async (req, res) => {
+    const { remitente_id, destinatarios_ids, mensaje, establecimiento_id } = req.body;
+
+    if (!remitente_id || !destinatarios_ids || !mensaje || !establecimiento_id) {
+        return res.status(400).json({ success: false, message: 'Faltan datos requeridos' });
+    }
+
+    try {
+        let enviados = 0;
+
+        for (const destId of destinatarios_ids) {
+            // 1. Obtener o crear conversación
+            // Reutilizamos lógica de crearConversacion pero simplificada
+            const [u1, u2] = [remitente_id, destId].sort((a, b) => a - b);
+
+            // Verificar existencia
+            let [conv] = await pool.query(`
+                SELECT id FROM tb_chat_conversaciones
+                WHERE establecimiento_id = ?
+                AND ((usuario1_id = ? AND usuario2_id = ?) OR (usuario1_id = ? AND usuario2_id = ?))
+            `, [establecimiento_id, u1, u2, u2, u1]);
+
+            let conversacionId;
+
+            if (conv.length > 0) {
+                conversacionId = conv[0].id;
+                // Asegurar activo
+                await pool.query('UPDATE tb_chat_conversaciones SET activo = 1 WHERE id = ?', [conversacionId]);
+            } else {
+                // Crear nueva (es con apoderado, asi que respuesta_habilitada = 0 por defecto)
+                const [result] = await pool.query(`
+                    INSERT INTO tb_chat_conversaciones
+                    (establecimiento_id, usuario1_id, usuario2_id, contexto_tipo, iniciada_por, respuesta_habilitada)
+                    VALUES (?, ?, ?, 'curso', ?, 0)
+                `, [establecimiento_id, u1, u2, remitente_id]);
+                conversacionId = result.insertId;
+            }
+
+            // 2. Insertar mensaje
+            await pool.query(`
+                INSERT INTO tb_chat_mensajes
+                (conversacion_id, remitente_id, mensaje, tipo_mensaje)
+                VALUES (?, ?, ?, 'texto')
+            `, [conversacionId, remitente_id, mensaje]);
+
+            // 3. Actualizar contadores
+            await pool.query(`
+                UPDATE tb_chat_conversaciones
+                SET mensajes_count = mensajes_count + 1, ultimo_mensaje_fecha = NOW()
+                WHERE id = ?
+            `, [conversacionId]);
+
+            enviados++;
+        }
+
+        res.json({ success: true, count: enviados, message: `Mensaje enviado a ${enviados} destinatarios` });
+
+    } catch (error) {
+        console.error('Error masivo:', error);
+        res.status(500).json({ success: false, message: 'Error al enviar mensajes masivos' });
+    }
+});
+
 module.exports = router;
+

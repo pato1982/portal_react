@@ -301,6 +301,80 @@ export const obtenerNuevosMensajes = async (usuarioId, establecimientoId, desde)
   }
 };
 
+/**
+ * Obtiene los cursos del docente para el chat
+ */
+export const obtenerCursosDocente = async (docenteId, establecimientoId) => {
+  if (config.isDemoMode()) {
+    return { success: true, data: [] };
+  }
+  try {
+    const response = await fetch(`${config.apiBaseUrl}/chat/docente/${docenteId}/cursos?establecimiento_id=${establecimientoId}`, {
+      headers: getAuthHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) return { success: false, error: data.message };
+    return data;
+  } catch (error) {
+    return { success: false, error: 'Error de conexión' };
+  }
+};
+
+/**
+ * Obtiene los alumnos y apoderados de un curso
+ */
+export const obtenerAlumnosCurso = async (cursoId, docenteUsuarioId) => {
+  if (config.isDemoMode()) {
+    return { success: true, data: [] };
+  }
+  try {
+    const response = await fetch(`${config.apiBaseUrl}/chat/curso/${cursoId}/alumnos-chat?usuario_id=${docenteUsuarioId}`, {
+      headers: getAuthHeaders()
+    });
+    const data = await response.json();
+    if (!response.ok) return { success: false, error: data.message };
+    return data;
+  } catch (error) {
+    return { success: false, error: 'Error de conexión' };
+  }
+};
+
+/**
+ * Habilita o deshabilita la respuesta del apoderado
+ */
+export const habilitarRespuesta = async (conversacionId, habilitado) => {
+  try {
+    const response = await fetch(`${config.apiBaseUrl}/chat/conversacion/${conversacionId}/habilitar-respuesta`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ habilitado })
+    });
+    const data = await response.json();
+    if (!response.ok) return { success: false, error: data.message };
+    return data;
+  } catch (error) {
+    return { success: false, error: 'Error de conexión' };
+  }
+};
+
+/**
+ * Envía mensaje masivo a varios destinatarios
+ */
+export const enviarMensajeMasivo = async (remitenteId, destinatariosIds, mensaje, establecimientoId) => {
+  try {
+    const response = await fetch(`${config.apiBaseUrl}/chat/mensaje-masivo`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ remitente_id: remitenteId, destinatarios_ids: destinatariosIds, mensaje, establecimiento_id: establecimientoId })
+    });
+    const data = await response.json();
+    if (!response.ok) return { success: false, error: data.message };
+    return data;
+  } catch (error) {
+    return { success: false, error: 'Error de conexión' };
+  }
+};
+
 export default {
   obtenerContactos,
   obtenerConversaciones,
@@ -309,5 +383,10 @@ export default {
   enviarMensaje,
   marcarConversacionLeida,
   obtenerNoLeidos,
-  obtenerNuevosMensajes
+  obtenerNoLeidos,
+  obtenerNuevosMensajes,
+  obtenerCursosDocente,
+  obtenerAlumnosCurso,
+  habilitarRespuesta,
+  enviarMensajeMasivo
 };

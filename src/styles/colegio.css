@@ -4215,7 +4215,11 @@ select.form-control {
         bottom: 20px;
         right: 20px;
         width: 1000px !important;
+        max-width: 95vw !important;
+        /* Adapt to screen width */
         height: 700px !important;
+        max-height: 90vh !important;
+        /* Adapt to screen height */
         border-radius: 16px;
         border: 1px solid rgba(0, 0, 0, 0.08);
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 5px 15px rgba(0, 0, 0, 0.05);
@@ -4645,233 +4649,8 @@ select.form-control {
         /* Fondo más oscuro para foco */
     }
 
-    /* Layout principal de dos columnas */
-    .chat-body {
-        display: flex;
-        flex: 1;
-        overflow: hidden;
-        position: relative;
-    }
 
-    /* Columna Izquierda (Sidebar) */
-    .chat-contacts-full {
-        width: 450px !important;
-        /* Ancho ajustado para mejorar legibilidad */
-        min-width: 450px !important;
-        background: white;
-        border-right: 1px solid var(--border-color);
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-    }
-
-    /* Tabs pegados arriba del sidebar */
-    .chat-tabs {
-        padding: 10px;
-        background: white;
-        border-bottom: 1px solid #f1f5f9;
-        display: flex;
-        gap: 5px;
-        flex-shrink: 0;
-    }
-
-    .chat-tab {
-        font-size: 12px;
-        padding: 6px 12px;
-        background: #f1f5f9;
-        color: #64748b;
-        border-radius: 20px;
-        /* Estilo píldora */
-    }
-
-    .chat-tab.active {
-        background: var(--primary-color);
-        color: white;
-    }
-
-    /* Lista de estudiantes y buscador dentro del sidebar */
-    .chat-students-list {
-        display: flex;
-        flex-direction: column;
-        height: auto;
-        /* Dejar que fluya en el sidebar */
-    }
-
-    /* Columna Derecha (Chat Area) */
-    .chat-messages-area {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        background: #efeae2;
-        /* Fondo tipo WhatsApp */
-        position: relative;
-    }
-
-    /* Header del Chat se mueve a la derecha o arriba? 
-       El diseño pide "izq lista / der chat".
-       La cabecera global podría mantenerse, o dividirse.
-       Vamos a mantener una cabecera global simple y una cabecera de chat derecha.
-    */
-
-    /* Ajuste Header Global */
-    .chat-header {
-        background: var(--primary-color);
-        padding: 8px 16px;
-        display: flex;
-        justify-content: flex-end;
-        /* A linear todo a la derecha hacia la X */
-        gap: 15px;
-        /* Separacion entre elementos */
-        align-items: center;
-        flex-shrink: 0;
-        z-index: 20;
-    }
-
-    .chat-header-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: white;
-        margin-right: 10px;
-        /* Cerca de la X */
-    }
-
-    /* Si no hay contacto seleccionado, la derecha muestra placeholder */
-    .chat-placeholder {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: #f0f2f5;
-        border-bottom: 6px solid #43c653;
-        /* Linea decorativa */
-        color: #64748b;
-        text-align: center;
-        padding: 40px;
-    }
-
-    .chat-placeholder svg {
-        width: 60px;
-        height: 60px;
-        margin-bottom: 20px;
-        color: #cbd5e1;
-    }
-
-    /* Ajuste de items de contacto más compactos */
-    .chat-contact-item {
-        padding: 8px 12px;
-        /* Más pequeño / compacto */
-        border-bottom: 1px solid #f1f5f9;
-        cursor: pointer;
-        transition: background 0.2s;
-        display: flex;
-        /* Asegurar flex para alinear avatar y texto */
-        align-items: center;
-        gap: 10px;
-    }
-
-    .chat-contact-avatar {
-        width: 36px;
-        height: 36px;
-        font-size: 12px;
-        border-radius: 50%;
-        /* Asegurar circulo */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #e2e8f0;
-        color: #64748b;
-        flex-shrink: 0;
-        overflow: hidden;
-    }
-
-    .chat-contact-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .chat-contact-info {
-        flex: 1;
-        min-width: 0;
-        /* Para que el truncate funcione */
-    }
-
-    .chat-contact-name {
-        font-size: 13px;
-        font-weight: 500;
-        color: #334155;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .chat-contact-tipo {
-        font-size: 11px;
-        color: #94a3b8;
-    }
-
-    .chat-contact-item:hover {
-        background: #f8fafc;
-    }
-
-    .chat-contact-item.active {
-        background: #e0f2fe;
-        /* Azul muy claro al seleccionar */
-    }
-
-    /* Mensajes */
-    .chat-messages {
-        flex: 1;
-        padding: 20px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .chat-message {
-        max-width: 65%;
-        /* Mensajes menos anchos */
-        padding: 8px 12px;
-        font-size: 13px;
-        border-radius: 8px;
-        position: relative;
-    }
-
-    .chat-message.enviado {
-        background: #d9fdd3;
-        /* Verde WhatsApp */
-        align-self: flex-end;
-    }
-
-    .chat-message.recibido {
-        background: white;
-        align-self: flex-start;
-    }
-
-    .chat-input-area {
-        padding: 10px 16px;
-        background: #f0f2f5;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .chat-input {
-        background: white;
-        border-radius: 20px;
-        border: none;
-        padding: 10px 16px;
-        font-size: 14px;
-    }
-
-    .chat-permissions {
-        background: #f0f2f5;
-        /* Mismo que input area */
-        padding: 5px 16px;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    /* Responsive para móvil: volver a estilo modal completo o adaptado */
+    /* Responsividad Mobile para Chat */
     @media (max-width: 768px) {
         .chat-modal {
             width: 100% !important;
@@ -4881,63 +4660,25 @@ select.form-control {
             border-radius: 0;
         }
 
-        .chat-body {
-            position: relative;
+        .chat-contacts-full {
+            width: 100% !important;
         }
 
-        /* En movil, si hay contacto seleccionado, el sidebar se oculta */
-        .chat-body.chat-mobile-view-sidebar .chat-contacts-full {
-            width: 100%;
-            display: flex;
+        .hidden-mobile {
+            display: none !important;
         }
 
-        .chat-body.chat-mobile-view-sidebar .chat-messages-area {
-            display: none;
+        .chat-header-actions {
+            gap: 8px;
         }
-
-        .chat-body.chat-mobile-view-messages .chat-contacts-full {
-            display: none;
-        }
-
-        .chat-body.chat-mobile-view-messages .chat-messages-area {
-            display: flex;
-            width: 100%;
-        }
-
     }
 
-    .chat-message-time {
-        font-size: 7px;
-    }
-
-    .chat-select-contact {
-        font-size: 9px;
-        padding: 20px 10px;
-    }
-
-    .chat-select-contact svg {
-        width: 28px;
-        height: 28px;
-    }
-
-    .chat-input-area {
-        padding: 8px 10px;
-        gap: 6px;
-    }
-
-    .chat-input {
-        font-size: 11px;
-        padding: 7px 10px;
-    }
-
-    .chat-send-btn {
-        width: 30px;
-        height: 30px;
-    }
-
-    .chat-send-btn svg {
-        width: 14px;
-        height: 14px;
+    /* Asegurar que el icono del placeholder no se desborde */
+    .chat-placeholder svg {
+        width: 80px !important;
+        height: 80px !important;
+        max-width: 100%;
+        color: #e2e8f0;
     }
 
     /* Modal Movil */

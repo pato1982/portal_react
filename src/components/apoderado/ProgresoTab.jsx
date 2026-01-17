@@ -46,45 +46,21 @@ function ProgresoTab({ pupilo }) {
     cargarProgreso();
   }, [pupilo?.id]);
 
-  // Estadisticas filtradas por asignatura seleccionada (para KPIs)
+  // Estadisticas siempre globales (KPIs fijos)
   const estadisticasFiltradas = useMemo(() => {
     if (!datosProgreso) return null;
 
-    const { estadisticas, promediosPorAsignatura } = datosProgreso;
-
-    // Si es "todas", usar estadisticas generales
-    if (asignaturaSeleccionada === 'todas') {
-      return {
-        promedio: estadisticas.promedio,
-        notaMaxima: estadisticas.notaMaxima,
-        notaMinima: estadisticas.notaMinima,
-        porcentajeAprobacion: estadisticas.porcentajeAprobacion,
-        totalNotas: estadisticas.totalNotas,
-        label: 'General'
-      };
-    }
-
-    // Si hay datos de la asignatura seleccionada
-    if (promediosPorAsignatura[asignaturaSeleccionada]) {
-      return {
-        promedio: promediosPorAsignatura[asignaturaSeleccionada],
-        notaMaxima: estadisticas.notaMaxima, // Mantener general
-        notaMinima: estadisticas.notaMinima, // Mantener general
-        porcentajeAprobacion: estadisticas.porcentajeAprobacion, // Mantener general
-        totalNotas: estadisticas.totalNotas, // Mantener general
-        label: asignaturaSeleccionada
-      };
-    }
+    const { estadisticas } = datosProgreso;
 
     return {
-      promedio: 0,
-      notaMaxima: 0,
-      notaMinima: 0,
-      porcentajeAprobacion: 0,
-      totalNotas: 0,
-      label: asignaturaSeleccionada
+      promedio: estadisticas.promedio,
+      notaMaxima: estadisticas.notaMaxima,
+      notaMinima: estadisticas.notaMinima,
+      porcentajeAprobacion: estadisticas.porcentajeAprobacion,
+      totalNotas: estadisticas.totalNotas,
+      label: 'General'
     };
-  }, [datosProgreso, asignaturaSeleccionada]);
+  }, [datosProgreso]);
 
   // Datos mensuales para el grafico
   const datosMensuales = useMemo(() => {
@@ -207,7 +183,7 @@ function ProgresoTab({ pupilo }) {
             max: 8,
             ticks: {
               stepSize: 1,
-              callback: function(value) {
+              callback: function (value) {
                 return value === 8 ? ' ' : value;
               }
             },
@@ -244,11 +220,45 @@ function ProgresoTab({ pupilo }) {
 
     if (!asignaturas || asignaturas.length === 0) return;
 
-    const ctx = chartAsignaturasRef.current.getContext('2d');
-    const labels = asignaturas;
-    const data = labels.map(asig => promediosPorAsignatura[asig] || 0);
+    // Función simple para abreviar asignaturas
+    const abreviarAsignatura = (nombre) => {
+      if (!nombre) return '';
+      const map = {
+        'Matemáticas': 'Mat',
+        'Lenguaje y Comunicación': 'Leng',
+        'Lenguaje': 'Leng',
+        'Historia, Geografía y Ciencias Sociales': 'Hist',
+        'Historia': 'Hist',
+        'Ciencias Naturales': 'C.Nat',
+        'Ciencias': 'Cien',
+        'Educación Física y Salud': 'Ed.Fís',
+        'Educación Física': 'Ed.Fís',
+        'Artes Visuales': 'Art',
+        'Artes': 'Art',
+        'Música': 'Mús',
+        'Tecnología': 'Tec',
+        'Inglés': 'Ing',
+        'Orientación': 'Ori',
+        'Religión': 'Rel',
+        'Química': 'Quím',
+        'Física': 'Fís',
+        'Biología': 'Biol'
+      };
+      // Si está en el mapa, devolver abreviatura
+      if (map[nombre]) return map[nombre];
 
-    const colors = labels.map(asig => {
+      // Si no, intentar abreviar algorítmicamente (primeras 3 letras o iniciales si es muy largo)
+      if (nombre.length > 10) {
+        return nombre.substring(0, 4) + '.';
+      }
+      return nombre;
+    };
+
+    const ctx = chartAsignaturasRef.current.getContext('2d');
+    const labels = asignaturas.map(abreviarAsignatura); // Aplicar abreviatura
+    const data = asignaturas.map(asig => promediosPorAsignatura[asig] || 0);
+
+    const colors = asignaturas.map(asig => {
       const nota = promediosPorAsignatura[asig] || 0;
       if (nota >= 6.0) return '#10b981';
       if (nota >= 5.0) return '#3b82f6';
@@ -259,7 +269,7 @@ function ProgresoTab({ pupilo }) {
     chartAsignaturasInstance.current = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: labels,
+        labels: labels, // Usar labels abreviados
         datasets: [{
           label: 'Promedio',
           data: data,
@@ -273,6 +283,15 @@ function ProgresoTab({ pupilo }) {
         plugins: {
           legend: {
             display: false
+          },
+          tooltip: {
+            callbacks: {
+              // Mostrar nombre completo en el tooltip
+              title: (tooltipItems) => {
+                const index = tooltipItems[0].dataIndex;
+                return asignaturas[index];
+              }
+            }
           }
         },
         scales: {
@@ -281,7 +300,7 @@ function ProgresoTab({ pupilo }) {
             max: 8,
             ticks: {
               stepSize: 1,
-              callback: function(value) {
+              callback: function (value) {
                 return value === 8 ? ' ' : value;
               }
             },
@@ -400,8 +419,8 @@ function ProgresoTab({ pupilo }) {
             <div className="kpi-card-vertical">
               <div className="kpi-icon promedio">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               </div>
               <div className="kpi-data">
@@ -415,10 +434,10 @@ function ProgresoTab({ pupilo }) {
             <div className="kpi-card-vertical">
               <div className="kpi-icon asistencia">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/>
-                  <line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
               </div>
               <div className="kpi-data">
@@ -430,9 +449,9 @@ function ProgresoTab({ pupilo }) {
             <div className="kpi-card-vertical">
               <div className="kpi-icon ranking">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="20" x2="18" y2="10"/>
-                  <line x1="12" y1="20" x2="12" y2="4"/>
-                  <line x1="6" y1="20" x2="6" y2="14"/>
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
                 </svg>
               </div>
               <div className="kpi-data">
@@ -446,7 +465,7 @@ function ProgresoTab({ pupilo }) {
             <div className="kpi-card-vertical">
               <div className="kpi-icon aprobacion">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="20 6 9 17 4 12"/>
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
               <div className="kpi-data">
@@ -458,8 +477,8 @@ function ProgresoTab({ pupilo }) {
             <div className="kpi-card-vertical">
               <div className="kpi-icon mejor">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                  <polyline points="17 6 23 6 23 12"/>
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                  <polyline points="17 6 23 6 23 12" />
                 </svg>
               </div>
               <div className="kpi-data">
@@ -473,8 +492,8 @@ function ProgresoTab({ pupilo }) {
             <div className="kpi-card-vertical">
               <div className="kpi-icon menor">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
-                  <polyline points="17 18 23 18 23 12"/>
+                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                  <polyline points="17 18 23 18 23 12" />
                 </svg>
               </div>
               <div className="kpi-data">

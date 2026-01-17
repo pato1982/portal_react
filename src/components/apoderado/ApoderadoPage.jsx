@@ -34,6 +34,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
   const [mostrarSelectorPupilo, setMostrarSelectorPupilo] = useState(false);
   const [mostrarModalAgregar, setMostrarModalAgregar] = useState(false);
   const [mostrarModalPendientes, setMostrarModalPendientes] = useState(false);
+  const [rutAlumnoAgregar, setRutAlumnoAgregar] = useState(''); // Estado añadido
   const [comunicados, setComunicados] = useState(comunicadosDemo);
   const [cargando, setCargando] = useState(false);
   const dropdownRef = useRef(null);

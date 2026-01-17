@@ -125,6 +125,42 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
     }
   };
 
+  const handleVincularManual = async () => {
+    if (!rutAlumnoAgregar) {
+      alert('Por favor ingrese el RUT del alumno');
+      return;
+    }
+
+    try {
+      const apoderadoId = apoderadoActual.apoderado_id || apoderadoActual.id;
+      const response = await fetch(`${config.apiBaseUrl}/apoderado/vincular-manual`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          rut_alumno: rutAlumnoAgregar,
+          apoderado_id: apoderadoId,
+          rut_apoderado: apoderadoActual.rut
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('¡Alumno vinculado exitosamente!');
+        setMostrarModalAgregar(false);
+        setRutAlumnoAgregar('');
+        cargarMisPupilos(); // Recargar lista
+      } else {
+        alert(data.error || 'Error al vincular alumno');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error de conexión al vincular');
+    }
+  };
+
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -444,35 +480,26 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
               </button>
             </div>
             <div className="modal-body">
-              <p className="modal-description">
-                Ingrese los datos solicitados para vincular un nuevo alumno a su cuenta de apoderado.
+              <p className="modal-description" style={{ marginBottom: '15px', color: '#64748b' }}>
+                Ingrese el RUT del alumno para vincularlo a su cuenta.
+                El establecimiento debe haber autorizado esta vinculación previamente.
               </p>
               <div className="form-group">
                 <label>RUT del Alumno</label>
-                <input type="text" className="form-control" placeholder="Ej: 21.234.567-8" />
-              </div>
-              <div className="form-group">
-                <label>Codigo de Vinculacion</label>
-                <input type="text" className="form-control" placeholder="Ej: ABC123XYZ" />
-              </div>
-              <div className="form-group">
-                <label>Parentesco</label>
-                <select className="form-control">
-                  <option value="">Seleccione parentesco</option>
-                  <option value="padre">Padre</option>
-                  <option value="madre">Madre</option>
-                  <option value="tutor">Tutor Legal</option>
-                  <option value="abuelo">Abuelo/a</option>
-                  <option value="tio">Tio/a</option>
-                  <option value="otro">Otro</option>
-                </select>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Ej: 21.234.567-8"
+                  value={rutAlumnoAgregar}
+                  onChange={(e) => setRutAlumnoAgregar(e.target.value)}
+                />
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setMostrarModalAgregar(false)}>
                 Cancelar
               </button>
-              <button className="btn btn-primary">
+              <button className="btn btn-primary" onClick={handleVincularManual}>
                 Vincular Pupilo
               </button>
             </div>

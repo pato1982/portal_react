@@ -651,6 +651,82 @@ app.post('/api/apoderado/confirmar-pupilo', async (req, res) => {
     }
 });
 
+// POST /api/apoderado/vincular-manual - Vincular alumno manualmente ingresando RUT
+app.post('/api/apoderado/vincular-manual', async (req, res) => {
+    const { rut_alumno, apoderado_id, rut_apoderado } = req.body;
+
+    if (!rut_alumno || !apoderado_id || !rut_apoderado) {
+        return res.status(400).json({ success: false, error: 'Faltan datos requeridos' });
+    }
+
+    const connection = await pool.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        // 1. Buscar si hay una relación pendiente en tb_preregistro_relaciones
+        // que coincida con el RUT del apoderado Y el RUT del alumno
+        const [preregistros] = await connection.query(`
+            SELECT id, parentesco, es_apoderado_titular
+            FROM tb_preregistro_relaciones
+            WHERE UPPER(rut_apoderado) = UPPER(?)
+            AND UPPER(rut_alumno) = UPPER(?)
+            AND activo = 1
+            AND usado = 0
+        `, [rut_apoderado, rut_alumno]);
+
+        if (preregistros.length === 0) {
+            await connection.rollback();
+            // Buscar si al menos existe el alumno para dar un mensaje mas especifico
+            const [alumnoExiste] = await connection.query('SELECT id FROM tb_alumnos WHERE UPPER(rut) = UPPER(?)', [rut_alumno]);
+            if (alumnoExiste.length === 0) {
+                return res.status(404).json({ success: false, error: 'RUT de alumno no encontrado en el sistema.' });
+            }
+            return res.status(400).json({
+                success: false,
+                error: 'No se encontró una vinculación autorizada pendiente para este alumno y su cuenta. Contacte al establecimiento.'
+            });
+        }
+
+        const datosRelacion = preregistros[0];
+
+        // 2. Obtener ID del Alumno
+        const [alumnos] = await connection.query('SELECT id FROM tb_alumnos WHERE UPPER(rut) = UPPER(?)', [rut_alumno]);
+        if (alumnos.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ success: false, error: 'Error interno: Alumno no encontrado en tabla maestra.' });
+        }
+        const alumnoId = alumnos[0].id;
+
+        // 3. Verificar si ya está vinculado
+        const [yaVinculado] = await connection.query('SELECT id FROM tb_apoderado_alumno WHERE apoderado_id = ? AND alumno_id = ? AND activo = 1', [apoderado_id, alumnoId]);
+        if (yaVinculado.length > 0) {
+            await connection.rollback();
+            return res.status(400).json({ success: false, error: 'Este alumno ya está vinculado a su cuenta.' });
+        }
+
+        // 4. Crear el vínculo definitivo
+        await connection.query(`
+            INSERT INTO tb_apoderado_alumno (apoderado_id, alumno_id, parentesco, es_apoderado_titular, activo)
+            VALUES (?, ?, ?, ?, 1)
+        `, [apoderado_id, alumnoId, datosRelacion.parentesco, datosRelacion.es_apoderado_titular]);
+
+        // 5. Marcar preregistro como usado
+        await connection.query('UPDATE tb_preregistro_relaciones SET usado = 1, fecha_uso = NOW() WHERE id = ?', [datosRelacion.id]);
+
+        await connection.commit();
+
+        res.json({ success: true, message: 'Alumno vinculado exitosamente.' });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error en vinculación manual:', error);
+        res.status(500).json({ success: false, error: 'Error del servidor al vincular.' });
+    } finally {
+        connection.release();
+    }
+});
+
 // GET /api/apoderado/mis-pupilos/:apoderadoId - Obtener pupilos vinculados del apoderado
 app.get('/api/apoderado/mis-pupilos/:apoderadoId', async (req, res) => {
     const { apoderadoId } = req.params;

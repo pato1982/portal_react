@@ -522,6 +522,19 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                       {!respuestaHabilitada ? 'Respuestas bloqueadas' : 'En línea'}
                     </span>
                   </div>
+                  {/* Botón X para cerrar chat */}
+                  <div className="chatv2-chat-header-actions">
+                    <button
+                      className="chatv2-cancel-masivo"
+                      onClick={volverALista}
+                      title="Cerrar chat"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Area de Mensajes */}

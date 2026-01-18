@@ -40,7 +40,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   const [enviando, setEnviando] = useState(false);
   const [totalNoLeidos, setTotalNoLeidos] = useState(0);
   const [ultimoTimestamp, setUltimoTimestamp] = useState(null);
-  const [respuestaHabilitada, setRespuestaHabilitada] = useState(true);
+  const [respuestaHabilitada, setRespuestaHabilitada] = useState(false);
 
   // Estados para mensajes masivos y selección múltiple
   const [esMensajeMasivo, setEsMensajeMasivo] = useState(false);
@@ -241,7 +241,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
 
     // Resetear estado anterior
     setConversacionActual(null);
-    setRespuestaHabilitada(true);
+    setRespuestaHabilitada(false);
 
     setContactoActual({
       ...contacto,
@@ -264,7 +264,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
         if (resultado.data.respuesta_habilitada !== undefined) {
           setRespuestaHabilitada(resultado.data.respuesta_habilitada === 1);
         } else {
-          setRespuestaHabilitada(true);
+          setRespuestaHabilitada(false);
         }
         await cargarMensajes(resultado.data.id);
         actualizarNoLeidos();
@@ -454,7 +454,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     setApoderadosSeleccionados([]);
     setEsMensajeMasivo(false);
     setDestinatariosMasivos([]);
-    setRespuestaHabilitada(true);
+    setRespuestaHabilitada(false);
   };
 
   // ==================== HELPERS ====================
@@ -946,21 +946,20 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                         <span className="chatv2-toggle-slider"></span>
                       </button>
                     </div>
-                    {esMensajeMasivo && (
-                      <button
-                        className="chatv2-cancel-masivo"
-                        onClick={() => {
-                          setApoderadosSeleccionados([]);
-                          volverALista();
-                        }}
-                        title="Cancelar envío"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="18" y1="6" x2="6" y2="18"></line>
-                          <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                      </button>
-                    )}
+                    {/* Botón X para cerrar/cancelar chat - siempre visible */}
+                    <button
+                      className="chatv2-cancel-masivo"
+                      onClick={() => {
+                        setApoderadosSeleccionados([]);
+                        volverALista();
+                      }}
+                      title="Cerrar chat"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
                   </div>
                 </div>
 

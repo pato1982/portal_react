@@ -54,12 +54,17 @@ function ProgresoTab({ pupilo }) {
   const estadisticasFiltradas = useMemo(() => {
     if (!datosProgreso) return null;
 
-    const { estadisticas } = datosProgreso;
+    const { estadisticas, promediosPorAsignatura } = datosProgreso;
+
+    // Calcular promedios mas alto y mas bajo
+    const promedios = Object.values(promediosPorAsignatura || {}).filter(val => val !== null);
+    const promedioMaximo = promedios.length > 0 ? Math.max(...promedios) : 0;
+    const promedioMinimo = promedios.length > 0 ? Math.min(...promedios) : 0;
 
     return {
       promedio: estadisticas.promedio,
-      notaMaxima: estadisticas.notaMaxima,
-      notaMinima: estadisticas.notaMinima,
+      notaMaxima: promedioMaximo, // Ahora es Promedio + Alto
+      notaMinima: promedioMinimo, // Ahora es Promedio + Bajo
       porcentajeAprobacion: estadisticas.porcentajeAprobacion,
       totalNotas: estadisticas.totalNotas,
       label: 'General'
@@ -528,7 +533,7 @@ function ProgresoTab({ pupilo }) {
                 <span className={`kpi-valor ${getNotaClass(estadisticasFiltradas?.notaMaxima || 0)}`}>
                   {(estadisticasFiltradas?.notaMaxima || 0).toFixed(1)}
                 </span>
-                <span className="kpi-label">Nota Maxima</span>
+                <span className="kpi-label">Promedio + Alto</span>
               </div>
             </div>
 
@@ -543,7 +548,7 @@ function ProgresoTab({ pupilo }) {
                 <span className={`kpi-valor ${getNotaClass(estadisticasFiltradas?.notaMinima || 0)}`}>
                   {(estadisticasFiltradas?.notaMinima || 0).toFixed(1)}
                 </span>
-                <span className="kpi-label">Nota Minima</span>
+                <span className="kpi-label">Promedio + Bajo</span>
               </div>
             </div>
           </div>

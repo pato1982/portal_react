@@ -278,8 +278,9 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     // Obtener el ID del usuario destinatario
     const destinatarioId = contacto.usuario_id || contacto.apoderado_usuario_id;
 
-    // Si no tiene cuenta, simplemente no abrir chat individual
+    // Si no tiene cuenta de usuario, mostrar mensaje informativo
     if (!destinatarioId) {
+      mostrarMensaje('Este apoderado aún no tiene cuenta de usuario registrada', 'info');
       return;
     }
 
@@ -287,9 +288,11 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     setConversacionActual(null);
     setRespuestaHabilitada(false);
 
+    const nombreMostrar = contacto.nombre_completo || contacto.nombre_apoderado || contacto.nombre_alumno;
+
     setContactoActual({
       ...contacto,
-      nombre_completo: contacto.nombre_completo || contacto.nombre_apoderado || contacto.nombre_alumno,
+      nombre_completo: nombreMostrar,
       tipoContacto: tipo
     });
     setEsMensajeMasivo(false);
@@ -314,9 +317,11 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
         actualizarNoLeidos();
       } else {
         console.error('Error creando conversación:', resultado.error);
+        mostrarMensaje('Error al abrir la conversación', 'error');
       }
     } catch (error) {
       console.error('Error al seleccionar contacto:', error);
+      mostrarMensaje('Error al abrir la conversación', 'error');
     } finally {
       setCargando(false);
     }
@@ -579,10 +584,13 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     }
 
     if (busqueda) {
+      const busquedaLower = busqueda.toLowerCase();
       lista = lista.filter(item =>
-        (item.nombre_completo || '').toLowerCase().includes(busqueda.toLowerCase()) ||
-        (item.subtitulo || '').toLowerCase().includes(busqueda.toLowerCase()) ||
-        (item.nombre_apoderado || '').toLowerCase().includes(busqueda.toLowerCase())
+        (item.nombre_completo || '').toLowerCase().includes(busquedaLower) ||
+        (item.subtitulo || '').toLowerCase().includes(busquedaLower) ||
+        (item.nombre_apoderado || '').toLowerCase().includes(busquedaLower) ||
+        (item.nombre_alumno || '').toLowerCase().includes(busquedaLower) ||
+        (item.curso_nombre || '').toLowerCase().includes(busquedaLower)
       );
     }
 
@@ -735,9 +743,6 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                             <span className="chatv2-list-item-name">
                               {contacto.nombre_completo}
                               {contacto.es_admin === 1 && <span className="chatv2-tag admin">Admin</span>}
-                              {contacto.tipo_lista === 'apoderado' && !contacto.apoderado_activo && (
-                                <span style={{ color: '#ef4444', marginLeft: '4px', fontSize: '0.75em' }}>(No App)</span>
-                              )}
                             </span>
                             <span className="chatv2-list-item-time">
                               {contacto.ultimo_mensaje_fecha && formatearFechaRelativa(contacto.ultimo_mensaje_fecha)}

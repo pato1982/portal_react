@@ -349,6 +349,7 @@ router.get('/curso/:id/alumnos-chat', async (req, res) => {
                 ap.usuario_id AS apoderado_usuario_id,
                 CONCAT(ap.nombres, ' ', ap.apellidos) AS nombre_apoderado,
                 ap.foto_url AS foto_apoderado,
+                (CASE WHEN u.id IS NOT NULL AND u.activo = 1 THEN 1 ELSE 0 END) as apoderado_activo,
                 (
                     SELECT COUNT(*)
                     FROM tb_chat_mensajes m
@@ -361,6 +362,7 @@ router.get('/curso/:id/alumnos-chat', async (req, res) => {
             FROM tb_matriculas m
             INNER JOIN tb_alumnos a ON m.alumno_id = a.id
             INNER JOIN tb_apoderados ap ON m.apoderado_id = ap.id
+            LEFT JOIN tb_usuarios u ON ap.usuario_id = u.id
             WHERE m.curso_asignado_id = ?
             AND m.activo = 1
             AND a.activo = 1

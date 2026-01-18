@@ -1552,11 +1552,13 @@ app.get('/api/docente/:docenteId/cursos', async (req, res) => {
                 c.letra
             FROM tb_asignaciones a
             JOIN tb_cursos c ON a.curso_id = c.id
+            JOIN tb_asignaturas asig ON a.asignatura_id = asig.id
             WHERE a.docente_id = ?
             AND a.establecimiento_id = ?
             AND a.anio_academico = ?
             AND a.activo = 1
             AND c.activo = 1
+            AND asig.activo = 1
             ORDER BY c.grado, c.letra, c.nombre
         `, [docenteId, establecimiento_id, anio]);
 

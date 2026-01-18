@@ -43,7 +43,15 @@ router.post('/login', async (req, res) => {
         });
     }
 
+    const fs = require('fs');
+    const path = require('path');
+
     try {
+        const logPath = path.join(__dirname, '../../debug_auth.log');
+        const logMsg = (msg) => fs.appendFileSync(logPath, `[${new Date().toISOString()}] ${msg}\n`);
+
+        logMsg(`LOGIN ATTEMPT: Email=${email}, Tipo=${tipo}`);
+
         // Buscar usuario por email (incluir inactivos para saber el motivo exacto)
         const [usuarios] = await pool.query(
             'SELECT * FROM tb_usuarios WHERE email = ?',
@@ -51,6 +59,7 @@ router.post('/login', async (req, res) => {
         );
 
         if (usuarios.length === 0) {
+            logMsg('RESULT: Usuario no encontrado en DB');
             // Registrar intento fallido: email no existe
             await registrarLoginFallido(email, tipoDb, 'email_no_existe', req);
             return res.status(401).json({
@@ -60,9 +69,11 @@ router.post('/login', async (req, res) => {
         }
 
         const usuario = usuarios[0];
+        logMsg(`USER FOUND: ID=${usuario.id}, TipoDB=${usuario.tipo_usuario}, Activo=${usuario.activo}`);
 
         // Verificar si la cuenta está inactiva
         if (usuario.activo !== 1) {
+            logMsg('RESULT: Usuario inactivo');
             await registrarLoginFallido(email, tipoDb, 'cuenta_inactiva', req);
             return res.status(401).json({
                 success: false,
@@ -72,6 +83,7 @@ router.post('/login', async (req, res) => {
 
         // Verificar si está bloqueado
         if (usuario.bloqueado_hasta && new Date(usuario.bloqueado_hasta) > new Date()) {
+            logMsg('RESULT: Usuario bloqueado');
             await registrarLoginFallido(email, tipoDb, 'cuenta_bloqueada', req);
             return res.status(403).json({
                 success: false,
@@ -81,6 +93,7 @@ router.post('/login', async (req, res) => {
 
         // Verificar tipo de usuario
         if (usuario.tipo_usuario !== tipoDb) {
+            logMsg(`RESULT: Tipo incorrecto. Esperaba ${tipoDb}, tiene ${usuario.tipo_usuario}`);
             await registrarLoginFallido(email, tipoDb, 'otro', req); // tipo incorrecto
             return res.status(401).json({
                 success: false,
@@ -89,9 +102,12 @@ router.post('/login', async (req, res) => {
         }
 
         // Verificar contraseña
+        logMsg(`CHECKING PASS: Hash length=${usuario.password_hash ? usuario.password_hash.length : 0}`);
         const passwordValida = await bcrypt.compare(password, usuario.password_hash);
+        logMsg(`PASS VALID: ${passwordValida}`);
 
         if (!passwordValida) {
+            logMsg('RESULT: Password invalida');
             // Registrar intento fallido: password incorrecta
             await registrarLoginFallido(email, tipoDb, 'password_incorrecta', req);
 

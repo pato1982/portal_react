@@ -270,6 +270,12 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   // Toggle selección de un apoderado
   const toggleSeleccionApoderado = (alumno) => {
     const apoderadoId = alumno.apoderado_usuario_id;
+
+    // No permitir seleccionar si el apoderado no tiene cuenta registrada
+    if (!apoderadoId || !alumno.apoderado_activo) {
+      return;
+    }
+
     setApoderadosSeleccionados(prev => {
       if (prev.find(a => a.id === apoderadoId)) {
         return prev.filter(a => a.id !== apoderadoId);
@@ -283,14 +289,17 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     });
   };
 
-  // Seleccionar todos los apoderados
+  // Seleccionar todos los apoderados (solo los que tienen cuenta activa)
   const seleccionarTodosApoderados = () => {
-    if (apoderadosSeleccionados.length === alumnos.length) {
-      // Si ya están todos seleccionados, deseleccionar todos
+    // Filtrar solo apoderados con cuenta activa
+    const apoderadosActivos = alumnos.filter(a => a.apoderado_usuario_id && a.apoderado_activo);
+
+    if (apoderadosSeleccionados.length === apoderadosActivos.length && apoderadosActivos.length > 0) {
+      // Si ya están todos los activos seleccionados, deseleccionar todos
       setApoderadosSeleccionados([]);
     } else {
-      // Seleccionar todos
-      setApoderadosSeleccionados(alumnos.map(a => ({
+      // Seleccionar todos los que tienen cuenta activa
+      setApoderadosSeleccionados(apoderadosActivos.map(a => ({
         id: a.apoderado_usuario_id,
         nombre_alumno: a.nombre_alumno,
         nombre_apoderado: a.nombre_apoderado
@@ -492,6 +501,16 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     return apoderadosSeleccionados.some(a => a.id === apoderadoId);
   };
 
+  // Verificar si un apoderado puede ser seleccionado (tiene cuenta activa)
+  const puedeSeleccionar = (alumno) => {
+    return alumno.apoderado_usuario_id && alumno.apoderado_activo;
+  };
+
+  // Contar apoderados con cuenta activa
+  const contarApoderadosActivos = () => {
+    return alumnos.filter(a => a.apoderado_usuario_id && a.apoderado_activo).length;
+  };
+
   // ==================== RENDER ====================
 
   if (!puedeUsarChat) return null;
@@ -686,10 +705,13 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                         ) : (
                           <div className="chatv2-seleccion-acciones">
                             <button
-                              className={`chatv2-btn-todos ${apoderadosSeleccionados.length === alumnos.length ? 'active' : ''}`}
+                              className={`chatv2-btn-todos ${apoderadosSeleccionados.length === contarApoderadosActivos() && contarApoderadosActivos() > 0 ? 'active' : ''}`}
                               onClick={seleccionarTodosApoderados}
+                              disabled={contarApoderadosActivos() === 0}
                             >
-                              {apoderadosSeleccionados.length === alumnos.length ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                              {apoderadosSeleccionados.length === contarApoderadosActivos() && contarApoderadosActivos() > 0
+                                ? 'Deseleccionar todos'
+                                : `Seleccionar todos (${contarApoderadosActivos()})`}
                             </button>
                             <span className="chatv2-seleccion-count">
                               {apoderadosSeleccionados.length} seleccionado{apoderadosSeleccionados.length !== 1 ? 's' : ''}
@@ -734,18 +756,18 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                         alumnos.map(alumno => (
                           <div
                             key={alumno.alumno_id}
-                            className={`chatv2-list-item alumno ${modoSeleccion ? 'selectable' : ''} ${estaSeleccionado(alumno.apoderado_usuario_id) ? 'selected' : ''} ${contactoActual?.apoderado_usuario_id === alumno.apoderado_usuario_id ? 'active' : ''}`}
+                            className={`chatv2-list-item alumno ${modoSeleccion ? 'selectable' : ''} ${modoSeleccion && !puedeSeleccionar(alumno) ? 'disabled' : ''} ${estaSeleccionado(alumno.apoderado_usuario_id) ? 'selected' : ''} ${contactoActual?.apoderado_usuario_id === alumno.apoderado_usuario_id ? 'active' : ''}`}
                             onClick={() => {
                               if (modoSeleccion) {
                                 toggleSeleccionApoderado(alumno);
-                              } else {
+                              } else if (puedeSeleccionar(alumno)) {
                                 seleccionarContacto(alumno, 'apoderado');
                               }
                             }}
                           >
                             {/* Checkbox en modo selección */}
                             {modoSeleccion && (
-                              <div className={`chatv2-checkbox ${estaSeleccionado(alumno.apoderado_usuario_id) ? 'checked' : ''}`}>
+                              <div className={`chatv2-checkbox ${estaSeleccionado(alumno.apoderado_usuario_id) ? 'checked' : ''} ${!puedeSeleccionar(alumno) ? 'disabled' : ''}`}>
                                 {estaSeleccionado(alumno.apoderado_usuario_id) && (
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                                     <polyline points="20 6 9 17 4 12"></polyline>

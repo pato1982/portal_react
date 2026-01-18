@@ -37,17 +37,7 @@ router.get('/contactos', async (req, res) => {
 
         const tipoUsuario = usuarioActual[0].tipo_usuario;
 
-        // Solo docentes y administradores pueden usar el chat
-        if (tipoUsuario !== 'docente' && tipoUsuario !== 'administrador') {
-            return res.status(403).json({
-                success: false,
-                message: 'El chat solo está disponible para docentes y administradores'
-            });
-        }
-
-        let contactos = [];
-
-        // Obtener administradores del establecimiento (siempre primero)
+        // --- LOGICA COMUN: OBTENER ADMINISTRADORES ---
         const [admins] = await pool.query(`
             SELECT
                 u.id AS usuario_id,
@@ -78,41 +68,97 @@ router.get('/contactos', async (req, res) => {
             AND u.id != ?
         `, [establecimiento_id, usuario_id, usuario_id, establecimiento_id, usuario_id]);
 
-        contactos = [...admins];
 
-        // Obtener docentes del establecimiento
-        const [docentes] = await pool.query(`
-            SELECT
-                u.id AS usuario_id,
-                d.id AS entidad_id,
-                d.nombres,
-                d.apellidos,
-                CONCAT(d.nombres, ' ', d.apellidos) AS nombre_completo,
-                d.foto_url,
-                d.especialidad,
-                'docente' AS tipo,
-                0 AS es_admin,
-                (
-                    SELECT COUNT(*)
-                    FROM tb_chat_mensajes m
-                    INNER JOIN tb_chat_conversaciones c ON m.conversacion_id = c.id
-                    WHERE c.establecimiento_id = ?
-                    AND ((c.usuario1_id = ? AND c.usuario2_id = u.id) OR (c.usuario2_id = ? AND c.usuario1_id = u.id))
-                    AND m.remitente_id = u.id
-                    AND m.leido = 0
-                    AND m.eliminado_destinatario = 0
-                ) AS mensajes_no_leidos
-            FROM tb_usuarios u
-            INNER JOIN tb_docentes d ON u.id = d.usuario_id
-            INNER JOIN tb_docente_establecimiento de ON d.id = de.docente_id
-            WHERE de.establecimiento_id = ?
-            AND de.activo = 1
-            AND u.activo = 1
-            AND d.activo = 1
-            AND u.id != ?
-        `, [establecimiento_id, usuario_id, usuario_id, establecimiento_id, usuario_id]);
+        let contactos = [...admins];
 
-        contactos = [...contactos, ...docentes];
+        // --- LOGICA DIFERENCIADA POR ROL ---
+
+        if (tipoUsuario === 'docente' || tipoUsuario === 'administrador') {
+            // STAFF: Ven a todos los docentes del establecimiento
+            const [docentes] = await pool.query(`
+                SELECT
+                    u.id AS usuario_id,
+                    d.id AS entidad_id,
+                    d.nombres,
+                    d.apellidos,
+                    CONCAT(d.nombres, ' ', d.apellidos) AS nombre_completo,
+                    d.foto_url,
+                    d.especialidad,
+                    'docente' AS tipo,
+                    0 AS es_admin,
+                    (
+                        SELECT COUNT(*)
+                        FROM tb_chat_mensajes m
+                        INNER JOIN tb_chat_conversaciones c ON m.conversacion_id = c.id
+                        WHERE c.establecimiento_id = ?
+                        AND ((c.usuario1_id = ? AND c.usuario2_id = u.id) OR (c.usuario2_id = ? AND c.usuario1_id = u.id))
+                        AND m.remitente_id = u.id
+                        AND m.leido = 0
+                        AND m.eliminado_destinatario = 0
+                    ) AS mensajes_no_leidos
+                FROM tb_usuarios u
+                INNER JOIN tb_docentes d ON u.id = d.usuario_id
+                INNER JOIN tb_docente_establecimiento de ON d.id = de.docente_id
+                WHERE de.establecimiento_id = ?
+                AND de.activo = 1
+                AND u.activo = 1
+                AND d.activo = 1
+                AND u.id != ?
+            `, [establecimiento_id, usuario_id, usuario_id, establecimiento_id, usuario_id]);
+
+            contactos = [...contactos, ...docentes];
+
+        } else if (tipoUsuario === 'apoderado') {
+            // APODERADO: Ve SOLO a los docentes de sus pupilos
+            // Cadena: Apoderado -> Pupilos -> Cursos -> Asignaciones -> Docentes
+
+            // 1. Obtener ID Apoderado desde Usuario
+            const [apoderadoData] = await pool.query('SELECT id FROM tb_apoderados WHERE usuario_id = ?', [usuario_id]);
+
+            if (apoderadoData.length > 0) {
+                const apoderadoId = apoderadoData[0].id;
+
+                // Query compleja para traer docentes vinculados
+                const [docentesPupilos] = await pool.query(`
+                    SELECT DISTINCT
+                        u.id AS usuario_id,
+                        d.id AS entidad_id,
+                        d.nombres,
+                        d.apellidos,
+                        CONCAT(d.nombres, ' ', d.apellidos) AS nombre_completo,
+                        d.foto_url,
+                        d.especialidad, -- Podriamos mostrar aqui "Profesor de [Asignatura] de [Hijo]"
+                        'docente' AS tipo,
+                        0 AS es_admin,
+                        (
+                            SELECT COUNT(*)
+                            FROM tb_chat_mensajes m
+                            INNER JOIN tb_chat_conversaciones c ON m.conversacion_id = c.id
+                            WHERE c.establecimiento_id = ?
+                            AND ((c.usuario1_id = ? AND c.usuario2_id = u.id) OR (c.usuario2_id = ? AND c.usuario1_id = u.id))
+                            AND m.remitente_id = u.id
+                            AND m.leido = 0
+                            AND m.eliminado_destinatario = 0
+                        ) AS mensajes_no_leidos
+                    FROM tb_apoderado_alumno aa
+                    JOIN tb_matriculas mat ON aa.alumno_id = mat.alumno_id AND mat.activo = 1 AND mat.anio = YEAR(CURDATE())
+                    JOIN tb_asignaciones asig ON mat.curso_id = asig.curso_id AND asig.activo = 1
+                    JOIN tb_docentes d ON asig.docente_id = d.id AND d.activo = 1
+                    JOIN tb_usuarios u ON d.usuario_id = u.id AND u.activo = 1
+                    WHERE aa.apoderado_id = ? 
+                    AND aa.activo = 1
+                    AND mat.establecimiento_id = ?
+                `, [establecimiento_id, usuario_id, usuario_id, apoderadoId, establecimiento_id]);
+
+                // Agregar info de qué asignatura imparte (opcional, por ahora nombre y especialidad)
+                contactos = [...contactos, ...docentesPupilos];
+            }
+        } else {
+            return res.status(403).json({
+                success: false,
+                message: 'Tipo de usuario no autorizado para chat'
+            });
+        }
 
         res.json({
             success: true,

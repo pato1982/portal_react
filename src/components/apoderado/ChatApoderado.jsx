@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import config from '../../config/env';
 
 function ChatApoderado({ usuario, pupiloSeleccionado }) {
   // Estados principales
@@ -6,17 +7,19 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   const [vistaActiva, setVistaActiva] = useState('todos'); // todos, docentes, administracion
   const [busqueda, setBusqueda] = useState('');
 
-  // Estados de datos (mock - sin conexion a BD)
+  // Estados de datos
   const [contactos, setContactos] = useState([]);
-  const [conversaciones, setConversaciones] = useState([]);
 
   // Estados de chat activo
   const [contactoActual, setContactoActual] = useState(null);
+  const [conversacionActiva, setConversacionActiva] = useState(null); // ID y datos de la conversacion
   const [mensajes, setMensajes] = useState([]);
   const [mensajeInput, setMensajeInput] = useState('');
+  const [respuestaHabilitada, setRespuestaHabilitada] = useState(true);
 
   // Estados de UI
   const [cargando, setCargando] = useState(false);
+  const [cargandoMensajes, setCargandoMensajes] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [totalNoLeidos, setTotalNoLeidos] = useState(0);
 
@@ -25,105 +28,164 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
   const mensajesRef = useRef(null);
   const inputRef = useRef(null);
+  const pollingRef = useRef(null);
 
-  // Datos mock de contactos (docentes y administradores)
-  const contactosMock = [
-    {
-      id: 1,
-      usuario_id: 101,
-      nombre_completo: 'Maria Gonzalez',
-      tipo: 'docente',
-      asignatura: 'Matematicas',
-      es_admin: 0,
-      mensajes_no_leidos: 2,
-      ultimo_mensaje: 'Recuerde enviar la tarea',
-      ultimo_mensaje_fecha: new Date().toISOString()
-    },
-    {
-      id: 2,
-      usuario_id: 102,
-      nombre_completo: 'Carlos Rodriguez',
-      tipo: 'docente',
-      asignatura: 'Lenguaje',
-      es_admin: 0,
-      mensajes_no_leidos: 0,
-      ultimo_mensaje: 'Gracias por su respuesta',
-      ultimo_mensaje_fecha: new Date(Date.now() - 86400000).toISOString()
-    },
-    {
-      id: 3,
-      usuario_id: 103,
-      nombre_completo: 'Ana Martinez',
-      tipo: 'docente',
-      asignatura: 'Ciencias',
-      es_admin: 0,
-      mensajes_no_leidos: 1,
-      ultimo_mensaje: null,
-      ultimo_mensaje_fecha: null
-    },
-    {
-      id: 4,
-      usuario_id: 104,
-      nombre_completo: 'Director Juan Perez',
-      tipo: 'administrador',
-      cargo: 'Director',
-      es_admin: 1,
-      mensajes_no_leidos: 0,
-      ultimo_mensaje: 'Bienvenido al sistema',
-      ultimo_mensaje_fecha: new Date(Date.now() - 172800000).toISOString()
-    },
-    {
-      id: 5,
-      usuario_id: 105,
-      nombre_completo: 'Secretaria Laura Silva',
-      tipo: 'administrador',
-      cargo: 'Secretaria',
-      es_admin: 1,
-      mensajes_no_leidos: 0,
-      ultimo_mensaje: null,
-      ultimo_mensaje_fecha: null
-    }
-  ];
+  // ==================== API CALLS ====================
 
-  // Mensajes mock para demo
-  const mensajesMock = {
-    101: [
-      { id: 1, mensaje: 'Buenos dias, le informo que su hijo tiene una tarea pendiente de matematicas.', direccion: 'recibido', fecha_envio: new Date(Date.now() - 7200000).toISOString(), leido: 1 },
-      { id: 2, mensaje: 'Gracias por informarme, revisare con el esta tarde.', direccion: 'enviado', fecha_envio: new Date(Date.now() - 3600000).toISOString(), leido: 1 },
-      { id: 3, mensaje: 'Recuerde enviar la tarea antes del viernes.', direccion: 'recibido', fecha_envio: new Date().toISOString(), leido: 0 }
-    ],
-    102: [
-      { id: 4, mensaje: 'Hola, queria consultar sobre el rendimiento de mi hijo en Lenguaje.', direccion: 'enviado', fecha_envio: new Date(Date.now() - 90000000).toISOString(), leido: 1 },
-      { id: 5, mensaje: 'Su hijo ha mostrado mejoras significativas. Siga apoyandolo en casa.', direccion: 'recibido', fecha_envio: new Date(Date.now() - 87000000).toISOString(), leido: 1 },
-      { id: 6, mensaje: 'Gracias por su respuesta', direccion: 'enviado', fecha_envio: new Date(Date.now() - 86400000).toISOString(), leido: 1 }
-    ],
-    104: [
-      { id: 7, mensaje: 'Bienvenido al sistema de comunicacion del colegio.', direccion: 'recibido', fecha_envio: new Date(Date.now() - 172800000).toISOString(), leido: 1 }
-    ]
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
   };
 
-  // Cargar contactos mock al abrir el chat
+  const cargarContactos = async () => {
+    if (!usuario?.id || !usuario?.establecimiento_id) return;
+
+    // Si ya estamos cargando mensajes de un chat especifico, evitamos recargar contactos masivamente para no saturar
+    // (Opcional: podriamos dejarlo si queremos actualizar "no leidos" en tiempo real)
+
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/api/chat/contactos?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`, {
+        headers: getAuthHeaders()
+      });
+
+      if (!response.ok) throw new Error('Error al cargar contactos');
+
+      const data = await response.json();
+      if (data.success) {
+        setContactos(data.data);
+        const noLeidos = data.data.reduce((acc, c) => acc + (c.mensajes_no_leidos || 0), 0);
+        setTotalNoLeidos(noLeidos);
+      }
+    } catch (error) {
+      console.error('Error cargando contactos:', error);
+    }
+  };
+
+  const iniciarConversacion = async (contacto) => {
+    if (!usuario?.id || !contacto?.usuario_id) return;
+
+    try {
+      setCargandoMensajes(true);
+
+      // 1. Obtener o crear conversacion
+      const response = await fetch(`${config.apiBaseUrl}/api/chat/conversacion`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          usuario_id: usuario.id,
+          otro_usuario_id: contacto.usuario_id,
+          establecimiento_id: usuario.establecimiento_id,
+          asunto: `Chat con ${usuario.nombres}`,
+          contexto_tipo: 'general'
+        })
+      });
+
+      if (!response.ok) throw new Error('Error al iniciar conversacion');
+
+      const data = await response.json();
+      if (data.success && data.data.id) {
+        const conversacionId = data.data.id;
+        setConversacionActiva({ id: conversacionId }); // Guardamos ID basico temporalmente
+
+        // 2. Cargar mensajes
+        await cargarMensajes(conversacionId);
+      }
+
+    } catch (error) {
+      console.error('Error iniciando conversacion:', error);
+      alert('No se pudo abrir el chat. Intente nuevamente.');
+    } finally {
+      setCargandoMensajes(false);
+    }
+  };
+
+  const cargarMensajes = async (conversacionId) => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/api/chat/conversacion/${conversacionId}/mensajes?usuario_id=${usuario.id}&limite=50`, {
+        headers: getAuthHeaders()
+      });
+
+      if (!response.ok) throw new Error('Error cargando mensajes');
+
+      const data = await response.json();
+      if (data.success) {
+        setMensajes(data.data);
+
+        // Verificar si estoy bloqueado (Necesitamos info de la conversacion, 
+        // idealmente el endpoint de mensajes o conversacion deberia devolver "respuesta_habilitada")
+        // Como parche, verificamos si el ultimo mensaje del sistema dice algo o si el endpoint de conversacion nos da el dato.
+        // Vamos a hacer un fetch rapido de "mis conversaciones" para buscar esta especifica y ver su estado de bloqueo
+        // O mejor: Asumimos habilitado a menos que falle el envio con 403, 
+        // PERO idealmente deberiamos saberlo antes.
+
+        // Opcion B: Obtener detalles de conversacion
+        verificarEstadoBloqueo(conversacionId);
+      }
+    } catch (error) {
+      console.error('Error cargando mensajes:', error);
+    }
+  };
+
+  const verificarEstadoBloqueo = async (conversacionId) => {
+    // Buscamos en la lista de conversaciones (endpoint que ya existe) o asumimos por defecto
+    // Por eficiencia, usaremos el endpoint de /conversaciones filtrando
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/api/chat/conversaciones?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`, {
+        headers: getAuthHeaders()
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          const conv = data.data.find(c => c.id === conversacionId);
+          if (conv) {
+            // Si respuesta_habilitada es 1 (true) -> habilitado. Si es 0 -> deshabilitado.
+            setRespuestaHabilitada(conv.respuesta_habilitada === 1);
+          }
+        }
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  // ==================== EFFECTS ====================
+
+  // Cargar contactos al abrir
   useEffect(() => {
     if (chatAbierto) {
-      setContactos(contactosMock);
-      const noLeidos = contactosMock.reduce((acc, c) => acc + (c.mensajes_no_leidos || 0), 0);
-      setTotalNoLeidos(noLeidos);
+      cargarContactos();
+      // Polling para actualizar lista de contactos (no leidos)
+      const interval = setInterval(cargarContactos, 10000); // Cada 10s
+      return () => clearInterval(interval);
     }
-  }, [chatAbierto]);
+  }, [chatAbierto, usuario]);
 
-  // Scroll al final de mensajes
+  // Polling de mensajes activos
+  useEffect(() => {
+    if (chatAbierto && conversacionActiva?.id) {
+      const interval = setInterval(() => {
+        cargarMensajes(conversacionActiva.id);
+      }, 3000); // Cada 3s actualiza chat activo
+      pollingRef.current = interval;
+      return () => clearInterval(interval);
+    }
+  }, [chatAbierto, conversacionActiva]);
+
+  // Scroll al final
   useEffect(() => {
     if (mensajesRef.current) {
       mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
     }
   }, [mensajes]);
 
-  // Focus en input al seleccionar contacto
+  // Focus input
   useEffect(() => {
-    if (contactoActual && inputRef.current) {
+    if (contactoActual && inputRef.current && !cargandoMensajes) {
       inputRef.current.focus();
     }
-  }, [contactoActual]);
+  }, [contactoActual, cargandoMensajes]);
+
 
   // ==================== HANDLERS ====================
 
@@ -131,65 +193,101 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     setChatAbierto(!chatAbierto);
     if (!chatAbierto) {
       setContactoActual(null);
+      setConversacionActiva(null);
       setMensajes([]);
       setMostrarListaMobile(true);
     }
   };
 
-  const seleccionarContacto = (contacto) => {
+  const seleccionarContacto = async (contacto) => {
     setContactoActual(contacto);
     setMostrarListaMobile(false);
+    setMensajes([]);
+    setRespuestaHabilitada(true); // Asumimos true mientras carga
 
-    // Cargar mensajes mock
-    const msgs = mensajesMock[contacto.usuario_id] || [];
-    setMensajes(msgs);
+    await iniciarConversacion(contacto);
 
-    // Simular marcar como leido
+    // Marcar leidos visualmente (se actualizara real en prox carga)
     setContactos(prev => prev.map(c =>
       c.usuario_id === contacto.usuario_id
         ? { ...c, mensajes_no_leidos: 0 }
         : c
     ));
-
-    // Actualizar total no leidos
     setTotalNoLeidos(prev => Math.max(0, prev - (contacto.mensajes_no_leidos || 0)));
   };
 
-  const handleEnviarMensaje = () => {
-    if (!mensajeInput.trim() || !contactoActual || enviando) return;
+  const handleEnviarMensaje = async () => {
+    if (!mensajeInput.trim() || !conversacionActiva || enviando) return;
+    if (!respuestaHabilitada) {
+      alert("No puedes responder a esta conversación porque el docente la ha finalizado o bloqueado.");
+      return;
+    }
 
     const textoMensaje = mensajeInput.trim();
     setMensajeInput('');
     setEnviando(true);
 
-    // Agregar mensaje optimista
+    // Mensaje optimista
+    const tempId = `temp-${Date.now()}`;
     const nuevoMensaje = {
-      id: `temp-${Date.now()}`,
+      id: tempId,
       mensaje: textoMensaje,
       direccion: 'enviado',
       fecha_envio: new Date().toISOString(),
-      enviando: true
+      enviando: true,
+      leido: 0
     };
     setMensajes(prev => [...prev, nuevoMensaje]);
 
-    // Simular envio (sin BD real)
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/api/chat/mensaje`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          conversacion_id: conversacionActiva.id,
+          remitente_id: usuario.id,
+          mensaje: textoMensaje,
+          tipo_mensaje: 'texto'
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          setRespuestaHabilitada(false); // Bloquear UI si el servidor dice prohibido
+          throw new Error('El docente ha bloqueado las respuestas.');
+        }
+        throw new Error('Error enviando mensaje');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Reemplazar mensaje optimista con real
+        setMensajes(prev => prev.map(m =>
+          m.id === tempId ? { ...data.data, direccion: 'enviado' } : m
+        ));
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Error al enviar mensaje');
+      // Marcar error en UI
       setMensajes(prev => prev.map(m =>
-        m.id === nuevoMensaje.id
-          ? { ...m, enviando: false, leido: 0 }
-          : m
+        m.id === tempId ? { ...m, error: true, enviando: false } : m
       ));
+    } finally {
       setEnviando(false);
-    }, 500);
+    }
   };
 
   const volverALista = () => {
     setContactoActual(null);
+    setConversacionActiva(null);
     setMensajes([]);
     setMostrarListaMobile(true);
+    if (pollingRef.current) clearInterval(pollingRef.current);
   };
 
-  // ==================== HELPERS ====================
+  // ==================== HELPERS (Mismos de antes) ====================
 
   const formatearHora = (fecha) => {
     if (!fecha) return '';
@@ -241,22 +339,19 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   // Filtrar contactos segun vista y busqueda
   const getContactosFiltrados = () => {
     let lista = contactos;
-
-    // Filtrar por tipo
+    // Filtrar por tipo (el backend ya filtra lo basico, pero aqui refinamos vistas)
     if (vistaActiva === 'docentes') {
       lista = lista.filter(c => c.tipo === 'docente');
     } else if (vistaActiva === 'administracion') {
       lista = lista.filter(c => c.tipo === 'administrador');
     }
 
-    // Filtrar por busqueda
     if (busqueda) {
       lista = lista.filter(c =>
         c.nombre_completo.toLowerCase().includes(busqueda.toLowerCase()) ||
-        (c.asignatura && c.asignatura.toLowerCase().includes(busqueda.toLowerCase()))
+        (c.especialidad && c.especialidad.toLowerCase().includes(busqueda.toLowerCase()))
       );
     }
-
     return lista;
   };
 
@@ -352,19 +447,11 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
               </svg>
               <input
                 type="text"
-                placeholder="Buscar docente o admin..."
+                placeholder="Buscar..."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
             </div>
-
-            {/* Pupilo seleccionado */}
-            {pupiloSeleccionado && (
-              <div className="chatv2-pupilo-info">
-                <span>Consultas sobre:</span>
-                <strong>{pupiloSeleccionado.nombres} {pupiloSeleccionado.apellidos}</strong>
-              </div>
-            )}
 
             {/* Lista de contactos */}
             <div className="chatv2-list-items">
@@ -375,17 +462,15 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                 </div>
               ) : getContactosFiltrados().length === 0 ? (
                 <div className="chatv2-empty-list">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                  </svg>
-                  <span>Sin contactos disponibles</span>
+                  <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
+                    No se encontraron contactos.
+                  </p>
                 </div>
               ) : (
                 getContactosFiltrados().map(contacto => (
                   <div
-                    key={contacto.id}
-                    className={`chatv2-list-item ${contactoActual?.id === contacto.id ? 'active' : ''}`}
+                    key={contacto.usuario_id}
+                    className={`chatv2-list-item ${contactoActual?.usuario_id === contacto.usuario_id ? 'active' : ''}`}
                     onClick={() => seleccionarContacto(contacto)}
                   >
                     <div className={`chatv2-avatar ${contacto.es_admin ? 'admin' : 'docente'}`}>
@@ -400,25 +485,11 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                           {contacto.nombre_completo}
                           {contacto.es_admin === 1 && <span className="chatv2-tag admin">Admin</span>}
                         </span>
-                        <span className="chatv2-list-item-time">
-                          {contacto.ultimo_mensaje_fecha && formatearFechaRelativa(contacto.ultimo_mensaje_fecha)}
-                        </span>
                       </div>
                       <div className="chatv2-list-item-preview">
                         <span className="chatv2-list-item-role">
-                          {contacto.tipo === 'administrador'
-                            ? contacto.cargo
-                            : contacto.asignatura || 'Docente'
-                          }
+                          {contacto.tipo === 'administrador' ? 'Administrador' : (contacto.especialidad || 'Docente')}
                         </span>
-                        {contacto.ultimo_mensaje && (
-                          <span className="chatv2-list-item-lastmsg">
-                            {contacto.ultimo_mensaje.length > 30
-                              ? contacto.ultimo_mensaje.substring(0, 30) + '...'
-                              : contacto.ultimo_mensaje
-                            }
-                          </span>
-                        )}
                       </div>
                     </div>
                     {contacto.mensajes_no_leidos > 0 && (
@@ -448,30 +519,21 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                   <div className="chatv2-chat-header-info">
                     <span className="chatv2-chat-header-name">{contactoActual.nombre_completo}</span>
                     <span className="chatv2-chat-header-status">
-                      {contactoActual.tipo === 'administrador'
-                        ? contactoActual.cargo
-                        : contactoActual.asignatura || 'Docente'
-                      }
+                      {!respuestaHabilitada ? 'Respuestas bloqueadas' : 'En línea'}
                     </span>
                   </div>
                 </div>
 
                 {/* Area de Mensajes */}
                 <div className="chatv2-messages" ref={mensajesRef}>
-                  {cargando ? (
+                  {cargandoMensajes ? (
                     <div className="chatv2-loading">
                       <div className="chatv2-spinner"></div>
                       <span>Cargando mensajes...</span>
                     </div>
                   ) : mensajes.length === 0 ? (
                     <div className="chatv2-empty-chat">
-                      <div className="chatv2-empty-chat-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                      </div>
-                      <p>Inicia la conversacion</p>
-                      <span>Envia un mensaje a {contactoActual.nombre_completo.split(' ')[0]}</span>
+                      <p>Inicia la conversación con {contactoActual.nombre_completo}</p>
                     </div>
                   ) : (
                     mensajes.map((msg, index) => {
@@ -490,34 +552,29 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                               <p>{msg.mensaje}</p>
                               <div className="chatv2-message-meta">
                                 <span className="chatv2-message-time">{formatearHora(msg.fecha_envio)}</span>
-                                {msg.direccion === 'enviado' && !msg.enviando && !msg.error && (
-                                  <span className="chatv2-message-status">
-                                    {msg.leido === 1 ? (
-                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                        <polyline points="20 12 9 23 4 18"></polyline>
-                                      </svg>
-                                    ) : (
-                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                      </svg>
-                                    )}
-                                  </span>
-                                )}
-                                {msg.enviando && (
-                                  <span className="chatv2-message-sending">
-                                    <div className="chatv2-mini-spinner"></div>
-                                  </span>
-                                )}
-                                {msg.error && (
-                                  <span className="chatv2-message-error" title="Error al enviar">!</span>
-                                )}
+                                {msg.enviando && <span className="chatv2-message-sending">...</span>}
+                                {msg.error && <span className="chatv2-message-error" title="No enviado">!</span>}
                               </div>
                             </div>
                           </div>
                         </React.Fragment>
                       );
                     })
+                  )}
+
+                  {/* Mensaje de bloqueo */}
+                  {!respuestaHabilitada && (
+                    <div style={{
+                      textAlign: 'center',
+                      margin: '10px 20px',
+                      padding: '10px',
+                      background: '#fee2e2',
+                      color: '#dc2626',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}>
+                      🚫 El docente ha cerrado las respuestas en esta conversación.
+                    </div>
                   )}
                 </div>
 
@@ -527,17 +584,18 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                     <input
                       ref={inputRef}
                       type="text"
-                      placeholder="Escribe un mensaje..."
+                      placeholder={respuestaHabilitada ? "Escribe un mensaje..." : "Respuestas deshabilitadas"}
                       value={mensajeInput}
                       onChange={(e) => setMensajeInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleEnviarMensaje()}
-                      disabled={enviando}
+                      disabled={enviando || !respuestaHabilitada} // BLOQUEO AQUI
+                      style={!respuestaHabilitada ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
                     />
                   </div>
                   <button
                     className="chatv2-send-btn"
                     onClick={handleEnviarMensaje}
-                    disabled={enviando || !mensajeInput.trim()}
+                    disabled={enviando || !mensajeInput.trim() || !respuestaHabilitada}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -555,14 +613,14 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                   </svg>
                 </div>
                 <h3>Selecciona un contacto</h3>
-                <p>Elige un docente o administrador para iniciar una conversacion</p>
+                <p>Elige un docente para iniciar una conversación.</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Estilos adicionales para info del pupilo */}
+      {/* Estilos adicionales especificos (el resto viene de ChatDocenteV2 o CSS global) */}
       <style>{`
         .chatv2-pupilo-info {
           padding: 8px 16px;
@@ -573,18 +631,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
           display: flex;
           align-items: center;
           gap: 6px;
-        }
-        .chatv2-pupilo-info strong {
-          color: #0c4a6e;
-        }
-        .chatv2-list-item-lastmsg {
-          display: block;
-          font-size: 11px;
-          color: #94a3b8;
-          margin-top: 2px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
         }
         .chatv2-avatar.docente {
           background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);

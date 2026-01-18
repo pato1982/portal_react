@@ -623,7 +623,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
                     options={cursos}
                     placeholder="Seleccionar..."
                     isOpen={dropdownAbierto === 'curso'}
-                    onToggle={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
+                    onToggle={() => setDropdownAbierto(prev => prev === 'curso' ? null : 'curso')}
                     onClose={() => setDropdownAbierto(null)}
                   />
                 )}
@@ -636,7 +636,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
                   placeholder={cargandoAsignaturas ? 'Cargando...' : 'Todas'}
                   disabled={!filtroCurso || cargandoAsignaturas}
                   isOpen={dropdownAbierto === 'asignatura'}
-                  onToggle={() => setDropdownAbierto(dropdownAbierto === 'asignatura' ? null : 'asignatura')}
+                  onToggle={() => setDropdownAbierto(prev => prev === 'asignatura' ? null : 'asignatura')}
                   onClose={() => setDropdownAbierto(null)}
                 />
               </div>

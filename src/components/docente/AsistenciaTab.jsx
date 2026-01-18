@@ -407,6 +407,25 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
           )}
 
           <div className="card-body" style={{ padding: '0' }}>
+            {/* Leyenda de siglas - Solo en móvil */}
+            {isMobile && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '8px 10px',
+                backgroundColor: '#f8fafc',
+                borderBottom: '1px solid #e2e8f0',
+                flexWrap: 'wrap'
+              }}>
+                <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '500' }}>P = Presente</span>
+                <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: '500' }}>A = Ausente</span>
+                <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '500' }}>T = Tardio</span>
+                <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '500' }}>J = Justificado</span>
+              </div>
+            )}
             <div className="table-container-scroll" style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '4px' }}>
               <table className="data-table docente-tabla-asistencia" style={{ width: '100%', marginBottom: 0 }}>
                 <thead style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#f8fafc', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>

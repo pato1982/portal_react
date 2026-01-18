@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "chart.js": "^4.4.0",
     "mysql2": "^3.16.0",
     "react": "^18.2.0",

@@ -307,8 +307,8 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
     <div className="tab-panel active">
       {/* Fix para Autocomplete Dropdown z-index y scroll */}
       <style>{`
-        .autocomplete-suggestions { 
-            z-index: 1500 !important; 
+        .autocomplete-suggestions {
+            z-index: 1500 !important;
             max-height: 200px !important;
             overflow-y: auto !important;
             border: 1px solid #cbd5e1;
@@ -339,6 +339,23 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
           display: block !important;
           height: 14px;
         }
+        /* SelectMovil dropdown sobre contenido */
+        .custom-select-options {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          z-index: 2000 !important;
+          background: white;
+          border: 1px solid #cbd5e1;
+          border-radius: 4px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          max-height: 200px;
+          overflow-y: auto;
+        }
+        .custom-select-container {
+          position: relative;
+        }
       `}</style>
 
       <div className="card" style={{ overflow: 'visible' }}>
@@ -346,7 +363,7 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
         <div className="card-body" style={{ overflow: 'visible' }}>
           {showMobile ? (
             <>
-              <div className="form-row-movil">
+              <div className="form-row-movil" style={{ position: 'relative', zIndex: 100 }}>
                 {cargandoCursos ? (
                   <div className="form-group">
                     <label>Curso</label>
@@ -361,7 +378,7 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
                     options={cursos}
                     placeholder="Seleccionar..."
                     isOpen={dropdownAbierto === 'curso'}
-                    onToggle={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
+                    onToggle={() => setDropdownAbierto(prev => prev === 'curso' ? null : 'curso')}
                     onClose={() => setDropdownAbierto(null)}
                   />
                 )}
@@ -374,7 +391,7 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
                   placeholder={cargandoAsignaturas ? 'Cargando...' : (cursoSeleccionado ? 'Seleccionar...' : 'Seleccione curso')}
                   disabled={!cursoSeleccionado || cargandoAsignaturas}
                   isOpen={dropdownAbierto === 'asignatura'}
-                  onToggle={() => setDropdownAbierto(dropdownAbierto === 'asignatura' ? null : 'asignatura')}
+                  onToggle={() => setDropdownAbierto(prev => prev === 'asignatura' ? null : 'asignatura')}
                   onClose={() => setDropdownAbierto(null)}
                 />
               </div>

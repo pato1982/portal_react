@@ -107,13 +107,39 @@ export function SelectMovil({
   onToggle,
   onClose
 }) {
+  const containerRef = React.useRef(null);
+
+  // Cerrar al hacer clic fuera
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    // Usar setTimeout para evitar que el clic que abre el dropdown lo cierre inmediatamente
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
   return (
-    <div className="form-group">
+    <div className="form-group" ref={containerRef}>
       <label>{label}</label>
-      <div className="custom-select-container">
+      <div className="custom-select-container" data-dropdown="true">
         <div
           className={`custom-select-trigger ${disabled ? 'disabled' : ''}`}
-          onClick={() => !disabled && onToggle()}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!disabled) onToggle();
+          }}
         >
           <span>{valueName || placeholder}</span>
           <span className="custom-select-arrow">{isOpen ? '▲' : '▼'}</span>
@@ -178,7 +204,7 @@ function FiltrosDocente({
             options={cursos}
             placeholder="Seleccionar..."
             isOpen={dropdownAbierto === 'curso'}
-            onToggle={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
+            onToggle={() => setDropdownAbierto(prev => prev === 'curso' ? null : 'curso')}
             onClose={() => setDropdownAbierto(null)}
           />
           <SelectMovil
@@ -190,7 +216,7 @@ function FiltrosDocente({
             placeholder={cursoSeleccionado ? 'Seleccionar...' : 'Seleccione curso'}
             disabled={!cursoSeleccionado}
             isOpen={dropdownAbierto === 'asignatura'}
-            onToggle={() => setDropdownAbierto(dropdownAbierto === 'asignatura' ? null : 'asignatura')}
+            onToggle={() => setDropdownAbierto(prev => prev === 'asignatura' ? null : 'asignatura')}
             onClose={() => setDropdownAbierto(null)}
           />
         </div>
@@ -204,7 +230,7 @@ function FiltrosDocente({
               options={trimestres}
               placeholder="Todos"
               isOpen={dropdownAbierto === 'trimestre'}
-              onToggle={() => setDropdownAbierto(dropdownAbierto === 'trimestre' ? null : 'trimestre')}
+              onToggle={() => setDropdownAbierto(prev => prev === 'trimestre' ? null : 'trimestre')}
               onClose={() => setDropdownAbierto(null)}
             />
           )}

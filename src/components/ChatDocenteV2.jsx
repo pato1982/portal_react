@@ -740,11 +740,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                               if (modoSeleccion) {
                                 toggleSeleccionApoderado(alumno);
                               } else {
-                                if (alumno.apoderado_activo) {
-                                  seleccionarContacto(alumno, 'apoderado');
-                                } else {
-                                  alert('El apoderado no tiene habilitada la aplicación');
-                                }
+                                seleccionarContacto(alumno, 'apoderado');
                               }
                             }}
                           >

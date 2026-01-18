@@ -363,7 +363,10 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
         <div className="card-body" style={{ overflow: 'visible' }}>
           {showMobile ? (
             <>
-              <div className="form-row-movil" style={{ position: 'relative', zIndex: 100 }}>
+              <div className="form-row-movil" style={{
+                position: 'relative',
+                zIndex: (dropdownAbierto === 'curso' || dropdownAbierto === 'asignatura') ? 1002 : 100
+              }}>
                 {cargandoCursos ? (
                   <div className="form-group">
                     <label>Curso</label>

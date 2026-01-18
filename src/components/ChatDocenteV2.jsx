@@ -372,7 +372,6 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
       } else {
         resultado = await enviarMensaje(conversacionActual, usuario.id, textoMensaje);
       }
-
       if (resultado.success) {
         setMensajes(prev => prev.map(m =>
           m.id === mensajeOptimista.id

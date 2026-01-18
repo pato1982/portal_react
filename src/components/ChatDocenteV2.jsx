@@ -19,7 +19,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   const { mostrarMensaje } = useMensaje();
   // Estados principales
   const [chatAbierto, setChatAbierto] = useState(false);
-  const [vistaActiva, setVistaActiva] = useState('todos'); // todos, institucional, cursos
+  const [vistaActiva, setVistaActiva] = useState('institucional'); // institucional, cursos
   const [busqueda, setBusqueda] = useState('');
 
   // Estados de datos
@@ -28,7 +28,6 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   const [cursos, setCursos] = useState([]);
   const [cursoSeleccionado, setCursoSeleccionado] = useState(null);
   const [alumnos, setAlumnos] = useState([]);
-  const [todosLosApoderados, setTodosLosApoderados] = useState([]); // Todos los apoderados de todos los cursos
 
   // Estados de chat activo
   const [conversacionActual, setConversacionActual] = useState(null);
@@ -115,42 +114,6 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     }
   };
 
-  // Cargar todos los apoderados de todos los cursos para la vista "Todos"
-  const cargarTodosLosApoderados = useCallback(async (listaCursos) => {
-    if (!listaCursos || listaCursos.length === 0) return;
-
-    try {
-      const promesas = listaCursos.map(curso =>
-        obtenerAlumnosCurso(curso.id, usuario.id)
-      );
-      const resultados = await Promise.all(promesas);
-
-      // Combinar todos los alumnos y eliminar duplicados por apoderado_usuario_id
-      const todosAlumnos = [];
-      const apoderadosVistos = new Set();
-
-      resultados.forEach((resultado, index) => {
-        if (resultado.success && resultado.data) {
-          resultado.data.forEach(alumno => {
-            const idUnico = alumno.apoderado_usuario_id || `alumno_${alumno.alumno_id}`;
-            if (!apoderadosVistos.has(idUnico)) {
-              apoderadosVistos.add(idUnico);
-              todosAlumnos.push({
-                ...alumno,
-                curso_nombre: listaCursos[index].nombre || `${listaCursos[index].grado}° ${listaCursos[index].letra}`,
-                curso_id: listaCursos[index].id
-              });
-            }
-          });
-        }
-      });
-
-      setTodosLosApoderados(todosAlumnos);
-    } catch (error) {
-      console.error('Error al cargar todos los apoderados:', error);
-    }
-  }, [usuario?.id]);
-
   const cargarMensajes = useCallback(async (conversacionId) => {
     if (!conversacionId || !usuario?.id) return;
     setCargando(true);
@@ -219,13 +182,6 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
       actualizarNoLeidos();
     }
   }, [chatAbierto, puedeUsarChat, cargarContactos, cargarCursos, cargarConversaciones, actualizarNoLeidos]);
-
-  // Cargar todos los apoderados cuando se cargan los cursos
-  useEffect(() => {
-    if (chatAbierto && puedeUsarChat && cursos.length > 0) {
-      cargarTodosLosApoderados(cursos);
-    }
-  }, [chatAbierto, puedeUsarChat, cursos, cargarTodosLosApoderados]);
 
   useEffect(() => {
     if (chatAbierto && puedeUsarChat && conversacionActual && typeof conversacionActual === 'number') {
@@ -557,40 +513,15 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
 
   // Filtrar lista según vista y búsqueda
   const getListaFiltrada = () => {
-    let lista = [];
-
-    if (vistaActiva === 'todos') {
-      // En "Todos": mostrar contactos institucionales + apoderados de cursos
-      const listaInstitucional = contactos.map(c => ({
-        ...c,
-        tipo_lista: 'institucional'
-      }));
-
-      const listaApoderados = todosLosApoderados.map(a => ({
-        ...a,
-        usuario_id: a.apoderado_usuario_id,
-        nombre_completo: a.nombre_alumno,
-        subtitulo: `Apod: ${a.nombre_apoderado || 'Sin registrar'}`,
-        tipo_lista: 'apoderado',
-        tipo: 'apoderado'
-      }));
-
-      lista = [...listaInstitucional, ...listaApoderados];
-    } else if (vistaActiva === 'institucional') {
-      lista = contactos.map(c => ({
-        ...c,
-        tipo_lista: 'institucional'
-      }));
-    }
+    let lista = contactos.map(c => ({
+      ...c,
+      tipo_lista: 'institucional'
+    }));
 
     if (busqueda) {
       const busquedaLower = busqueda.toLowerCase();
       lista = lista.filter(item =>
-        (item.nombre_completo || '').toLowerCase().includes(busquedaLower) ||
-        (item.subtitulo || '').toLowerCase().includes(busquedaLower) ||
-        (item.nombre_apoderado || '').toLowerCase().includes(busquedaLower) ||
-        (item.nombre_alumno || '').toLowerCase().includes(busquedaLower) ||
-        (item.curso_nombre || '').toLowerCase().includes(busquedaLower)
+        (item.nombre_completo || '').toLowerCase().includes(busquedaLower)
       );
     }
 
@@ -650,19 +581,9 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
           {/* Columna 1: Navegación */}
           <div className={`chatv2-nav ${!mostrarListaMobile ? 'hidden-mobile' : ''}`}>
             <button
-              className={`chatv2-nav-item ${vistaActiva === 'todos' ? 'active' : ''}`}
-              onClick={() => { setVistaActiva('todos'); setCursoSeleccionado(null); setModoSeleccion(false); }}
-              title="Todos"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <span>Todos</span>
-            </button>
-            <button
               className={`chatv2-nav-item ${vistaActiva === 'institucional' ? 'active' : ''}`}
               onClick={() => { setVistaActiva('institucional'); setCursoSeleccionado(null); setModoSeleccion(false); }}
-              title="Institucional"
+              title="Equipo"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -705,8 +626,8 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
             {/* Lista según vista activa */}
             <div className="chatv2-list-items">
 
-              {/* Vista: Institucional o Todos */}
-              {(vistaActiva === 'todos' || vistaActiva === 'institucional') && (
+              {/* Vista: Equipo (Docentes y Admins) */}
+              {vistaActiva === 'institucional' && (
                 <>
                   {cargando ? (
                     <div className="chatv2-loading">
@@ -722,13 +643,13 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                       <span>Sin contactos</span>
                     </div>
                   ) : (
-                    getListaFiltrada().map((contacto, index) => (
+                    getListaFiltrada().map(contacto => (
                       <div
-                        key={contacto.tipo_lista === 'apoderado' ? `apod-${contacto.alumno_id}` : contacto.usuario_id}
-                        className={`chatv2-list-item ${contacto.tipo_lista === 'apoderado' ? 'alumno' : ''} ${contactoActual?.usuario_id === contacto.usuario_id ? 'active' : ''}`}
-                        onClick={() => seleccionarContacto(contacto, contacto.tipo_lista === 'apoderado' ? 'apoderado' : 'institucional')}
+                        key={contacto.usuario_id}
+                        className={`chatv2-list-item ${contactoActual?.usuario_id === contacto.usuario_id ? 'active' : ''}`}
+                        onClick={() => seleccionarContacto(contacto)}
                       >
-                        <div className={`chatv2-avatar ${contacto.es_admin ? 'admin' : ''} ${contacto.tipo_lista === 'apoderado' ? 'estudiante' : ''}`}>
+                        <div className={`chatv2-avatar ${contacto.es_admin ? 'admin' : ''}`}>
                           {contacto.foto_url ? (
                             <img src={contacto.foto_url} alt="" />
                           ) : (
@@ -750,9 +671,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                           </div>
                           <div className="chatv2-list-item-preview">
                             <span className="chatv2-list-item-role">
-                              {contacto.tipo_lista === 'apoderado'
-                                ? contacto.subtitulo
-                                : (contacto.tipo === 'administrador' ? 'Administración' : 'Docente')}
+                              {contacto.tipo === 'administrador' ? 'Administración' : 'Docente'}
                             </span>
                           </div>
                         </div>

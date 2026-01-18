@@ -829,11 +829,14 @@ router.put('/conversacion/:id/habilitar-respuesta', async (req, res) => {
 // POST /api/chat/mensaje-masivo - Enviar mensaje a múltiples destinatarios
 // ============================================
 router.post('/mensaje-masivo', async (req, res) => {
-    const { remitente_id, destinatarios_ids, mensaje, establecimiento_id } = req.body;
+    const { remitente_id, destinatarios_ids, mensaje, establecimiento_id, respuesta_habilitada } = req.body;
 
     if (!remitente_id || !destinatarios_ids || !mensaje || !establecimiento_id) {
         return res.status(400).json({ success: false, message: 'Faltan datos requeridos' });
     }
+
+    // Por defecto respuesta_habilitada es 0 (deshabilitada) si no se especifica
+    const habilitarRespuesta = respuesta_habilitada !== undefined ? (respuesta_habilitada ? 1 : 0) : 0;
 
     try {
         let enviados = 0;
@@ -854,15 +857,15 @@ router.post('/mensaje-masivo', async (req, res) => {
 
             if (conv.length > 0) {
                 conversacionId = conv[0].id;
-                // Asegurar activo
-                await pool.query('UPDATE tb_chat_conversaciones SET activo = 1 WHERE id = ?', [conversacionId]);
+                // Asegurar activo y actualizar respuesta_habilitada
+                await pool.query('UPDATE tb_chat_conversaciones SET activo = 1, respuesta_habilitada = ? WHERE id = ?', [habilitarRespuesta, conversacionId]);
             } else {
-                // Crear nueva (es con apoderado, asi que respuesta_habilitada = 0 por defecto)
+                // Crear nueva con el valor de respuesta_habilitada especificado
                 const [result] = await pool.query(`
                     INSERT INTO tb_chat_conversaciones
                     (establecimiento_id, usuario1_id, usuario2_id, contexto_tipo, iniciada_por, respuesta_habilitada)
-                    VALUES (?, ?, ?, 'curso', ?, 0)
-                `, [establecimiento_id, u1, u2, remitente_id]);
+                    VALUES (?, ?, ?, 'curso', ?, ?)
+                `, [establecimiento_id, u1, u2, remitente_id, habilitarRespuesta]);
                 conversacionId = result.insertId;
             }
 

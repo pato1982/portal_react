@@ -234,9 +234,8 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     // Obtener el ID del usuario destinatario
     const destinatarioId = contacto.usuario_id || contacto.apoderado_usuario_id;
 
-    // Verificar que el destinatario tiene cuenta
+    // Si no tiene cuenta, simplemente no abrir chat individual
     if (!destinatarioId) {
-      mostrarMensaje('Aviso', 'Este apoderado no tiene cuenta registrada en la aplicación', 'warning');
       return;
     }
 
@@ -387,7 +386,8 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
           usuario.id,
           destinatariosMasivos,
           textoMensaje,
-          establecimientoId
+          establecimientoId,
+          respuestaHabilitada
         );
       } else {
         resultado = await enviarMensaje(conversacionActual, usuario.id, textoMensaje);
@@ -420,28 +420,28 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   };
 
   const toggleRespuestaHabilitada = async () => {
-    // No permitir en mensajes masivos
-    if (esMensajeMasivo) return;
+    const nuevoEstado = !respuestaHabilitada;
+    setRespuestaHabilitada(nuevoEstado);
 
-    // Verificar que hay una conversación válida
-    if (!conversacionActual || conversacionActual === 'masivo') {
-      console.warn('No hay conversación activa para cambiar estado');
+    // Para mensajes masivos, el estado se aplicará cuando se envíe el mensaje
+    if (esMensajeMasivo || conversacionActual === 'masivo') {
       return;
     }
 
-    const nuevoEstado = !respuestaHabilitada;
-    setRespuestaHabilitada(nuevoEstado);
+    // Para chat individual, actualizar en el servidor
+    if (!conversacionActual) {
+      console.warn('No hay conversación activa para cambiar estado');
+      return;
+    }
 
     try {
       const resultado = await habilitarRespuesta(conversacionActual, nuevoEstado);
       if (!resultado.success) {
         console.error('Error al cambiar estado:', resultado.error);
-        // Revertir si falla
         setRespuestaHabilitada(!nuevoEstado);
       }
     } catch (error) {
       console.error('Error al cambiar estado de respuesta:', error);
-      // Revertir si hay error
       setRespuestaHabilitada(!nuevoEstado);
     }
   };
@@ -452,6 +452,9 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     setMensajes([]);
     setMostrarListaMobile(true);
     setApoderadosSeleccionados([]);
+    setEsMensajeMasivo(false);
+    setDestinatariosMasivos([]);
+    setRespuestaHabilitada(true);
   };
 
   // ==================== HELPERS ====================
@@ -887,29 +890,76 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                   </div>
                   <div className="chatv2-chat-header-info">
                     <span className="chatv2-chat-header-name">{contactoActual.nombre_completo}</span>
-                    <span className="chatv2-chat-header-status">
-                      {esMensajeMasivo ? (
-                        contactoActual.detalleDestinatarios?.length > 3
-                          ? `${contactoActual.detalleDestinatarios.slice(0, 3).join(', ')}...`
-                          : contactoActual.detalleDestinatarios?.join(', ') || 'Mensaje grupal'
-                      ) : (contactoActual.tipo || 'Chat')}
-                    </span>
+                    {esMensajeMasivo ? (
+                      <div className="chatv2-destinatarios-tags">
+                        {apoderadosSeleccionados.slice(0, 5).map(sel => (
+                          <span key={sel.id} className="chatv2-dest-tag">
+                            {sel.nombre_alumno}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const nuevosSeleccionados = apoderadosSeleccionados.filter(a => a.id !== sel.id);
+                                setApoderadosSeleccionados(nuevosSeleccionados);
+                                if (nuevosSeleccionados.length === 0) {
+                                  volverALista();
+                                } else if (nuevosSeleccionados.length === 1) {
+                                  // Si queda solo uno, abrir chat individual
+                                  const alumno = alumnos.find(a =>
+                                    (a.apoderado_usuario_id || `alumno_${a.alumno_id}`) === nuevosSeleccionados[0].id
+                                  );
+                                  if (alumno && alumno.apoderado_usuario_id) {
+                                    setApoderadosSeleccionados([]);
+                                    seleccionarContacto(alumno, 'apoderado');
+                                  }
+                                } else {
+                                  // Actualizar destinatarios masivos
+                                  setDestinatariosMasivos(nuevosSeleccionados.map(a => a.id));
+                                  setContactoActual(prev => ({
+                                    ...prev,
+                                    nombre_completo: `${cursoSeleccionado.grado}° ${cursoSeleccionado.letra} - ${nuevosSeleccionados.length} seleccionados`,
+                                    detalleDestinatarios: nuevosSeleccionados.map(a => a.nombre_alumno)
+                                  }));
+                                }
+                              }}
+                            >×</button>
+                          </span>
+                        ))}
+                        {apoderadosSeleccionados.length > 5 && (
+                          <span className="chatv2-dest-more">+{apoderadosSeleccionados.length - 5} más</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="chatv2-chat-header-status">{contactoActual.tipo || 'Chat'}</span>
+                    )}
                   </div>
 
                   {/* Acciones del header */}
                   <div className="chatv2-chat-header-actions">
-                    {!esMensajeMasivo && (
-                      <div className="chatv2-toggle-wrapper" title="Permitir respuestas del apoderado">
-                        <span className={`chatv2-toggle-label ${respuestaHabilitada ? 'activo' : 'inactivo'}`}>
-                          {respuestaHabilitada ? 'Activado' : 'Desactivado'}
-                        </span>
-                        <button
-                          className={`chatv2-toggle ${respuestaHabilitada ? 'active' : ''}`}
-                          onClick={toggleRespuestaHabilitada}
-                        >
-                          <span className="chatv2-toggle-slider"></span>
-                        </button>
-                      </div>
+                    <div className="chatv2-toggle-wrapper" title="Permitir respuestas del apoderado">
+                      <span className={`chatv2-toggle-label ${respuestaHabilitada ? 'activo' : 'inactivo'}`}>
+                        {respuestaHabilitada ? 'Activado' : 'Desactivado'}
+                      </span>
+                      <button
+                        className={`chatv2-toggle ${respuestaHabilitada ? 'active' : ''}`}
+                        onClick={toggleRespuestaHabilitada}
+                      >
+                        <span className="chatv2-toggle-slider"></span>
+                      </button>
+                    </div>
+                    {esMensajeMasivo && (
+                      <button
+                        className="chatv2-cancel-masivo"
+                        onClick={() => {
+                          setApoderadosSeleccionados([]);
+                          volverALista();
+                        }}
+                        title="Cancelar envío"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </button>
                     )}
                   </div>
                 </div>

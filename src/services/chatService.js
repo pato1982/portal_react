@@ -394,12 +394,18 @@ export const habilitarRespuesta = async (conversacionId, habilitado) => {
 /**
  * Envía mensaje masivo a varios destinatarios
  */
-export const enviarMensajeMasivo = async (remitenteId, destinatariosIds, mensaje, establecimientoId) => {
+export const enviarMensajeMasivo = async (remitenteId, destinatariosIds, mensaje, establecimientoId, respuestaHabilitada = true) => {
   try {
     const response = await fetch(`${config.apiBaseUrl}/chat/mensaje-masivo`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ remitente_id: remitenteId, destinatarios_ids: destinatariosIds, mensaje, establecimiento_id: establecimientoId })
+      body: JSON.stringify({
+        remitente_id: remitenteId,
+        destinatarios_ids: destinatariosIds,
+        mensaje,
+        establecimiento_id: establecimientoId,
+        respuesta_habilitada: respuestaHabilitada ? 1 : 0
+      })
     });
     const data = await response.json();
     if (!response.ok) return { success: false, error: data.message };

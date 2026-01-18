@@ -7938,6 +7938,80 @@ select.form-control {
     color: #ef4444;
 }
 
+/* Botón cancelar mensaje masivo */
+.chatv2-cancel-masivo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chatv2-cancel-masivo:hover {
+    background: #fecaca;
+    border-color: #fca5a5;
+}
+
+.chatv2-cancel-masivo svg {
+    width: 16px;
+    height: 16px;
+    color: #dc2626;
+}
+
+/* Tags de destinatarios en header */
+.chatv2-destinatarios-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 300px;
+    overflow: hidden;
+}
+
+.chatv2-dest-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    background: #e0f2fe;
+    border-radius: 10px;
+    font-size: 10px;
+    color: #0369a1;
+    white-space: nowrap;
+}
+
+.chatv2-dest-tag button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    background: #bae6fd;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    line-height: 1;
+    color: #0369a1;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.chatv2-dest-tag button:hover {
+    background: #7dd3fc;
+}
+
+.chatv2-dest-more {
+    font-size: 10px;
+    color: #64748b;
+    padding: 2px 4px;
+}
+
 .chatv2-toggle {
     width: 40px;
     height: 22px;

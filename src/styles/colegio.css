@@ -482,11 +482,13 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
+    overflow: visible;
 }
 
 .column {
     display: flex;
     flex-direction: column;
+    overflow: visible;
 }
 
 /* ==================== CARDS ==================== */
@@ -496,6 +498,21 @@ body {
     box-shadow: none;
     border: 1px solid var(--border-color);
     overflow: hidden;
+}
+
+/* Permitir que dropdowns salgan de las cards */
+.card:has(.custom-select-container),
+.card:has(.filtros-alumnos),
+.card:has(.filtros-asistencia),
+.card:has(.form-alumnos) {
+    overflow: visible;
+}
+
+.card-body:has(.custom-select-container),
+.card-body:has(.filtros-alumnos),
+.card-body:has(.filtros-asistencia),
+.card-body:has(.form-alumnos) {
+    overflow: visible;
 }
 
 .card-header {
@@ -610,6 +627,11 @@ body {
     margin-bottom: 0;
 }
 
+/* Espacio entre filtros y tabla de notas */
+.tabla-notas-curso-container {
+    margin-top: 20px;
+}
+
 .form-row-cuatro {
     grid-template-columns: 1fr 1fr 1fr 1fr;
 }
@@ -711,10 +733,10 @@ select.form-control {
     border: 1px solid #d1d5db;
     border-top: none;
     border-radius: 0 0 4px 4px;
-    max-height: 200px;
+    max-height: 150px;
     overflow-y: auto;
-    z-index: 100;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .custom-select-option {
@@ -1299,6 +1321,74 @@ select.form-control {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background: white;
+}
+
+/* Custom selects en filtros de estadísticas */
+.stats-filtros-panel,
+.stats-filtros-grid,
+.stats-filtros-row {
+    overflow: visible !important;
+    position: relative;
+}
+
+.stats-filtros-panel {
+    z-index: 100;
+}
+
+.stats-filtros-row {
+    z-index: 100;
+}
+
+/* Z-index descendente para que el primer filtro quede sobre los demás */
+.stats-filtros-row .stats-filtro-grupo:nth-child(1) {
+    z-index: 103;
+}
+
+.stats-filtros-row .stats-filtro-grupo:nth-child(2) {
+    z-index: 102;
+}
+
+.stats-filtros-row .stats-filtro-grupo:nth-child(3) {
+    z-index: 101;
+}
+
+.stats-filtros-row-segundo {
+    z-index: 99;
+}
+
+.stats-filtros-row-segundo .stats-filtro-grupo {
+    z-index: 99;
+}
+
+.stats-filtro-grupo {
+    position: relative;
+}
+
+.stats-filtro-grupo .custom-select-container {
+    position: relative;
+}
+
+.stats-filtro-grupo .custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    max-height: 150px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+/* Asegurar que el contenido debajo de los filtros quede debajo */
+.stats-vista-titulo,
+.stats-kpis-row,
+.stats-graficos-grid,
+.stats-info-adicional {
+    position: relative;
+    z-index: 1;
 }
 
 .stats-titulo-seccion h4 {
@@ -4809,13 +4899,17 @@ select.form-control {
     }
 
     /* Filtros Notas por Curso - movil: 2 arriba, 1 abajo */
-    .filtros-notas-inline {
+    .filtros-notas-inline,
+    .filtros-notas-curso {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
+        position: relative;
+        z-index: 1000;
     }
 
-    .filtros-notas-inline .form-group:nth-child(3) {
+    .filtros-notas-inline .form-group:nth-child(3),
+    .filtros-notas-curso .form-group:nth-child(3) {
         grid-column: 1;
     }
 
@@ -5129,6 +5223,7 @@ select.form-control {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    overflow: visible;
 }
 
 /* Vista Titulo */
@@ -5214,8 +5309,228 @@ select.form-control {
 }
 
 /* ==================== ASISTENCIA TAB ==================== */
+
+/* Permitir que dropdowns salgan del contenedor */
+.tab-panel:has(.filtros-asistencia) .card,
+.tab-panel:has(.filtros-asistencia) .card-body {
+    overflow: visible;
+}
+
 .filtros-asistencia {
     margin-bottom: 20px;
+    position: relative;
+    z-index: 100;
+}
+
+.filtros-asistencia .form-group {
+    position: relative;
+}
+
+.filtros-asistencia .custom-select-container {
+    position: relative;
+    z-index: 100;
+}
+
+.filtros-asistencia .custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    max-height: 150px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ==================== ALUMNOS TAB - FILTROS ==================== */
+
+/* Permitir que dropdowns salgan del contenedor en TODA la pestaña Alumnos */
+.tab-panel:has(.form-alumnos) .card,
+.tab-panel:has(.form-alumnos) .card-body,
+.tab-panel:has(.filtros-alumnos) .card,
+.tab-panel:has(.filtros-alumnos) .card-body {
+    overflow: visible;
+}
+
+/* Sección Gestión de Alumnos */
+.form-alumnos {
+    position: relative;
+    z-index: 100;
+}
+
+.form-alumnos .form-group {
+    position: relative;
+}
+
+.form-alumnos .custom-select-container {
+    position: relative;
+    z-index: 100;
+}
+
+.form-alumnos .custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    max-height: 150px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #fff;
+}
+
+/* Sección Listado de Alumnos */
+.filtros-alumnos {
+    position: relative;
+    z-index: 100;
+}
+
+.filtros-alumnos .form-group {
+    position: relative;
+}
+
+.filtros-alumnos .custom-select-container {
+    position: relative;
+    z-index: 100;
+}
+
+.filtros-alumnos .custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    max-height: 150px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #fff;
+}
+
+/* ==================== ASIGNACIONES TAB - FILTROS ==================== */
+
+/* Permitir que dropdowns salgan del contenedor */
+.tab-panel:has(.filtros-asignaciones) .card,
+.tab-panel:has(.filtros-asignaciones) .card-body,
+.tab-panel:has(.filtros-asignaciones-form) .card,
+.tab-panel:has(.filtros-asignaciones-form) .card-body {
+    overflow: visible;
+}
+
+.filtros-asignaciones,
+.filtros-asignaciones-form {
+    position: relative;
+    z-index: 100;
+}
+
+.filtros-asignaciones .form-group,
+.filtros-asignaciones-form .form-group {
+    position: relative;
+}
+
+.filtros-asignaciones .custom-select-container,
+.filtros-asignaciones-form .custom-select-container {
+    position: relative;
+    z-index: 100;
+}
+
+.filtros-asignaciones .custom-select-options,
+.filtros-asignaciones-form .custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    max-height: 150px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #fff;
+}
+
+/* ==================== DOCENTES TAB - FILTROS ==================== */
+
+/* Permitir que dropdowns salgan del contenedor */
+.tab-panel:has(.filtros-docentes) .card,
+.tab-panel:has(.filtros-docentes) .card-body {
+    overflow: visible;
+}
+
+.filtros-docentes {
+    position: relative;
+    z-index: 100;
+}
+
+.filtros-docentes .form-group {
+    position: relative;
+}
+
+.filtros-docentes .custom-select-container {
+    position: relative;
+    z-index: 100;
+}
+
+.filtros-docentes .custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    max-height: 150px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #fff;
+}
+
+/* Filtros Notas por Curso - custom selects */
+.tab-panel:has(.filtros-notas-curso) .card,
+.tab-panel:has(.filtros-notas-curso) .card-body {
+    overflow: visible !important;
+}
+
+.filtros-notas-curso {
+    position: relative;
+    z-index: 1000;
+}
+
+.filtros-notas-curso .form-group {
+    position: relative;
+}
+
+/* Z-index descendente para que el primer filtro quede sobre los demás */
+.filtros-notas-curso .form-group:nth-child(1) {
+    z-index: 1003;
+}
+
+.filtros-notas-curso .form-group:nth-child(2) {
+    z-index: 1002;
+}
+
+.filtros-notas-curso .form-group:nth-child(3) {
+    z-index: 1001;
+}
+
+.filtros-notas-curso .custom-select-container {
+    position: relative;
+}
+
+.filtros-notas-curso .custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    max-height: 150px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+/* Asegurar que la tabla quede debajo de los filtros */
+.filtros-notas-curso ~ .tabla-notas-curso-container,
+.filtros-notas-curso ~ div:has(.tabla-notas-curso-container) {
+    position: relative;
+    z-index: 1;
 }
 
 .acciones-rapidas {
@@ -6939,19 +7254,19 @@ select.form-control {
 
     /* Fix z-index for dropdowns to be above table headers */
     .custom-select-options {
-        z-index: 1000;
+        z-index: 9999 !important;
     }
 
     /* Ensure filters container is above table */
-    .filtros-notas-inline {
+    .filtros-notas-inline,
+    .filtros-notas-curso {
         position: relative;
-        z-index: 50;
+        z-index: 1000;
     }
 
     /* Add margin between filters and table */
     .tabla-notas-curso-container {
-        margin-top: 60px;
-        /* More margin to separate them */
+        margin-top: 20px;
         position: relative;
         z-index: 1;
     }

@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMensaje } from '../contexts';
+import { useDropdown } from '../hooks';
 import config from '../config/env';
 
 function NotasPorCursoTab() {
   const { mostrarMensaje } = useMensaje();
+  const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
   // Filtros
   const [filtros, setFiltros] = useState({
     cursoId: '',
+    cursoNombre: '',
     asignaturaId: '',
-    trimestre: 'todas'
+    asignaturaNombre: '',
+    trimestre: 'todas',
+    trimestreNombre: 'Todas (Ver todos)'
   });
 
   // Datos de la BD
@@ -26,6 +31,18 @@ function NotasPorCursoTab() {
     { id: 3, nombre: 'Trimestre 3' }
   ];
 
+  // Abreviar nombres compuestos de asignaturas
+  const abreviarNombre = (nombre) => {
+    const palabras = nombre.split(' ');
+    if (palabras.length >= 2) {
+      return palabras.map(p => {
+        if (p.length <= 4) return p;
+        return p.substring(0, 3) + '.';
+      }).join(' ');
+    }
+    return nombre;
+  };
+
   // Cargar cursos al montar
   useEffect(() => {
     cargarCursos();
@@ -37,7 +54,7 @@ function NotasPorCursoTab() {
       cargarAsignaturasPorCurso(filtros.cursoId);
     } else {
       setAsignaturasDB([]);
-      setFiltros(prev => ({ ...prev, asignaturaId: '', trimestre: 'todas' }));
+      setFiltros(prev => ({ ...prev, asignaturaId: '', asignaturaNombre: '', trimestre: 'todas', trimestreNombre: 'Todas (Ver todos)' }));
     }
   }, [filtros.cursoId]);
 
@@ -101,27 +118,36 @@ function NotasPorCursoTab() {
   };
 
   // Handlers de filtros
-  const handleCursoChange = (e) => {
+  const handleCursoSelect = (id, nombre) => {
     setFiltros({
-      cursoId: e.target.value,
+      cursoId: id,
+      cursoNombre: nombre,
       asignaturaId: '',
-      trimestre: 'todas'
+      asignaturaNombre: '',
+      trimestre: 'todas',
+      trimestreNombre: 'Todas (Ver todos)'
     });
+    setDropdownAbierto(null);
   };
 
-  const handleAsignaturaChange = (e) => {
+  const handleAsignaturaSelect = (id, nombre) => {
     setFiltros({
       ...filtros,
-      asignaturaId: e.target.value,
-      trimestre: 'todas'
+      asignaturaId: id,
+      asignaturaNombre: nombre,
+      trimestre: 'todas',
+      trimestreNombre: 'Todas (Ver todos)'
     });
+    setDropdownAbierto(null);
   };
 
-  const handleTrimestreChange = (e) => {
+  const handleTrimestreSelect = (id, nombre) => {
     setFiltros({
       ...filtros,
-      trimestre: e.target.value
+      trimestre: id,
+      trimestreNombre: nombre
     });
+    setDropdownAbierto(null);
   };
 
   // Calcular promedio de notas
@@ -173,55 +199,101 @@ function NotasPorCursoTab() {
           <h3>Notas por Curso y Asignatura</h3>
         </div>
         <div className="card-body">
-          <div className="form-row form-row-filtros filtros-notas-inline">
+          <div className="form-row form-row-filtros filtros-notas-curso">
             <div className="form-group">
               <label>Curso</label>
-              <select
-                className="form-control"
-                value={filtros.cursoId}
-                onChange={handleCursoChange}
-              >
-                <option value="">Todos los cursos</option>
-                {cursosDB.map(curso => (
-                  <option key={curso.id} value={curso.id}>
-                    {curso.nombre}
-                  </option>
-                ))}
-              </select>
+              <div className="custom-select-container">
+                <div
+                  className="custom-select-trigger"
+                  onClick={() => setDropdownAbierto(dropdownAbierto === 'curso' ? null : 'curso')}
+                >
+                  <span>{filtros.cursoNombre || 'Todos los cursos'}</span>
+                  <span className="custom-select-arrow">▼</span>
+                </div>
+                {dropdownAbierto === 'curso' && (
+                  <div className="custom-select-options">
+                    <div
+                      className={`custom-select-option ${!filtros.cursoId ? 'selected' : ''}`}
+                      onClick={() => handleCursoSelect('', '')}
+                    >
+                      Todos los cursos
+                    </div>
+                    {cursosDB.map(curso => (
+                      <div
+                        key={curso.id}
+                        className={`custom-select-option ${filtros.cursoId === String(curso.id) ? 'selected' : ''}`}
+                        onClick={() => handleCursoSelect(String(curso.id), curso.nombre)}
+                      >
+                        {curso.nombre}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="form-group">
               <label>Asignatura</label>
-              <select
-                className="form-control"
-                value={filtros.asignaturaId}
-                onChange={handleAsignaturaChange}
-                disabled={!filtros.cursoId}
-              >
-                <option value="">Todas las asignaturas</option>
-                {asignaturasDB.map(asig => (
-                  <option key={asig.id} value={asig.id}>
-                    {asig.nombre}
-                  </option>
-                ))}
-              </select>
+              <div className={`custom-select-container ${!filtros.cursoId ? 'disabled' : ''}`}>
+                <div
+                  className="custom-select-trigger"
+                  onClick={() => filtros.cursoId && setDropdownAbierto(dropdownAbierto === 'asignatura' ? null : 'asignatura')}
+                >
+                  <span>{filtros.asignaturaNombre || 'Todas las asignaturas'}</span>
+                  <span className="custom-select-arrow">▼</span>
+                </div>
+                {dropdownAbierto === 'asignatura' && (
+                  <div className="custom-select-options">
+                    <div
+                      className={`custom-select-option ${!filtros.asignaturaId ? 'selected' : ''}`}
+                      onClick={() => handleAsignaturaSelect('', '')}
+                    >
+                      Todas las asignaturas
+                    </div>
+                    {asignaturasDB.map(asig => (
+                      <div
+                        key={asig.id}
+                        className={`custom-select-option ${filtros.asignaturaId === String(asig.id) ? 'selected' : ''}`}
+                        onClick={() => handleAsignaturaSelect(String(asig.id), abreviarNombre(asig.nombre))}
+                      >
+                        {abreviarNombre(asig.nombre)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="form-group">
               <label>Trimestre</label>
-              <select
-                className="form-control"
-                value={filtros.trimestre}
-                onChange={handleTrimestreChange}
-                disabled={!filtros.asignaturaId}
-              >
-                <option value="todas">Todas (Ver todos)</option>
-                {trimestres.map(trim => (
-                  <option key={trim.id} value={trim.id}>
-                    {trim.nombre}
-                  </option>
-                ))}
-              </select>
+              <div className={`custom-select-container ${!filtros.asignaturaId ? 'disabled' : ''}`}>
+                <div
+                  className="custom-select-trigger"
+                  onClick={() => filtros.asignaturaId && setDropdownAbierto(dropdownAbierto === 'trimestre' ? null : 'trimestre')}
+                >
+                  <span>{filtros.trimestreNombre}</span>
+                  <span className="custom-select-arrow">▼</span>
+                </div>
+                {dropdownAbierto === 'trimestre' && (
+                  <div className="custom-select-options">
+                    <div
+                      className={`custom-select-option ${filtros.trimestre === 'todas' ? 'selected' : ''}`}
+                      onClick={() => handleTrimestreSelect('todas', 'Todas (Ver todos)')}
+                    >
+                      Todas (Ver todos)
+                    </div>
+                    {trimestres.map(trim => (
+                      <div
+                        key={trim.id}
+                        className={`custom-select-option ${filtros.trimestre === String(trim.id) ? 'selected' : ''}`}
+                        onClick={() => handleTrimestreSelect(String(trim.id), trim.nombre)}
+                      >
+                        {trim.nombre}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

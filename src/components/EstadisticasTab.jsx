@@ -18,6 +18,31 @@ import {
   getColorByAsistencia
 } from './estadisticas';
 
+// Función para ordenar cursos: primero Básico, luego Medio, por número y letra
+const ordenarCursos = (cursos) => {
+  if (!cursos || !Array.isArray(cursos)) return [];
+
+  return [...cursos].sort((a, b) => {
+    // Extraer nivel (Básico = 0, Medio = 1)
+    const nivelA = /medio/i.test(a) ? 1 : 0;
+    const nivelB = /medio/i.test(b) ? 1 : 0;
+
+    if (nivelA !== nivelB) return nivelA - nivelB;
+
+    // Extraer número del curso
+    const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+    const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+
+    if (numA !== numB) return numA - numB;
+
+    // Extraer letra final (A, B, C, etc.)
+    const letraA = a.match(/[A-Z]$/i)?.[0]?.toUpperCase() || '';
+    const letraB = b.match(/[A-Z]$/i)?.[0]?.toUpperCase() || '';
+
+    return letraA.localeCompare(letraB);
+  });
+};
+
 function EstadisticasTab() {
   const [vistaActual, setVistaActual] = useState('general');
   const [cursoSeleccionado, setCursoSeleccionado] = useState('');
@@ -698,7 +723,7 @@ function EstadisticasTab() {
             <div className="stats-info-card">
               <h4>Cursos asignados</h4>
               <div className="stats-cursos-list">
-                {datosDocente.cursos?.map(curso => (
+                {ordenarCursos(datosDocente.cursos)?.map(curso => (
                   <span key={curso} className="stats-curso-tag">{curso}</span>
                 ))}
               </div>

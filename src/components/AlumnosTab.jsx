@@ -461,14 +461,29 @@ function AlumnosTab() {
                 <div className="form-alumnos-grid">
                   <div className="form-group grupo-curso">
                     <label htmlFor="selectCursoAlumno">Curso</label>
-                    {isMobile ? (
-                      <SelectMovilLocal label="" value={formData.curso} valueName={formData.cursoNombre} onChange={(id, nombre) => setFormData({ ...formData, curso: String(id), cursoNombre: nombre })} options={cursosDB} placeholder="Seleccionar..." isOpen={dropdownAbierto === 'cursoForm'} onToggle={() => setDropdownAbierto(dropdownAbierto === 'cursoForm' ? null : 'cursoForm')} />
-                    ) : (
-                      <select id="selectCursoAlumno" className="form-control" name="curso" value={formData.curso} onChange={handleInputChange} required>
-                        <option value="">Seleccionar...</option>
-                        {cursosDB.map(curso => (<option key={curso.id} value={curso.id}>{curso.nombre}</option>))}
-                      </select>
-                    )}
+                    <div className="custom-select-container">
+                      <div
+                        className="custom-select-trigger"
+                        onClick={() => setDropdownAbierto(dropdownAbierto === 'cursoForm' ? null : 'cursoForm')}
+                      >
+                        <span>{formData.cursoNombre || 'Seleccionar...'}</span>
+                        <span className="custom-select-arrow">{dropdownAbierto === 'cursoForm' ? '▲' : '▼'}</span>
+                      </div>
+                      {dropdownAbierto === 'cursoForm' && (
+                        <div className="custom-select-options">
+                          <div className="custom-select-option" onClick={() => { setFormData({ ...formData, curso: '', cursoNombre: '' }); setDropdownAbierto(null); }}>Seleccionar...</div>
+                          {cursosDB.map(curso => (
+                            <div
+                              key={curso.id}
+                              className={`custom-select-option ${formData.curso === String(curso.id) ? 'selected' : ''}`}
+                              onClick={() => { setFormData({ ...formData, curso: String(curso.id), cursoNombre: curso.nombre }); setDropdownAbierto(null); }}
+                            >
+                              {curso.nombre}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="form-group grupo-rut">
                     <label htmlFor="inputRutAlumno">RUT</label>
@@ -526,35 +541,32 @@ function AlumnosTab() {
             <div className="card-body">
               <div className="filtros-alumnos">
                 <div className="form-row form-row-filtros">
-                  {isMobile ? (
-                    <SelectMovilLocal
-                      label="Curso"
-                      value={filtros.cursoId}
-                      valueName={filtros.cursoNombre}
-                      onChange={(id, nombre) => handleCambiarCursoFiltro(id, nombre)}
-                      options={cursosDB}
-                      placeholder="Todos los cursos"
-                      isOpen={dropdownAbierto === 'filtroCurso'}
-                      onToggle={() => setDropdownAbierto(dropdownAbierto === 'filtroCurso' ? null : 'filtroCurso')}
-                    />
-                  ) : (
-                    <div className="form-group">
-                      <label>Curso</label>
-                      <select
-                        className="form-control"
-                        value={filtros.cursoId}
-                        onChange={(e) => {
-                          const curso = cursosDB.find(c => c.id === parseInt(e.target.value));
-                          handleCambiarCursoFiltro(e.target.value, curso ? curso.nombre : '');
-                        }}
+                  <div className="form-group">
+                    <label>Curso</label>
+                    <div className="custom-select-container">
+                      <div
+                        className="custom-select-trigger"
+                        onClick={() => setDropdownAbierto(dropdownAbierto === 'filtroCurso' ? null : 'filtroCurso')}
                       >
-                        <option value="">Todos los cursos</option>
-                        {cursosDB.map(curso => (
-                          <option key={curso.id} value={curso.id}>{curso.nombre}</option>
-                        ))}
-                      </select>
+                        <span>{filtros.cursoNombre || 'Todos los cursos'}</span>
+                        <span className="custom-select-arrow">{dropdownAbierto === 'filtroCurso' ? '▲' : '▼'}</span>
+                      </div>
+                      {dropdownAbierto === 'filtroCurso' && (
+                        <div className="custom-select-options">
+                          <div className="custom-select-option" onClick={() => { handleCambiarCursoFiltro('', ''); setDropdownAbierto(null); }}>Todos los cursos</div>
+                          {cursosDB.map(curso => (
+                            <div
+                              key={curso.id}
+                              className={`custom-select-option ${filtros.cursoId === String(curso.id) ? 'selected' : ''}`}
+                              onClick={() => { handleCambiarCursoFiltro(curso.id, curso.nombre); setDropdownAbierto(null); }}
+                            >
+                              {curso.nombre}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                   <div className="form-group" style={{ position: 'relative' }} ref={dropdownAlumnoRef}>
                     <label>Alumno</label>
                     <input
@@ -578,10 +590,10 @@ function AlumnosTab() {
                         background: 'white',
                         border: '1px solid #e2e8f0',
                         borderRadius: '0 0 8px 8px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                        maxHeight: '250px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        maxHeight: '150px',
                         overflowY: 'auto',
-                        zIndex: 100
+                        zIndex: 1000
                       }}>
                         {/* Opción "Todos" al inicio */}
                         <div
@@ -628,7 +640,7 @@ function AlumnosTab() {
                                   {alumno.rut}
                                 </div>
                               </div>
-                              <div style={{ color: '#64748b', fontSize: '12px' }}>
+                              <div style={{ color: '#64748b', fontSize: '10px', whiteSpace: 'nowrap', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>
                                 {alumno.curso_nombre}
                               </div>
                             </div>
@@ -645,7 +657,7 @@ function AlumnosTab() {
                 {filtros.cursoNombre && (
                   <div style={{ marginTop: '10px', padding: '8px 12px', background: '#eff6ff', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ color: '#3b82f6', fontWeight: '500' }}>Mostrando:</span>
-                    <span style={{ color: '#1e40af' }}>{filtros.cursoNombre}</span>
+                    <span style={{ color: '#1e40af' }}>{filtros.cursoNombre?.replace(/Básico|Basico|Básica|Basica/gi, 'B').replace(/Media/gi, 'M')}</span>
                     {filtros.alumnoSeleccionado && (
                       <>
                         <span style={{ color: '#94a3b8' }}>→</span>
@@ -675,7 +687,7 @@ function AlumnosTab() {
                       <tr key={alumno.id}>
                         <td>{alumno.nombre_completo}</td>
                         <td>{alumno.rut}</td>
-                        <td>{alumno.curso_nombre}</td>
+                        <td>{alumno.curso_nombre?.replace(/Básico|Basico|Básica|Basica/gi, 'B').replace(/Media/gi, 'M')}</td>
                         <td>
                           <div className="acciones-btns">
                             <button className="btn-icon btn-icon-edit" onClick={() => setModalEditar({ visible: true, alumno })} title="Editar">

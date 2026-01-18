@@ -9,6 +9,7 @@ import AsistenciaTab from './components/AsistenciaTab';
 import ComunicadosTab from './components/ComunicadosTab';
 import EstadisticasTab from './components/EstadisticasTab';
 import ChatFlotante from './components/ChatFlotante';
+import ChatDocenteV2 from './components/ChatDocenteV2';
 import DocentePage from './components/docente/DocentePage';
 import ApoderadoPage from './components/apoderado/ApoderadoPage';
 import LandingPage from './components/LandingPage';
@@ -241,10 +242,15 @@ function App() {
         <p className="footer-creditos">Sistema escolar desarrollado por <span className="ch-naranja">CH</span>system</p>
       </footer>
 
-      {/* El chat flotante tiene su propio ErrorBoundary - si falla, simplemente no se muestra */}
+      {/* Chat V2 - Mismo diseño que el docente */}
       <ErrorBoundary fallback={null}>
-        <ChatFlotante
-          usuario={usuarioLogueado ? { ...usuarioLogueado, tipo: 'administrador' } : null}
+        <ChatDocenteV2
+          usuario={usuarioLogueado ? {
+            id: usuarioLogueado.id,
+            tipo: 'administrador',
+            nombres: usuarioLogueado.nombres,
+            apellidos: usuarioLogueado.apellidos
+          } : null}
           establecimientoId={usuarioLogueado?.establecimiento_id}
         />
       </ErrorBoundary>

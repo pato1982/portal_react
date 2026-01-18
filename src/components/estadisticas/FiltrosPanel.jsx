@@ -23,48 +23,32 @@ function FiltrosPanel({
 }) {
 
   const renderSelect = (id, value, onChange, options, placeholder, disabled = false) => {
-    if (isMobile) {
-      return (
-        <div className="custom-select-container">
-          <div
-            className="custom-select-trigger"
-            onClick={() => !disabled && setDropdownAbierto(dropdownAbierto === id ? null : id)}
-          >
-            <span>{options.find(o => o.value === value)?.label || placeholder}</span>
-            <span className="custom-select-arrow">{dropdownAbierto === id ? '▲' : '▼'}</span>
-          </div>
-          {dropdownAbierto === id && (
-            <div className="custom-select-options">
-              <div className="custom-select-option" onClick={() => { onChange(''); setDropdownAbierto(null); }}>
-                {placeholder}
-              </div>
-              {options.map(opt => (
-                <div
-                  key={opt.value}
-                  className={`custom-select-option ${value === opt.value ? 'selected' : ''}`}
-                  onClick={() => { onChange(opt.value); setDropdownAbierto(null); }}
-                >
-                  {opt.label}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      );
-    }
-
     return (
-      <select
-        className="form-control"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
-      >
-        <option value="">{placeholder}</option>
-        {options.map(opt => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
+      <div className={`custom-select-container ${disabled ? 'disabled' : ''}`}>
+        <div
+          className="custom-select-trigger"
+          onClick={() => !disabled && setDropdownAbierto(dropdownAbierto === id ? null : id)}
+        >
+          <span>{options.find(o => o.value === value)?.label || placeholder}</span>
+          <span className="custom-select-arrow">{dropdownAbierto === id ? '▲' : '▼'}</span>
+        </div>
+        {dropdownAbierto === id && (
+          <div className="custom-select-options">
+            <div className="custom-select-option" onClick={() => { onChange(''); setDropdownAbierto(null); }}>
+              {placeholder}
+            </div>
+            {options.map(opt => (
+              <div
+                key={opt.value}
+                className={`custom-select-option ${value === opt.value ? 'selected' : ''}`}
+                onClick={() => { onChange(opt.value); setDropdownAbierto(null); }}
+              >
+                {opt.label}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     );
   };
 

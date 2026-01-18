@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMensaje } from '../contexts';
+import { useDropdown } from '../hooks';
 import config from '../config/env';
 
 function AsignacionesTab() {
   const { mostrarMensaje } = useMensaje();
   const [subTab, setSubTab] = useState('asignar');
+  const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
   // Datos del formulario
   const [formData, setFormData] = useState({
     docenteId: '',
     cursoId: '',
+    docenteNombre: '',
+    cursoNombre: '',
     asignaturas: []
   });
 
   // Filtros para listado
-  const [filtros, setFiltros] = useState({ cursoId: '', docenteId: '' });
+  const [filtros, setFiltros] = useState({ cursoId: '', docenteId: '', cursoNombre: '', docenteNombre: '' });
 
   // Datos de la BD
   const [docentesDB, setDocentesDB] = useState([]);
@@ -73,19 +77,23 @@ function AsignacionesTab() {
   }, [formData.docenteId, docentesDB]);
 
   // Handlers del formulario
-  const handleDocenteChange = (e) => {
+  const handleDocenteChange = (id, nombre) => {
     setFormData({
       ...formData,
-      docenteId: e.target.value,
+      docenteId: id,
+      docenteNombre: nombre,
       asignaturas: [] // Limpiar asignaturas al cambiar docente
     });
+    setDropdownAbierto(null);
   };
 
-  const handleCursoChange = (e) => {
+  const handleCursoChange = (id, nombre) => {
     setFormData({
       ...formData,
-      cursoId: e.target.value
+      cursoId: id,
+      cursoNombre: nombre
     });
+    setDropdownAbierto(null);
   };
 
   const handleAsignaturaChange = (asignaturaId) => {
@@ -141,6 +149,8 @@ function AsignacionesTab() {
     setFormData({
       docenteId: '',
       cursoId: '',
+      docenteNombre: '',
+      cursoNombre: '',
       asignaturas: []
     });
   };
@@ -222,36 +232,58 @@ function AsignacionesTab() {
             </div>
             <div className="card-body">
               <form onSubmit={handleSubmit}>
-                <div className="form-row form-row-filtros">
+                <div className="form-row form-row-filtros filtros-asignaciones-form">
                   <div className="form-group">
                     <label>Docente</label>
-                    <select
-                      className="form-control"
-                      value={formData.docenteId}
-                      onChange={handleDocenteChange}
-                    >
-                      <option value="">Todos los docentes</option>
-                      {docentesDB.map(docente => (
-                        <option key={docente.id} value={docente.id}>
-                          {docente.nombre_completo}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="custom-select-container">
+                      <div
+                        className="custom-select-trigger"
+                        onClick={() => setDropdownAbierto(dropdownAbierto === 'formDocente' ? null : 'formDocente')}
+                      >
+                        <span>{formData.docenteNombre || 'Seleccionar docente...'}</span>
+                        <span className="custom-select-arrow">{dropdownAbierto === 'formDocente' ? '▲' : '▼'}</span>
+                      </div>
+                      {dropdownAbierto === 'formDocente' && (
+                        <div className="custom-select-options">
+                          <div className="custom-select-option" onClick={() => handleDocenteChange('', '')}>Seleccionar docente...</div>
+                          {docentesDB.map(docente => (
+                            <div
+                              key={docente.id}
+                              className={`custom-select-option ${formData.docenteId === String(docente.id) ? 'selected' : ''}`}
+                              onClick={() => handleDocenteChange(String(docente.id), docente.nombre_completo)}
+                            >
+                              {docente.nombre_completo}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>Curso</label>
-                    <select
-                      className="form-control"
-                      value={formData.cursoId}
-                      onChange={handleCursoChange}
-                    >
-                      <option value="">Todos los cursos</option>
-                      {cursosDB.map(curso => (
-                        <option key={curso.id} value={curso.id}>
-                          {curso.nombre}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="custom-select-container">
+                      <div
+                        className="custom-select-trigger"
+                        onClick={() => setDropdownAbierto(dropdownAbierto === 'formCurso' ? null : 'formCurso')}
+                      >
+                        <span>{formData.cursoNombre || 'Seleccionar curso...'}</span>
+                        <span className="custom-select-arrow">{dropdownAbierto === 'formCurso' ? '▲' : '▼'}</span>
+                      </div>
+                      {dropdownAbierto === 'formCurso' && (
+                        <div className="custom-select-options">
+                          <div className="custom-select-option" onClick={() => handleCursoChange('', '')}>Seleccionar curso...</div>
+                          {cursosDB.map(curso => (
+                            <div
+                              key={curso.id}
+                              className={`custom-select-option ${formData.cursoId === String(curso.id) ? 'selected' : ''}`}
+                              onClick={() => handleCursoChange(String(curso.id), curso.nombre)}
+                            >
+                              {curso.nombre}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -302,33 +334,55 @@ function AsignacionesTab() {
                 <div className="form-row form-row-filtros">
                   <div className="form-group">
                     <label>Filtrar por Curso</label>
-                    <select
-                      className="form-control"
-                      value={filtros.cursoId}
-                      onChange={(e) => setFiltros({ ...filtros, cursoId: e.target.value })}
-                    >
-                      <option value="">Todos los cursos</option>
-                      {cursosDB.map(curso => (
-                        <option key={curso.id} value={curso.id}>
-                          {curso.nombre}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="custom-select-container">
+                      <div
+                        className="custom-select-trigger"
+                        onClick={() => setDropdownAbierto(dropdownAbierto === 'filtroCurso' ? null : 'filtroCurso')}
+                      >
+                        <span>{filtros.cursoNombre || 'Todos los cursos'}</span>
+                        <span className="custom-select-arrow">{dropdownAbierto === 'filtroCurso' ? '▲' : '▼'}</span>
+                      </div>
+                      {dropdownAbierto === 'filtroCurso' && (
+                        <div className="custom-select-options">
+                          <div className="custom-select-option" onClick={() => { setFiltros({ ...filtros, cursoId: '', cursoNombre: '' }); setDropdownAbierto(null); }}>Todos los cursos</div>
+                          {cursosDB.map(curso => (
+                            <div
+                              key={curso.id}
+                              className={`custom-select-option ${filtros.cursoId === String(curso.id) ? 'selected' : ''}`}
+                              onClick={() => { setFiltros({ ...filtros, cursoId: String(curso.id), cursoNombre: curso.nombre }); setDropdownAbierto(null); }}
+                            >
+                              {curso.nombre}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>Filtrar por Docente</label>
-                    <select
-                      className="form-control"
-                      value={filtros.docenteId}
-                      onChange={(e) => setFiltros({ ...filtros, docenteId: e.target.value })}
-                    >
-                      <option value="">Todos los docentes</option>
-                      {docentesDB.map(docente => (
-                        <option key={docente.id} value={docente.id}>
-                          {docente.nombre_completo}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="custom-select-container">
+                      <div
+                        className="custom-select-trigger"
+                        onClick={() => setDropdownAbierto(dropdownAbierto === 'filtroDocente' ? null : 'filtroDocente')}
+                      >
+                        <span>{filtros.docenteNombre || 'Todos los docentes'}</span>
+                        <span className="custom-select-arrow">{dropdownAbierto === 'filtroDocente' ? '▲' : '▼'}</span>
+                      </div>
+                      {dropdownAbierto === 'filtroDocente' && (
+                        <div className="custom-select-options">
+                          <div className="custom-select-option" onClick={() => { setFiltros({ ...filtros, docenteId: '', docenteNombre: '' }); setDropdownAbierto(null); }}>Todos los docentes</div>
+                          {docentesDB.map(docente => (
+                            <div
+                              key={docente.id}
+                              className={`custom-select-option ${filtros.docenteId === String(docente.id) ? 'selected' : ''}`}
+                              onClick={() => { setFiltros({ ...filtros, docenteId: String(docente.id), docenteNombre: docente.nombre_completo }); setDropdownAbierto(null); }}
+                            >
+                              {docente.nombre_completo}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

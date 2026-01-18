@@ -47,7 +47,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     // (Opcional: podriamos dejarlo si queremos actualizar "no leidos" en tiempo real)
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/api/chat/contactos?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`, {
+      const response = await fetch(`${config.apiBaseUrl}/chat/contactos?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`, {
         headers: getAuthHeaders()
       });
 
@@ -71,7 +71,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
       setCargandoMensajes(true);
 
       // 1. Obtener o crear conversacion
-      const response = await fetch(`${config.apiBaseUrl}/api/chat/conversacion`, {
+      const response = await fetch(`${config.apiBaseUrl}/chat/conversacion`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -104,7 +104,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
   const cargarMensajes = async (conversacionId) => {
     try {
-      const response = await fetch(`${config.apiBaseUrl}/api/chat/conversacion/${conversacionId}/mensajes?usuario_id=${usuario.id}&limite=50`, {
+      const response = await fetch(`${config.apiBaseUrl}/chat/conversacion/${conversacionId}/mensajes?usuario_id=${usuario.id}&limite=50`, {
         headers: getAuthHeaders()
       });
 
@@ -133,7 +133,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     // Buscamos en la lista de conversaciones (endpoint que ya existe) o asumimos por defecto
     // Por eficiencia, usaremos el endpoint de /conversaciones filtrando
     try {
-      const response = await fetch(`${config.apiBaseUrl}/api/chat/conversaciones?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`, {
+      const response = await fetch(`${config.apiBaseUrl}/chat/conversaciones?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`, {
         headers: getAuthHeaders()
       });
       if (response.ok) {
@@ -240,7 +240,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     setMensajes(prev => [...prev, nuevoMensaje]);
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/api/chat/mensaje`, {
+      const response = await fetch(`${config.apiBaseUrl}/chat/mensaje`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({

@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import config from '../../config/env';
+import { useResponsive } from '../../hooks';
 
 function ProgresoTab({ pupilo }) {
   const chartRendimientoRef = useRef(null);
@@ -8,6 +9,9 @@ function ProgresoTab({ pupilo }) {
   const chartRendimientoInstance = useRef(null);
   const chartAsignaturasInstance = useRef(null);
   const [asignaturaSeleccionada, setAsignaturaSeleccionada] = useState('todas');
+
+  // Hook responsivo para tamaños de fuente
+  const { isMobile, isTablet } = useResponsive();
 
   // Estados para datos de la API
   const [datosProgreso, setDatosProgreso] = useState(null);
@@ -266,6 +270,44 @@ function ProgresoTab({ pupilo }) {
       return '#ef4444';
     });
 
+    // Plugin para mostrar notas dentro de las barras
+    const notasEnBarrasPlugin = {
+      id: 'notasEnBarras',
+      afterDatasetsDraw: (chart) => {
+        const ctx = chart.ctx;
+        const meta = chart.getDatasetMeta(0);
+
+        // Tamaño de fuente según dispositivo
+        let fontSize = 11; // Desktop
+        if (isMobile) {
+          fontSize = 8;
+        } else if (isTablet) {
+          fontSize = 9;
+        }
+
+        ctx.save();
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+
+        meta.data.forEach((bar, index) => {
+          const nota = data[index];
+          if (nota && nota > 0) {
+            const x = bar.x;
+            const y = bar.y + (bar.height / 2);
+
+            // Solo mostrar si la barra es suficientemente alta
+            if (bar.height > 15) {
+              ctx.fillText(nota.toFixed(1), x, y);
+            }
+          }
+        });
+
+        ctx.restore();
+      }
+    };
+
     chartAsignaturasInstance.current = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -314,7 +356,8 @@ function ProgresoTab({ pupilo }) {
             }
           }
         }
-      }
+      },
+      plugins: [notasEnBarrasPlugin]
     });
 
     return () => {
@@ -322,7 +365,7 @@ function ProgresoTab({ pupilo }) {
         chartAsignaturasInstance.current.destroy();
       }
     };
-  }, [datosProgreso]);
+  }, [datosProgreso, isMobile, isTablet]);
 
   const getNotaClass = (nota) => {
     if (nota >= 6.0) return 'nota-excelente';

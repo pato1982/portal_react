@@ -3,6 +3,7 @@ import InformacionTab from './InformacionTab';
 import NotasTab from './NotasTab';
 import ComunicadosTab from './ComunicadosTab';
 import ProgresoTab from './ProgresoTab';
+import ChatApoderado from './ChatApoderado';
 import Header from '../Header';
 import config from '../../config/env';
 
@@ -515,6 +516,12 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
           50% { opacity: 0.7; }
         }
       `}</style>
+
+      {/* Chat Flotante */}
+      <ChatApoderado
+        usuario={apoderadoActual}
+        pupiloSeleccionado={pupiloSeleccionado}
+      />
     </div>
   );
 }

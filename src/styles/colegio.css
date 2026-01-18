@@ -7951,26 +7951,207 @@ select.form-control {
 
 /* ==================== RESPONSIVE ==================== */
 
+/* Tablet grande (900px - 1100px): Reducir un poco */
+@media (max-width: 1100px) {
+    .chatv2-modal {
+        width: 98vw;
+        max-width: 1000px;
+    }
+}
+
+/* Tablet (768px - 900px): Layout 3 columnas compacto */
 @media (max-width: 900px) {
+    .chatv2-modal {
+        width: 98vw;
+        max-width: 850px;
+        height: 80vh;
+    }
+
     .chatv2-nav {
-        width: 60px;
+        width: 56px;
         padding: 8px 4px;
     }
 
     .chatv2-nav-item {
-        padding: 10px 4px;
+        padding: 8px 4px;
+    }
+
+    .chatv2-nav-item svg {
+        width: 20px;
+        height: 20px;
     }
 
     .chatv2-nav-item span {
-        font-size: 9px;
+        font-size: 8px;
     }
 
     .chatv2-list {
-        width: 260px;
+        width: 220px;
+    }
+
+    .chatv2-search {
+        padding: 10px;
+    }
+
+    .chatv2-search input {
+        font-size: 13px;
+    }
+
+    .chatv2-list-item {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .chatv2-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 12px;
+    }
+
+    .chatv2-list-item-name {
+        font-size: 13px;
+    }
+
+    .chatv2-list-item-preview {
+        font-size: 12px;
+    }
+
+    .chatv2-chat-header {
+        padding: 10px 14px;
+    }
+
+    .chatv2-chat-header-name {
+        font-size: 14px;
+    }
+
+    .chatv2-message-bubble p {
+        font-size: 13px;
+    }
+
+    .chatv2-input-wrapper input {
+        height: 40px;
+        font-size: 13px;
+    }
+
+    .chatv2-send-btn {
+        width: 40px;
+        height: 40px;
     }
 }
 
+/* Tablet pequeña (600px - 768px): Aún más compacto pero 3 columnas */
 @media (max-width: 768px) {
+    .chatv2-modal {
+        width: 98vw;
+        max-width: 720px;
+        height: 85vh;
+        max-height: 600px;
+    }
+
+    .chatv2-header {
+        padding: 12px 16px;
+    }
+
+    .chatv2-header-title {
+        font-size: 16px;
+    }
+
+    .chatv2-nav {
+        width: 50px;
+        padding: 6px 3px;
+    }
+
+    .chatv2-nav-item {
+        padding: 6px 3px;
+        gap: 4px;
+    }
+
+    .chatv2-nav-item svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .chatv2-nav-item span {
+        font-size: 7px;
+    }
+
+    .chatv2-list {
+        width: 200px;
+    }
+
+    .chatv2-avatar {
+        width: 34px;
+        height: 34px;
+        font-size: 11px;
+    }
+
+    .chatv2-avatar.small {
+        width: 32px;
+        height: 32px;
+    }
+
+    .chatv2-list-item {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .chatv2-list-item-name {
+        font-size: 12px;
+    }
+
+    .chatv2-list-item-preview {
+        font-size: 11px;
+    }
+
+    .chatv2-tag {
+        font-size: 8px;
+        padding: 1px 4px;
+    }
+
+    .chatv2-unread-badge {
+        min-width: 18px;
+        height: 18px;
+        font-size: 10px;
+    }
+
+    .chatv2-toggle-label {
+        display: none;
+    }
+
+    .chatv2-toggle {
+        width: 36px;
+        height: 20px;
+    }
+
+    .chatv2-toggle-slider {
+        width: 16px;
+        height: 16px;
+    }
+
+    .chatv2-toggle.active .chatv2-toggle-slider {
+        transform: translateX(16px);
+    }
+
+    .chatv2-message {
+        max-width: 80%;
+    }
+
+    .chatv2-message-bubble {
+        padding: 8px 12px;
+    }
+
+    .chatv2-message-bubble p {
+        font-size: 13px;
+    }
+
+    .chatv2-fab {
+        width: 52px;
+        height: 52px;
+    }
+}
+
+/* Móvil (< 600px): Layout de una columna */
+@media (max-width: 600px) {
     .chatv2-modal {
         width: 100%;
         height: 100%;
@@ -8011,6 +8192,25 @@ select.form-control {
         display: flex;
     }
 
+    .chatv2-avatar {
+        width: 42px;
+        height: 42px;
+        font-size: 13px;
+    }
+
+    .chatv2-list-item {
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .chatv2-list-item-name {
+        font-size: 14px;
+    }
+
+    .chatv2-list-item-preview {
+        font-size: 13px;
+    }
+
     .chatv2-fab {
         bottom: 16px;
         right: 16px;
@@ -8021,27 +8221,37 @@ select.form-control {
     .chatv2-message {
         max-width: 85%;
     }
+
+    .chatv2-message-bubble p {
+        font-size: 14px;
+    }
+
+    .chatv2-input-wrapper input {
+        height: 44px;
+        font-size: 14px;
+    }
 }
 
-@media (max-width: 480px) {
+/* Móvil pequeño (< 400px) */
+@media (max-width: 400px) {
     .chatv2-header {
-        padding: 12px 16px;
+        padding: 10px 12px;
     }
 
     .chatv2-header-title {
-        font-size: 16px;
+        font-size: 15px;
     }
 
     .chatv2-chat-header-actions {
-        gap: 8px;
-    }
-
-    .chatv2-toggle-label {
-        display: none;
+        gap: 6px;
     }
 
     .chatv2-message {
         max-width: 90%;
+    }
+
+    .chatv2-input-area {
+        padding: 10px 12px;
     }
 }
 

@@ -758,7 +758,11 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                                 )}
                               </div>
                             )}
-                            <div className="chatv2-avatar estudiante">
+                            <div
+                              className="chatv2-avatar estudiante"
+                              style={alumno.chat_habilitado === 1 ? { border: '3px solid #ef4444' } : {}}
+                              title={alumno.chat_habilitado === 1 ? "Respuesta habilitada" : ""}
+                            >
                               {getIniciales(alumno.nombre_alumno)}
                             </div>
                             <div className="chatv2-list-item-info">

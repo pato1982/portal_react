@@ -351,6 +351,14 @@ router.get('/curso/:id/alumnos-chat', async (req, res) => {
                 ap.foto_url AS foto_apoderado,
                 (CASE WHEN u.id IS NOT NULL AND u.activo = 1 THEN 1 ELSE 0 END) as apoderado_activo,
                 (
+                    SELECT c.respuesta_habilitada
+                    FROM tb_chat_conversaciones c
+                    WHERE c.activo = 1
+                    AND ((c.usuario1_id = ? AND c.usuario2_id = ap.usuario_id) OR (c.usuario2_id = ? AND c.usuario1_id = ap.usuario_id))
+                    ORDER BY c.ultimo_mensaje_fecha DESC
+                    LIMIT 1
+                ) as chat_habilitado,
+                (
                     SELECT COUNT(*)
                     FROM tb_chat_mensajes m
                     INNER JOIN tb_chat_conversaciones c ON m.conversacion_id = c.id
@@ -361,16 +369,14 @@ router.get('/curso/:id/alumnos-chat', async (req, res) => {
                 ) AS mensajes_no_leidos
             FROM tb_alumno_establecimiento ae
             INNER JOIN tb_alumnos a ON ae.alumno_id = a.id
-            INNER JOIN tb_apoderado_alumno aa ON a.id = aa.alumno_id
-            INNER JOIN tb_apoderados ap ON aa.apoderado_id = ap.id
+            LEFT JOIN tb_apoderado_alumno aa ON a.id = aa.alumno_id
+            LEFT JOIN tb_apoderados ap ON aa.apoderado_id = ap.id
             LEFT JOIN tb_usuarios u ON ap.usuario_id = u.id
             WHERE ae.curso_id = ?
             AND ae.activo = 1
             AND a.activo = 1
-            AND aa.activo = 1
-            AND ap.activo = 1
             ORDER BY a.apellidos, a.nombres
-        `, [usuario_id, usuario_id, id]);
+        `, [usuario_id, usuario_id, usuario_id, usuario_id, id]);
 
         res.json({ success: true, data: alumnos });
     } catch (error) {

@@ -242,12 +242,12 @@ function App() {
         <p className="footer-creditos">Sistema escolar desarrollado por <span className="ch-naranja">CH</span>system</p>
       </footer>
 
-      {/* Chat V2 - Mismo diseño que el docente */}
+      {/* Chat V2 - Global para Docentes y Administradores */}
       <ErrorBoundary fallback={null}>
         <ChatDocenteV2
           usuario={usuarioLogueado ? {
             id: usuarioLogueado.id,
-            tipo: 'administrador',
+            tipo: usuarioLogueado.tipo || usuarioLogueado.tipo_usuario?.toLowerCase(),
             nombres: usuarioLogueado.nombres,
             apellidos: usuarioLogueado.apellidos
           } : null}

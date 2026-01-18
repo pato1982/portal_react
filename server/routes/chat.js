@@ -273,21 +273,58 @@ router.get('/conversaciones', async (req, res) => {
 // ============================================
 // GET /api/chat/docente/:id/cursos - Obtener cursos del docente
 // ============================================
+// ============================================
+// GET /api/chat/docente/:id/cursos - Obtener cursos del docente (o todos si es admin)
+// ============================================
 router.get('/docente/:id/cursos', async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // usuario_id
     const { establecimiento_id } = req.query;
 
+    if (!establecimiento_id) {
+        console.log('Chat/Cursos: Faltan parametros', req.query);
+        return res.status(400).json({ success: false, message: 'establecimiento_id requerido' });
+    }
+
     try {
-        const [cursos] = await pool.query(`
-            SELECT DISTINCT c.id, c.nombre, c.grado, c.letra, c.nivel
-            FROM tb_cursos c
-            INNER JOIN tb_asignaciones a ON c.id = a.curso_id
-            WHERE a.docente_id = (SELECT id FROM tb_docentes WHERE usuario_id = ?)
-            AND c.establecimiento_id = ?
-            AND c.activo = 1
-            AND a.activo = 1
-            ORDER BY c.nivel, c.grado, c.letra
-        `, [id, establecimiento_id]);
+        console.log(`Chat/Cursos: Solicitando cursos para usuario ${id}, estab ${establecimiento_id}`);
+        // Verificar tipo de usuario
+        const [users] = await pool.query('SELECT tipo_usuario FROM tb_usuarios WHERE id = ?', [id]);
+
+        if (users.length === 0) {
+            console.log('Chat/Cursos: Usuario no encontrado');
+            return res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+        }
+
+        const tipoUsuario = users[0].tipo_usuario;
+        console.log(`Chat/Cursos: Tipo de usuario detectado: ${tipoUsuario}`);
+        let cursos = [];
+
+        if (tipoUsuario === 'administrador') {
+            // Administradores ven TODOS los cursos activos del establecimiento
+            const [todosCursos] = await pool.query(`
+                SELECT id, nombre, grado, letra, nivel
+                FROM tb_cursos
+                WHERE establecimiento_id = ? AND activo = 1
+                ORDER BY nivel, grado, letra
+            `, [establecimiento_id]);
+            cursos = todosCursos;
+            console.log(`Chat/Cursos: Admin encontrÃ³ ${cursos.length} cursos`);
+
+        } else {
+            // Docentes ven solo sus cursos asignados
+            const [cursosAsignados] = await pool.query(`
+                SELECT DISTINCT c.id, c.nombre, c.grado, c.letra, c.nivel
+                FROM tb_cursos c
+                INNER JOIN tb_asignaciones a ON c.id = a.curso_id
+                WHERE a.docente_id = (SELECT id FROM tb_docentes WHERE usuario_id = ?)
+                AND c.establecimiento_id = ?
+                AND c.activo = 1
+                AND a.activo = 1
+                ORDER BY c.nivel, c.grado, c.letra
+            `, [id, establecimiento_id]);
+            cursos = cursosAsignados;
+            console.log(`Chat/Cursos: Docente encontrÃ³ ${cursos.length} cursos`);
+        }
 
         res.json({ success: true, data: cursos });
     } catch (error) {

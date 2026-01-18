@@ -608,7 +608,10 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
           {/* Añadir overflow visible a las filas de filtros y mayor z-index */}
           {showMobile ? (
             <>
-              <div className="form-row-movil">
+              <div className="form-row-movil" style={{
+                position: 'relative',
+                zIndex: (dropdownAbierto === 'curso' || dropdownAbierto === 'asignatura') ? 1002 : 10
+              }}>
                 {cargandoCursos ? (
                   <div className="form-group">
                     <label>Curso</label>
@@ -640,7 +643,10 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
                   onClose={() => setDropdownAbierto(null)}
                 />
               </div>
-              <div className="form-row-movil" style={{ zIndex: dropdownAbierto ? 999 : 'auto' }}>
+              <div className="form-row-movil" style={{
+                position: 'relative',
+                zIndex: (dropdownAbierto === 'alumno' || !dropdownAbierto) ? 1000 : 1
+              }}>
                 {/* Wrapper para asegurar que el dropdown se vea */}
                 <div style={{ position: 'relative', zIndex: 1001 }}>
                   <AutocompleteAlumno
@@ -793,33 +799,37 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
         </div>
       </div>
 
-      {modalEditar && (
-        <ModalEditar
-          nota={notaEditando}
-          editNota={editNota}
-          setEditNota={setEditNota}
-          editTrimestre={editTrimestre}
-          setEditTrimestre={setEditTrimestre}
-          editFecha={editFecha}
-          setEditFecha={setEditFecha}
-          editComentario={editComentario}
-          setEditComentario={setEditComentario}
-          editPendiente={editPendiente}
-          setEditPendiente={setEditPendiente}
-          onGuardar={guardarEdicion}
-          onCerrar={() => setModalEditar(false)}
-          guardando={guardando}
-        />
-      )}
-      {modalEliminar && (
-        <ModalEliminar
-          nota={notaEliminar}
-          onConfirmar={confirmarEliminar}
-          onCerrar={() => setModalEliminar(false)}
-          eliminando={eliminando}
-        />
-      )}
-    </div>
+      {
+        modalEditar && (
+          <ModalEditar
+            nota={notaEditando}
+            editNota={editNota}
+            setEditNota={setEditNota}
+            editTrimestre={editTrimestre}
+            setEditTrimestre={setEditTrimestre}
+            editFecha={editFecha}
+            setEditFecha={setEditFecha}
+            editComentario={editComentario}
+            setEditComentario={setEditComentario}
+            editPendiente={editPendiente}
+            setEditPendiente={setEditPendiente}
+            onGuardar={guardarEdicion}
+            onCerrar={() => setModalEditar(false)}
+            guardando={guardando}
+          />
+        )
+      }
+      {
+        modalEliminar && (
+          <ModalEliminar
+            nota={notaEliminar}
+            onConfirmar={confirmarEliminar}
+            onCerrar={() => setModalEliminar(false)}
+            eliminando={eliminando}
+          />
+        )
+      }
+    </div >
   );
 }
 

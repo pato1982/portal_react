@@ -25,7 +25,7 @@ export function SelectNativo({ label, value, onChange, options, placeholder, dis
   };
 
   return (
-    <div className="form-group" ref={containerRef} style={{ position: 'relative', marginBottom: '15px', ...containerStyle }}>
+    <div className="form-group" ref={containerRef} style={{ position: 'relative', marginBottom: '15px', zIndex: isOpen ? 100 : 'auto', ...containerStyle }}>
       <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>{label}</label>
       <div
         className={`form-control ${disabled ? 'disabled' : ''}`}

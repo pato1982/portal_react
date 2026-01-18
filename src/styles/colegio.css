@@ -8692,7 +8692,69 @@ select.form-control {
     border-color: #fca5a5;
 }
 
-/* Botón enviar a seleccionados */
+/* Panel de seleccionados */
+.chatv2-seleccionados-panel {
+    padding: 12px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-bottom: 1px solid #bae6fd;
+}
+
+.chatv2-seleccionados-header {
+    margin-bottom: 8px;
+}
+
+.chatv2-seleccionados-titulo {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0369a1;
+}
+
+.chatv2-seleccionados-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.chatv2-seleccionado-tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: white;
+    border: 1px solid #0ea5e9;
+    border-radius: 16px;
+    font-size: 11px;
+    color: #0369a1;
+}
+
+.chatv2-seleccionado-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    background: #fee2e2;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.chatv2-seleccionado-remove:hover {
+    background: #fecaca;
+}
+
+.chatv2-seleccionado-remove svg {
+    width: 10px;
+    height: 10px;
+    color: #dc2626;
+}
+
+/* Botón enviar a seleccionados (legacy) */
 .chatv2-enviar-seleccionados {
     padding: 8px 12px;
     background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);

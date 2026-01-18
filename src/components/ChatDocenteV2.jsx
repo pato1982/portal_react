@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useMensaje } from '../contexts';
 import {
   obtenerContactos,
   obtenerMensajes,
@@ -15,6 +16,7 @@ import {
 } from '../services/chatService';
 
 function ChatDocenteV2({ usuario, establecimientoId }) {
+  const { mostrarMensaje } = useMensaje();
   // Estados principales
   const [chatAbierto, setChatAbierto] = useState(false);
   const [vistaActiva, setVistaActiva] = useState('todos'); // todos, institucional, cursos
@@ -229,6 +231,19 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     // Si estamos en modo selección, no abrir chat individual
     if (modoSeleccion) return;
 
+    // Obtener el ID del usuario destinatario
+    const destinatarioId = contacto.usuario_id || contacto.apoderado_usuario_id;
+
+    // Verificar que el destinatario tiene cuenta
+    if (!destinatarioId) {
+      mostrarMensaje('Aviso', 'Este apoderado no tiene cuenta registrada en la aplicación', 'warning');
+      return;
+    }
+
+    // Resetear estado anterior
+    setConversacionActual(null);
+    setRespuestaHabilitada(true);
+
     setContactoActual({
       ...contacto,
       nombre_completo: contacto.nombre_completo || contacto.nombre_apoderado || contacto.nombre_alumno,
@@ -241,7 +256,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     try {
       const resultado = await crearConversacion(
         usuario.id,
-        contacto.usuario_id || contacto.apoderado_usuario_id,
+        destinatarioId,
         establecimientoId
       );
 
@@ -254,6 +269,8 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
         }
         await cargarMensajes(resultado.data.id);
         actualizarNoLeidos();
+      } else {
+        console.error('Error creando conversación:', resultado.error);
       }
     } catch (error) {
       console.error('Error al seleccionar contacto:', error);
@@ -403,12 +420,28 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   };
 
   const toggleRespuestaHabilitada = async () => {
-    if (!conversacionActual || esMensajeMasivo) return;
+    // No permitir en mensajes masivos
+    if (esMensajeMasivo) return;
+
+    // Verificar que hay una conversación válida
+    if (!conversacionActual || conversacionActual === 'masivo') {
+      console.warn('No hay conversación activa para cambiar estado');
+      return;
+    }
+
     const nuevoEstado = !respuestaHabilitada;
     setRespuestaHabilitada(nuevoEstado);
 
-    const resultado = await habilitarRespuesta(conversacionActual, nuevoEstado);
-    if (!resultado.success) {
+    try {
+      const resultado = await habilitarRespuesta(conversacionActual, nuevoEstado);
+      if (!resultado.success) {
+        console.error('Error al cambiar estado:', resultado.error);
+        // Revertir si falla
+        setRespuestaHabilitada(!nuevoEstado);
+      }
+    } catch (error) {
+      console.error('Error al cambiar estado de respuesta:', error);
+      // Revertir si hay error
       setRespuestaHabilitada(!nuevoEstado);
     }
   };
@@ -707,9 +740,36 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                         )}
                       </div>
 
-                      {/* Botón enviar a seleccionados */}
+                      {/* Panel de seleccionados */}
                       {modoSeleccion && apoderadosSeleccionados.length > 0 && (
-                        <div className="chatv2-enviar-seleccionados">
+                        <div className="chatv2-seleccionados-panel">
+                          <div className="chatv2-seleccionados-header">
+                            <span className="chatv2-seleccionados-titulo">
+                              Destinatarios ({apoderadosSeleccionados.length})
+                            </span>
+                          </div>
+                          <div className="chatv2-seleccionados-lista">
+                            {apoderadosSeleccionados.map(sel => (
+                              <div key={sel.id} className="chatv2-seleccionado-tag">
+                                <span>{sel.nombre_alumno}</span>
+                                <button
+                                  className="chatv2-seleccionado-remove"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const alumno = alumnos.find(a =>
+                                      (a.apoderado_usuario_id || `alumno_${a.alumno_id}`) === sel.id
+                                    );
+                                    if (alumno) toggleSeleccionApoderado(alumno);
+                                  }}
+                                >
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                  </svg>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
                           <button
                             className="chatv2-btn-enviar-grupo"
                             onClick={iniciarMensajeASeleccionados}
@@ -718,7 +778,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                               <line x1="22" y1="2" x2="11" y2="13"></line>
                               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                             </svg>
-                            Enviar mensaje a {apoderadosSeleccionados.length} apoderado{apoderadosSeleccionados.length !== 1 ? 's' : ''}
+                            Escribir mensaje
                           </button>
                         </div>
                       )}

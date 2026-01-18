@@ -7927,6 +7927,15 @@ select.form-control {
     font-size: 12px;
     color: #64748b;
     font-weight: 500;
+    transition: color 0.2s;
+}
+
+.chatv2-toggle-label.activo {
+    color: #10b981;
+}
+
+.chatv2-toggle-label.inactivo {
+    color: #ef4444;
 }
 
 .chatv2-toggle {

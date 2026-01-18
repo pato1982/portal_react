@@ -3,7 +3,7 @@ import InformacionTab from './InformacionTab';
 import NotasTab from './NotasTab';
 import ComunicadosTab from './ComunicadosTab';
 import ProgresoTab from './ProgresoTab';
-// import ChatApoderado from './ChatApoderado';
+import ChatApoderado from './ChatApoderado';
 import Header from '../Header';
 import config from '../../config/env';
 

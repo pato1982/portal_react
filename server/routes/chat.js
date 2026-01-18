@@ -359,13 +359,15 @@ router.get('/curso/:id/alumnos-chat', async (req, res) => {
                     AND m.remitente_id = ap.usuario_id
                     AND m.leido = 0
                 ) AS mensajes_no_leidos
-            FROM tb_matriculas m
-            INNER JOIN tb_alumnos a ON m.alumno_id = a.id
-            INNER JOIN tb_apoderados ap ON m.apoderado_id = ap.id
+            FROM tb_alumno_establecimiento ae
+            INNER JOIN tb_alumnos a ON ae.alumno_id = a.id
+            INNER JOIN tb_apoderado_alumno aa ON a.id = aa.alumno_id
+            INNER JOIN tb_apoderados ap ON aa.apoderado_id = ap.id
             LEFT JOIN tb_usuarios u ON ap.usuario_id = u.id
-            WHERE m.curso_asignado_id = ?
-            AND m.activo = 1
+            WHERE ae.curso_id = ?
+            AND ae.activo = 1
             AND a.activo = 1
+            AND aa.activo = 1
             AND ap.activo = 1
             ORDER BY a.apellidos, a.nombres
         `, [usuario_id, usuario_id, id]);

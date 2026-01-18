@@ -740,36 +740,9 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                         )}
                       </div>
 
-                      {/* Panel de seleccionados */}
+                      {/* Botón escribir mensaje a seleccionados */}
                       {modoSeleccion && apoderadosSeleccionados.length > 0 && (
-                        <div className="chatv2-seleccionados-panel">
-                          <div className="chatv2-seleccionados-header">
-                            <span className="chatv2-seleccionados-titulo">
-                              Destinatarios ({apoderadosSeleccionados.length})
-                            </span>
-                          </div>
-                          <div className="chatv2-seleccionados-lista">
-                            {apoderadosSeleccionados.map(sel => (
-                              <div key={sel.id} className="chatv2-seleccionado-tag">
-                                <span>{sel.nombre_alumno}</span>
-                                <button
-                                  className="chatv2-seleccionado-remove"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const alumno = alumnos.find(a =>
-                                      (a.apoderado_usuario_id || `alumno_${a.alumno_id}`) === sel.id
-                                    );
-                                    if (alumno) toggleSeleccionApoderado(alumno);
-                                  }}
-                                >
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                  </svg>
-                                </button>
-                              </div>
-                            ))}
-                          </div>
+                        <div className="chatv2-enviar-seleccionados">
                           <button
                             className="chatv2-btn-enviar-grupo"
                             onClick={iniciarMensajeASeleccionados}
@@ -778,7 +751,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                               <line x1="22" y1="2" x2="11" y2="13"></line>
                               <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                             </svg>
-                            Escribir mensaje
+                            Escribir mensaje a {apoderadosSeleccionados.length} apoderado{apoderadosSeleccionados.length !== 1 ? 's' : ''}
                           </button>
                         </div>
                       )}

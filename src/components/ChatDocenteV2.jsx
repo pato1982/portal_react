@@ -28,6 +28,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   const [cursos, setCursos] = useState([]);
   const [cursoSeleccionado, setCursoSeleccionado] = useState(null);
   const [alumnos, setAlumnos] = useState([]);
+  const [todosLosApoderados, setTodosLosApoderados] = useState([]); // Todos los apoderados de todos los cursos
 
   // Estados de chat activo
   const [conversacionActual, setConversacionActual] = useState(null);
@@ -114,6 +115,42 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     }
   };
 
+  // Cargar todos los apoderados de todos los cursos para la vista "Todos"
+  const cargarTodosLosApoderados = useCallback(async (listaCursos) => {
+    if (!listaCursos || listaCursos.length === 0) return;
+
+    try {
+      const promesas = listaCursos.map(curso =>
+        obtenerAlumnosCurso(curso.id, usuario.id)
+      );
+      const resultados = await Promise.all(promesas);
+
+      // Combinar todos los alumnos y eliminar duplicados por apoderado_usuario_id
+      const todosAlumnos = [];
+      const apoderadosVistos = new Set();
+
+      resultados.forEach((resultado, index) => {
+        if (resultado.success && resultado.data) {
+          resultado.data.forEach(alumno => {
+            const idUnico = alumno.apoderado_usuario_id || `alumno_${alumno.alumno_id}`;
+            if (!apoderadosVistos.has(idUnico)) {
+              apoderadosVistos.add(idUnico);
+              todosAlumnos.push({
+                ...alumno,
+                curso_nombre: listaCursos[index].nombre || `${listaCursos[index].grado}° ${listaCursos[index].letra}`,
+                curso_id: listaCursos[index].id
+              });
+            }
+          });
+        }
+      });
+
+      setTodosLosApoderados(todosAlumnos);
+    } catch (error) {
+      console.error('Error al cargar todos los apoderados:', error);
+    }
+  }, [usuario?.id]);
+
   const cargarMensajes = useCallback(async (conversacionId) => {
     if (!conversacionId || !usuario?.id) return;
     setCargando(true);
@@ -182,6 +219,13 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
       actualizarNoLeidos();
     }
   }, [chatAbierto, puedeUsarChat, cargarContactos, cargarCursos, cargarConversaciones, actualizarNoLeidos]);
+
+  // Cargar todos los apoderados cuando se cargan los cursos
+  useEffect(() => {
+    if (chatAbierto && puedeUsarChat && cursos.length > 0) {
+      cargarTodosLosApoderados(cursos);
+    }
+  }, [chatAbierto, puedeUsarChat, cursos, cargarTodosLosApoderados]);
 
   useEffect(() => {
     if (chatAbierto && puedeUsarChat && conversacionActual && typeof conversacionActual === 'number') {
@@ -510,7 +554,24 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   const getListaFiltrada = () => {
     let lista = [];
 
-    if (vistaActiva === 'todos' || vistaActiva === 'institucional') {
+    if (vistaActiva === 'todos') {
+      // En "Todos": mostrar contactos institucionales + apoderados de cursos
+      const listaInstitucional = contactos.map(c => ({
+        ...c,
+        tipo_lista: 'institucional'
+      }));
+
+      const listaApoderados = todosLosApoderados.map(a => ({
+        ...a,
+        usuario_id: a.apoderado_usuario_id,
+        nombre_completo: a.nombre_alumno,
+        subtitulo: `Apod: ${a.nombre_apoderado || 'Sin registrar'}`,
+        tipo_lista: 'apoderado',
+        tipo: 'apoderado'
+      }));
+
+      lista = [...listaInstitucional, ...listaApoderados];
+    } else if (vistaActiva === 'institucional') {
       lista = contactos.map(c => ({
         ...c,
         tipo_lista: 'institucional'
@@ -519,7 +580,9 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
 
     if (busqueda) {
       lista = lista.filter(item =>
-        (item.nombre_completo || '').toLowerCase().includes(busqueda.toLowerCase())
+        (item.nombre_completo || '').toLowerCase().includes(busqueda.toLowerCase()) ||
+        (item.subtitulo || '').toLowerCase().includes(busqueda.toLowerCase()) ||
+        (item.nombre_apoderado || '').toLowerCase().includes(busqueda.toLowerCase())
       );
     }
 
@@ -651,13 +714,13 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                       <span>Sin contactos</span>
                     </div>
                   ) : (
-                    getListaFiltrada().map(contacto => (
+                    getListaFiltrada().map((contacto, index) => (
                       <div
-                        key={contacto.usuario_id}
-                        className={`chatv2-list-item ${contactoActual?.usuario_id === contacto.usuario_id ? 'active' : ''}`}
-                        onClick={() => seleccionarContacto(contacto)}
+                        key={contacto.tipo_lista === 'apoderado' ? `apod-${contacto.alumno_id}` : contacto.usuario_id}
+                        className={`chatv2-list-item ${contacto.tipo_lista === 'apoderado' ? 'alumno' : ''} ${contactoActual?.usuario_id === contacto.usuario_id ? 'active' : ''}`}
+                        onClick={() => seleccionarContacto(contacto, contacto.tipo_lista === 'apoderado' ? 'apoderado' : 'institucional')}
                       >
-                        <div className={`chatv2-avatar ${contacto.es_admin ? 'admin' : ''}`}>
+                        <div className={`chatv2-avatar ${contacto.es_admin ? 'admin' : ''} ${contacto.tipo_lista === 'apoderado' ? 'estudiante' : ''}`}>
                           {contacto.foto_url ? (
                             <img src={contacto.foto_url} alt="" />
                           ) : (
@@ -672,6 +735,9 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                             <span className="chatv2-list-item-name">
                               {contacto.nombre_completo}
                               {contacto.es_admin === 1 && <span className="chatv2-tag admin">Admin</span>}
+                              {contacto.tipo_lista === 'apoderado' && !contacto.apoderado_activo && (
+                                <span style={{ color: '#ef4444', marginLeft: '4px', fontSize: '0.75em' }}>(No App)</span>
+                              )}
                             </span>
                             <span className="chatv2-list-item-time">
                               {contacto.ultimo_mensaje_fecha && formatearFechaRelativa(contacto.ultimo_mensaje_fecha)}
@@ -679,7 +745,9 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                           </div>
                           <div className="chatv2-list-item-preview">
                             <span className="chatv2-list-item-role">
-                              {contacto.tipo === 'administrador' ? 'Administración' : 'Docente'}
+                              {contacto.tipo_lista === 'apoderado'
+                                ? contacto.subtitulo
+                                : (contacto.tipo === 'administrador' ? 'Administración' : 'Docente')}
                             </span>
                           </div>
                         </div>

@@ -469,9 +469,9 @@ router.post('/conversacion', async (req, res) => {
     }
 
     try {
-        // Verificar que ambos usuarios son docentes o administradores
+        // Verificar que ambos usuarios son docentes o administradores (permitir inactivos para dejar mensajes en espera)
         const [usuarios] = await pool.query(
-            'SELECT id, tipo_usuario FROM tb_usuarios WHERE id IN (?, ?) AND activo = 1',
+            'SELECT id, tipo_usuario FROM tb_usuarios WHERE id IN (?, ?)',
             [usuario_id, otro_usuario_id]
         );
 

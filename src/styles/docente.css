@@ -736,25 +736,25 @@ textarea.docente-form-control {
     transition: all 0.2s ease;
 }
 
-.asistencia-radio input[type="radio"]:checked + .asistencia-circle.presente {
+.asistencia-radio input[type="radio"]:checked+.asistencia-circle.presente {
     background: #10b981;
     border-color: #10b981;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
-.asistencia-radio input[type="radio"]:checked + .asistencia-circle.ausente {
+.asistencia-radio input[type="radio"]:checked+.asistencia-circle.ausente {
     background: #ef4444;
     border-color: #ef4444;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 
-.asistencia-radio input[type="radio"]:checked + .asistencia-circle.tardio {
+.asistencia-radio input[type="radio"]:checked+.asistencia-circle.tardio {
     background: #f59e0b;
     border-color: #f59e0b;
     box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
 }
 
-.asistencia-radio input[type="radio"]:checked + .asistencia-circle.justificado {
+.asistencia-radio input[type="radio"]:checked+.asistencia-circle.justificado {
     background: #3b82f6;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
@@ -904,6 +904,7 @@ textarea.docente-form-control {
         opacity: 0;
         transform: translateY(-8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -980,5 +981,14 @@ textarea.docente-form-control {
     .establecimiento-dropdown {
         right: -100px;
         min-width: 220px;
+    }
+}
+
+/* Custom para Modal Editar Nota: Nota y Trimestre en una fila en movil */
+@media (max-width: 699px) {
+    .form-row.form-row-nota-trimestre {
+        grid-template-columns: 1fr 1fr !important;
+        display: grid !important;
+        gap: 12px;
     }
 }

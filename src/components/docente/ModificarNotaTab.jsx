@@ -25,7 +25,7 @@ const ModalEditar = ({ nota, editNota, setEditNota, editTrimestre, setEditTrimes
             <div className="docente-info-item"><label>Curso</label><span>{nota?.curso_nombre}</span></div>
             <div className="docente-info-item"><label>Asignatura</label><span>{nota?.asignatura_nombre}</span></div>
           </div>
-          <div className="form-row">
+          <div className="form-row form-row-nota-trimestre">
             <div className="form-group">
               <label>Nota (1.0 - 7.0)</label>
               <input

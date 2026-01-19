@@ -142,7 +142,6 @@ router.get('/contactos', async (req, res) => {
                     JOIN tb_usuarios u ON d.usuario_id = u.id AND u.activo = 1
                     WHERE mat.alumno_id = ? 
                     AND mat.activo = 1 
-                    AND mat.anio = YEAR(CURDATE())
                     AND mat.establecimiento_id = ?
                     GROUP BY u.id, d.id, d.nombres, d.apellidos, d.foto_url
                     ORDER BY mensajes_no_leidos DESC, d.nombres ASC

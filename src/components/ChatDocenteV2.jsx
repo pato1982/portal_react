@@ -187,11 +187,18 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
         console.error('Error sync chat:', error);
       }
     } else {
-      // Si solo estoy en la lista, chequear contadores
-      actualizarNoLeidos();
-      cargarConversaciones(); // Para actualizar orden de lista si alguien escribió
+      // Si solo estoy en la lista (chat abierto pero sin conversación seleccionada),
+      // chequear nuevos mensajes generales para actualizar orden y badges rápidamente.
+      try {
+        const res = await obtenerNuevosMensajes(usuario.id, establecimientoId, ultimoTimestamp);
+        if (res.success && res.data?.length > 0) {
+          actualizarNoLeidos();
+          cargarConversaciones();
+          if (res.timestamp) setUltimoTimestamp(res.timestamp);
+        }
+      } catch (e) { console.error('Error polling lista:', e); }
     }
-  }, [usuario?.id, establecimientoId, chatAbierto, conversacionActual, actualizarNoLeidos]);
+  }, [usuario?.id, establecimientoId, chatAbierto, conversacionActual, actualizarNoLeidos, ultimoTimestamp]);
 
   // ==================== EFECTOS ====================
 
@@ -217,7 +224,8 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   useEffect(() => {
     if (puedeUsarChat) {
       actualizarNoLeidos();
-      const interval = setInterval(actualizarNoLeidos, 30000);
+      // Polling de fondo (chat cerrado) mucho más rápido para alertas
+      const interval = setInterval(actualizarNoLeidos, 5000);
       return () => clearInterval(interval);
     }
   }, [puedeUsarChat, actualizarNoLeidos]);

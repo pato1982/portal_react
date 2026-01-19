@@ -525,7 +525,19 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
       );
     }
 
-    return lista;
+    // Asegurar que administradores aparezcan primero
+    return lista.sort((a, b) => {
+      // 1. Prioridad Admin
+      if (a.es_admin && !b.es_admin) return -1;
+      if (!a.es_admin && b.es_admin) return 1;
+
+      // 2. Prioridad con mensajes no leídos
+      if (a.mensajes_no_leidos > 0 && b.mensajes_no_leidos === 0) return -1;
+      if (a.mensajes_no_leidos === 0 && b.mensajes_no_leidos > 0) return 1;
+
+      // 3. Orden alfabético
+      return (a.nombre_completo || '').localeCompare(b.nombre_completo || '');
+    });
   };
 
   // Verificar si un apoderado está seleccionado

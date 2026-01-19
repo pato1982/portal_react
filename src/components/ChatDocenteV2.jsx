@@ -150,20 +150,37 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     try {
       const resultado = await obtenerNuevosMensajes(usuario.id, establecimientoId, ultimoTimestamp);
       if (resultado.success && resultado.data?.length > 0) {
+
+        // Filtrar mensajes para la conversación actual
         if (conversacionActual && typeof conversacionActual === 'number') {
           const nuevosParaConversacion = resultado.data.filter(
             m => m.conversacion_id === conversacionActual
           );
+
           if (nuevosParaConversacion.length > 0) {
-            setMensajes(prev => [...prev, ...nuevosParaConversacion.map(m => ({
-              ...m,
-              direccion: 'recibido'
-            }))]);
+            // Agregar al chat
+            setMensajes(prev => {
+              // Evitar duplicados por seguridad
+              const idsExistentes = new Set(prev.map(m => m.id));
+              const nuevosUnicos = nuevosParaConversacion.filter(m => !idsExistentes.has(m.id));
+              if (nuevosUnicos.length === 0) return prev;
+
+              return [...prev, ...nuevosUnicos.map(m => ({
+                ...m,
+                direccion: 'recibido'
+              }))];
+            });
+
+            // IMPORTANTE: Marcar como leídos inmediatamente porque los estoy viendo
+            await marcarConversacionLeida(conversacionActual, usuario.id);
           }
         }
+
+        // Actualizar contadores globales y lista de conversaciones
         actualizarNoLeidos();
         cargarConversaciones();
       }
+
       if (resultado.timestamp) {
         setUltimoTimestamp(resultado.timestamp);
       }
@@ -184,13 +201,14 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   }, [chatAbierto, puedeUsarChat, cargarContactos, cargarCursos, cargarConversaciones, actualizarNoLeidos]);
 
   useEffect(() => {
-    if (chatAbierto && puedeUsarChat && conversacionActual && typeof conversacionActual === 'number') {
-      pollingRef.current = setInterval(verificarNuevosMensajes, 3000);
+    if (chatAbierto && puedeUsarChat) {
+      // Polling más agresivo cuando el chat está abierto
+      pollingRef.current = setInterval(verificarNuevosMensajes, 2000);
     }
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [chatAbierto, puedeUsarChat, verificarNuevosMensajes, conversacionActual]);
+  }, [chatAbierto, puedeUsarChat, verificarNuevosMensajes]);
 
   useEffect(() => {
     if (puedeUsarChat) {

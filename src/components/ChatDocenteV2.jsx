@@ -185,7 +185,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
 
   useEffect(() => {
     if (chatAbierto && puedeUsarChat && conversacionActual && typeof conversacionActual === 'number') {
-      pollingRef.current = setInterval(verificarNuevosMensajes, 5000);
+      pollingRef.current = setInterval(verificarNuevosMensajes, 3000);
     }
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);

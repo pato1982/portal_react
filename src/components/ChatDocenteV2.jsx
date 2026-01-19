@@ -969,17 +969,19 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
 
                   {/* Acciones del header */}
                   <div className="chatv2-chat-header-actions">
-                    <div className="chatv2-toggle-wrapper" title="Permitir respuestas del apoderado">
-                      <span className={`chatv2-toggle-label ${respuestaHabilitada ? 'activo' : 'inactivo'}`}>
-                        {respuestaHabilitada ? 'Activado' : 'Desactivado'}
-                      </span>
-                      <button
-                        className={`chatv2-toggle ${respuestaHabilitada ? 'active' : ''}`}
-                        onClick={toggleRespuestaHabilitada}
-                      >
-                        <span className="chatv2-toggle-slider"></span>
-                      </button>
-                    </div>
+                    {(esMensajeMasivo || contactoActual.tipoContacto === 'apoderado') && (
+                      <div className="chatv2-toggle-wrapper" title="Permitir respuestas del apoderado">
+                        <span className={`chatv2-toggle-label ${respuestaHabilitada ? 'activo' : 'inactivo'}`}>
+                          {respuestaHabilitada ? 'Activado' : 'Desactivado'}
+                        </span>
+                        <button
+                          className={`chatv2-toggle ${respuestaHabilitada ? 'active' : ''}`}
+                          onClick={toggleRespuestaHabilitada}
+                        >
+                          <span className="chatv2-toggle-slider"></span>
+                        </button>
+                      </div>
+                    )}
                     {/* Botón X para cerrar/cancelar chat - siempre visible */}
                     <button
                       className="chatv2-cancel-masivo"

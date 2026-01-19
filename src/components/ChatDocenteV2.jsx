@@ -148,21 +148,24 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   const verificarNuevosMensajes = useCallback(async () => {
     if (!usuario?.id || !establecimientoId || !chatAbierto) return;
 
+    const idConv = Number(conversacionActual);
+    const esConversacionValida = idConv && !isNaN(idConv) && idConv > 0;
+
     // ESTRATEGIA ROBUSTA TIPO WHATSAPP:
-    // Si hay conversación activa, sincronizar sus mensajes directamente por ID.
-    // Ignoramos timestamps para evitar desincronización.
-    if (conversacionActual && typeof conversacionActual === 'number') {
+    // Sincronización agnóstica de tipos (string/number)
+    if (esConversacionValida) {
       try {
-        // Pedir los ultimos 20 mensajes de la conversación actual
-        const resultado = await obtenerMensajes(conversacionActual, usuario.id, 20, 0);
+        // Pedir los ultimos 50 mensajes de la conversación actual para asegurar cobertura
+        const resultado = await obtenerMensajes(idConv, usuario.id, 50, 0);
 
         if (resultado.success && resultado.data) {
           const mensajesRemotos = resultado.data;
 
           setMensajes(prev => {
-            const idsLocales = new Set(prev.map(m => m.id));
-            // Encontrar mensajes que NO tenemos localmente
-            const nuevos = mensajesRemotos.filter(m => !idsLocales.has(m.id));
+            // Usar Strings para la comparación de IDs y evitar problemas de tipo
+            const idsLocales = new Set(prev.map(m => String(m.id)));
+            // Encontrar mensajes remotos que NO tenemos localmente
+            const nuevos = mensajesRemotos.filter(m => !idsLocales.has(String(m.id)));
 
             if (nuevos.length === 0) return prev;
 
@@ -173,13 +176,13 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
             return combinados;
           });
 
-          // Si encontramos cosas nuevas recibidas, marcar leído inmediatamente en servidor
+          // Si encontramos cosas nuevas recibidas, marcar leído inmediatamente
           const tengoNuevosRecibidos = mensajesRemotos.some(m =>
             m.direccion === 'recibido' && m.leido === 0
           );
 
           if (tengoNuevosRecibidos) {
-            await marcarConversacionLeida(conversacionActual, usuario.id);
+            await marcarConversacionLeida(idConv, usuario.id);
             actualizarNoLeidos();
           }
         }

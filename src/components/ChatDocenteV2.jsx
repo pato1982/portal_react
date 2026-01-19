@@ -236,8 +236,14 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   useEffect(() => {
     if (mensajesRef.current) {
       mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
+      // Refuerzo para asegurar que baje después de renderizar
+      setTimeout(() => {
+        if (mensajesRef.current) {
+          mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
+        }
+      }, 100);
     }
-  }, [mensajes]);
+  }, [mensajes, conversacionActual, chatAbierto]);
 
   useEffect(() => {
     if (contactoActual && inputRef.current) {

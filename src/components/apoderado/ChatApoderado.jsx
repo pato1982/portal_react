@@ -41,11 +41,18 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   };
 
   const cargarContactos = async () => {
-    if (!usuario?.id || !usuario?.establecimiento_id) return;
+    if (!usuario?.id) return;
 
     try {
-      // Incluir alumno_id para filtrar docentes específicos del pupilo
-      let url = `${config.apiBaseUrl}/chat/contactos?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`;
+      // Priorizar el establecimiento del pupilo seleccionado
+      const establecimientoId = pupiloSeleccionado?.establecimiento_id || usuario.establecimiento_id;
+
+      if (!establecimientoId) {
+        console.warn('No hay establecimiento ID disponible para cargar contactos');
+        return;
+      }
+
+      let url = `${config.apiBaseUrl}/chat/contactos?usuario_id=${usuario.id}&establecimiento_id=${establecimientoId}`;
       // Si hay un pupilo seleccionado, enviamos su ID para que el backend filtre asignaturas
       if (pupiloSeleccionado?.id) {
         url += `&alumno_id=${pupiloSeleccionado.id}`;

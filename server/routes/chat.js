@@ -133,7 +133,7 @@ router.get('/contactos', async (req, res) => {
                         JOIN tb_asignaturas tas ON asig.asignatura_id = tas.id
                         JOIN tb_docentes d ON asig.docente_id = d.id AND d.activo = 1
                         JOIN tb_usuarios u ON d.usuario_id = u.id AND u.activo = 1
-                        WHERE mat.alumno_id = ? AND mat.activo = 1 AND mat.establecimiento_id = ?
+                        WHERE mat.alumno_id = ? AND mat.establecimiento_id = ?
                         GROUP BY u.id, d.id, d.nombres, d.apellidos, d.foto_url
                     )
                     UNION

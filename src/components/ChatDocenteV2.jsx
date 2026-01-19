@@ -147,47 +147,51 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
 
   const verificarNuevosMensajes = useCallback(async () => {
     if (!usuario?.id || !establecimientoId || !chatAbierto) return;
-    try {
-      const resultado = await obtenerNuevosMensajes(usuario.id, establecimientoId, ultimoTimestamp);
-      if (resultado.success && resultado.data?.length > 0) {
 
-        // Filtrar mensajes para la conversación actual
-        if (conversacionActual && typeof conversacionActual === 'number') {
-          const nuevosParaConversacion = resultado.data.filter(
-            m => m.conversacion_id === conversacionActual
+    // ESTRATEGIA ROBUSTA TIPO WHATSAPP:
+    // Si hay conversación activa, sincronizar sus mensajes directamente por ID.
+    // Ignoramos timestamps para evitar desincronización.
+    if (conversacionActual && typeof conversacionActual === 'number') {
+      try {
+        // Pedir los ultimos 20 mensajes de la conversación actual
+        const resultado = await obtenerMensajes(conversacionActual, usuario.id, 20, 0);
+
+        if (resultado.success && resultado.data) {
+          const mensajesRemotos = resultado.data;
+
+          setMensajes(prev => {
+            const idsLocales = new Set(prev.map(m => m.id));
+            // Encontrar mensajes que NO tenemos localmente
+            const nuevos = mensajesRemotos.filter(m => !idsLocales.has(m.id));
+
+            if (nuevos.length === 0) return prev;
+
+            // Combinar y asegurar orden cronológico
+            const combinados = [...prev, ...nuevos].sort((a, b) =>
+              new Date(a.fecha_envio) - new Date(b.fecha_envio)
+            );
+            return combinados;
+          });
+
+          // Si encontramos cosas nuevas recibidas, marcar leído inmediatamente en servidor
+          const tengoNuevosRecibidos = mensajesRemotos.some(m =>
+            m.direccion === 'recibido' && m.leido === 0
           );
 
-          if (nuevosParaConversacion.length > 0) {
-            // Agregar al chat
-            setMensajes(prev => {
-              // Evitar duplicados por seguridad
-              const idsExistentes = new Set(prev.map(m => m.id));
-              const nuevosUnicos = nuevosParaConversacion.filter(m => !idsExistentes.has(m.id));
-              if (nuevosUnicos.length === 0) return prev;
-
-              return [...prev, ...nuevosUnicos.map(m => ({
-                ...m,
-                direccion: 'recibido'
-              }))];
-            });
-
-            // IMPORTANTE: Marcar como leídos inmediatamente porque los estoy viendo
+          if (tengoNuevosRecibidos) {
             await marcarConversacionLeida(conversacionActual, usuario.id);
+            actualizarNoLeidos();
           }
         }
-
-        // Actualizar contadores globales y lista de conversaciones
-        actualizarNoLeidos();
-        cargarConversaciones();
+      } catch (error) {
+        console.error('Error sync chat:', error);
       }
-
-      if (resultado.timestamp) {
-        setUltimoTimestamp(resultado.timestamp);
-      }
-    } catch (error) {
-      console.error('Error en polling:', error);
+    } else {
+      // Si solo estoy en la lista, chequear contadores
+      actualizarNoLeidos();
+      cargarConversaciones(); // Para actualizar orden de lista si alguien escribió
     }
-  }, [usuario?.id, establecimientoId, chatAbierto, ultimoTimestamp, conversacionActual, actualizarNoLeidos, cargarConversaciones]);
+  }, [usuario?.id, establecimientoId, chatAbierto, conversacionActual, actualizarNoLeidos]);
 
   // ==================== EFECTOS ====================
 

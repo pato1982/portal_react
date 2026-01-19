@@ -4,7 +4,7 @@ import config from '../../config/env';
 function ChatApoderado({ usuario, pupiloSeleccionado }) {
   // Estados principales
   const [chatAbierto, setChatAbierto] = useState(false);
-  const [vistaActiva, setVistaActiva] = useState('todos'); // todos, docentes, administracion
+  const [vistaActiva, setVistaActiva] = useState('docentes'); // Solo docentes por defecto
   const [busqueda, setBusqueda] = useState('');
 
   // Estados de datos
@@ -400,16 +400,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
           {/* Columna 1: Navegacion */}
           <div className={`chatv2-nav ${!mostrarListaMobile ? 'hidden-mobile' : ''}`}>
             <button
-              className={`chatv2-nav-item ${vistaActiva === 'todos' ? 'active' : ''}`}
-              onClick={() => setVistaActiva('todos')}
-              title="Todos"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <span>Todos</span>
-            </button>
-            <button
               className={`chatv2-nav-item ${vistaActiva === 'docentes' ? 'active' : ''}`}
               onClick={() => setVistaActiva('docentes')}
               title="Docentes"
@@ -421,18 +411,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
               <span>Docentes</span>
-            </button>
-            <button
-              className={`chatv2-nav-item ${vistaActiva === 'administracion' ? 'active' : ''}`}
-              onClick={() => setVistaActiva('administracion')}
-              title="Administracion"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                <path d="M2 17l10 5 10-5"></path>
-                <path d="M2 12l10 5 10-5"></path>
-              </svg>
-              <span>Admin</span>
             </button>
           </div>
 

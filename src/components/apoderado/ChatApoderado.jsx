@@ -43,11 +43,15 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   const cargarContactos = async () => {
     if (!usuario?.id || !usuario?.establecimiento_id) return;
 
-    // Si ya estamos cargando mensajes de un chat especifico, evitamos recargar contactos masivamente para no saturar
-    // (Opcional: podriamos dejarlo si queremos actualizar "no leidos" en tiempo real)
-
     try {
-      const response = await fetch(`${config.apiBaseUrl}/chat/contactos?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`, {
+      // Incluir alumno_id para filtrar docentes específicos del pupilo
+      let url = `${config.apiBaseUrl}/chat/contactos?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`;
+      // Si hay un pupilo seleccionado, enviamos su ID para que el backend filtre asignaturas
+      if (pupiloSeleccionado?.id) {
+        url += `&alumno_id=${pupiloSeleccionado.id}`;
+      }
+
+      const response = await fetch(url, {
         headers: getAuthHeaders()
       });
 
@@ -113,15 +117,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
       const data = await response.json();
       if (data.success) {
         setMensajes(data.data);
-
-        // Verificar si estoy bloqueado (Necesitamos info de la conversacion, 
-        // idealmente el endpoint de mensajes o conversacion deberia devolver "respuesta_habilitada")
-        // Como parche, verificamos si el ultimo mensaje del sistema dice algo o si el endpoint de conversacion nos da el dato.
-        // Vamos a hacer un fetch rapido de "mis conversaciones" para buscar esta especifica y ver su estado de bloqueo
-        // O mejor: Asumimos habilitado a menos que falle el envio con 403, 
-        // PERO idealmente deberiamos saberlo antes.
-
-        // Opcion B: Obtener detalles de conversacion
         verificarEstadoBloqueo(conversacionId);
       }
     } catch (error) {
@@ -130,8 +125,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   };
 
   const verificarEstadoBloqueo = async (conversacionId) => {
-    // Buscamos en la lista de conversaciones (endpoint que ya existe) o asumimos por defecto
-    // Por eficiencia, usaremos el endpoint de /conversaciones filtrando
     try {
       const response = await fetch(`${config.apiBaseUrl}/chat/conversaciones?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`, {
         headers: getAuthHeaders()
@@ -141,7 +134,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
         if (data.success) {
           const conv = data.data.find(c => c.id === conversacionId);
           if (conv) {
-            // Si respuesta_habilitada es 1 (true) -> habilitado. Si es 0 -> deshabilitado.
             setRespuestaHabilitada(conv.respuesta_habilitada === 1);
           }
         }
@@ -151,7 +143,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
   // ==================== EFFECTS ====================
 
-  // Cargar contactos al abrir
+  // Cargar contactos al abrir o al cambiar pupilo
   useEffect(() => {
     if (chatAbierto) {
       cargarContactos();
@@ -159,7 +151,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
       const interval = setInterval(cargarContactos, 10000); // Cada 10s
       return () => clearInterval(interval);
     }
-  }, [chatAbierto, usuario]);
+  }, [chatAbierto, usuario, pupiloSeleccionado]); // <--- Dependencia CRUCIAL
 
   // Polling de mensajes activos
   useEffect(() => {
@@ -203,11 +195,11 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     setContactoActual(contacto);
     setMostrarListaMobile(false);
     setMensajes([]);
-    setRespuestaHabilitada(true); // Asumimos true mientras carga
+    setRespuestaHabilitada(true);
 
     await iniciarConversacion(contacto);
 
-    // Marcar leidos visualmente (se actualizara real en prox carga)
+    // Marcar leidos visualmente
     setContactos(prev => prev.map(c =>
       c.usuario_id === contacto.usuario_id
         ? { ...c, mensajes_no_leidos: 0 }
@@ -227,7 +219,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     setMensajeInput('');
     setEnviando(true);
 
-    // Mensaje optimista
     const tempId = `temp-${Date.now()}`;
     const nuevoMensaje = {
       id: tempId,
@@ -253,7 +244,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
       if (!response.ok) {
         if (response.status === 403) {
-          setRespuestaHabilitada(false); // Bloquear UI si el servidor dice prohibido
+          setRespuestaHabilitada(false);
           throw new Error('El docente ha bloqueado las respuestas.');
         }
         throw new Error('Error enviando mensaje');
@@ -261,7 +252,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
       const data = await response.json();
       if (data.success) {
-        // Reemplazar mensaje optimista con real
         setMensajes(prev => prev.map(m =>
           m.id === tempId ? { ...data.data, direccion: 'enviado' } : m
         ));
@@ -270,7 +260,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     } catch (error) {
       console.error(error);
       alert(error.message || 'Error al enviar mensaje');
-      // Marcar error en UI
       setMensajes(prev => prev.map(m =>
         m.id === tempId ? { ...m, error: true, enviando: false } : m
       ));
@@ -287,7 +276,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     if (pollingRef.current) clearInterval(pollingRef.current);
   };
 
-  // ==================== HELPERS (Mismos de antes) ====================
+  // ==================== HELPERS ====================
 
   const formatearHora = (fecha) => {
     if (!fecha) return '';
@@ -295,28 +284,11 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     return date.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const formatearFechaRelativa = (fecha) => {
-    if (!fecha) return '';
-    const date = new Date(fecha);
-    const hoy = new Date();
-    const ayer = new Date(hoy);
-    ayer.setDate(ayer.getDate() - 1);
-
-    if (date.toDateString() === hoy.toDateString()) {
-      return formatearHora(fecha);
-    } else if (date.toDateString() === ayer.toDateString()) {
-      return 'Ayer';
-    } else {
-      return date.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' });
-    }
-  };
-
   const formatearFechaSeparador = (fecha) => {
     if (!fecha) return '';
     const date = new Date(fecha);
     const hoy = new Date();
     const ayer = new Date(hoy);
-    ayer.setDate(ayer.getDate() - 1);
 
     if (date.toDateString() === hoy.toDateString()) {
       return 'Hoy';
@@ -336,15 +308,10 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     return nombre.substring(0, 2).toUpperCase();
   };
 
-  // Filtrar contactos segun vista y busqueda
   const getContactosFiltrados = () => {
     let lista = contactos;
-    // Filtrar por tipo (el backend ya filtra lo basico, pero aqui refinamos vistas)
-    if (vistaActiva === 'docentes') {
-      lista = lista.filter(c => c.tipo === 'docente');
-    } else if (vistaActiva === 'administracion') {
-      lista = lista.filter(c => c.tipo === 'administrador');
-    }
+    // Si queremos filtrar por tipo cuando existan más tipos, aquí es donde.
+    // Actualmente el backend ya devuelve lo correcto para apoderado.
 
     if (busqueda) {
       lista = lista.filter(c =>
@@ -381,7 +348,9 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
             <svg className="chatv2-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
-            <span className="chatv2-header-title">Mensajes</span>
+            <span className="chatv2-header-title">
+              Mensanería {pupiloSeleccionado ? `- ${pupiloSeleccionado.nombres}` : ''}
+            </span>
             {totalNoLeidos > 0 && (
               <span className="chatv2-header-badge">{totalNoLeidos}</span>
             )}
@@ -397,21 +366,24 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
         {/* Contenido Principal */}
         <div className="chatv2-content">
 
-          {/* Columna 1: Navegacion */}
-          <div className={`chatv2-nav ${!mostrarListaMobile ? 'hidden-mobile' : ''}`}>
-            <button
-              className={`chatv2-nav-item ${vistaActiva === 'docentes' ? 'active' : ''}`}
-              onClick={() => setVistaActiva('docentes')}
-              title="Docentes"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-              <span>Docentes</span>
-            </button>
+          {/* Columna 1: Navegacion Estática Lateral */}
+          <div className={`chatv2-nav ${!mostrarListaMobile ? 'hidden-mobile' : ''}`} style={{ width: '40px', padding: '10px 0', alignItems: 'center' }}>
+            <div className="chatv2-nav-static" style={{
+              writingMode: 'vertical-rl',
+              textOrientation: 'mixed',
+              transform: 'rotate(180deg)',
+              color: '#64748b',
+              fontWeight: 'bold',
+              fontSize: '12px',
+              letterSpacing: '1px',
+              height: '100%',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              CONTACTOS
+            </div>
           </div>
 
           {/* Columna 2: Lista de Contactos */}
@@ -441,7 +413,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
               ) : getContactosFiltrados().length === 0 ? (
                 <div className="chatv2-empty-list">
                   <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
-                    No se encontraron contactos.
+                    {pupiloSeleccionado ? 'No hay docentes disponibles.' : 'Selecciona un pupilo arriba.'}
                   </p>
                 </div>
               ) : (
@@ -464,9 +436,10 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                           {contacto.es_admin === 1 && <span className="chatv2-tag admin">Admin</span>}
                         </span>
                       </div>
+                      {/* Aquí mostramos las asignaturas en lugar de la especialidad genérica */}
                       <div className="chatv2-list-item-preview">
-                        <span className="chatv2-list-item-role">
-                          {contacto.tipo === 'administrador' ? 'Administrador' : (contacto.especialidad || 'Docente')}
+                        <span className="chatv2-list-item-role" style={{ fontSize: '11px', color: '#64748b' }}>
+                          {contacto.tipo === 'administrador' ? 'Administración' : (contacto.asignaturas || 'Docente General')}
                         </span>
                       </div>
                     </div>
@@ -500,7 +473,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                       {!respuestaHabilitada ? 'Respuestas bloqueadas' : 'En línea'}
                     </span>
                   </div>
-                  {/* Botón X para cerrar chat */}
                   <div className="chatv2-chat-header-actions">
                     <button
                       className="chatv2-cancel-masivo"
@@ -524,7 +496,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                     </div>
                   ) : mensajes.length === 0 ? (
                     <div className="chatv2-empty-chat">
-                      <p>Inicia la conversación con {contactoActual.nombre_completo}</p>
+                      <p>Inicia la conversación con {contactoActual.nombre_completo} para tu pupilo {pupiloSeleccionado.nombres}.</p>
                     </div>
                   ) : (
                     mensajes.map((msg, index) => {
@@ -553,7 +525,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                     })
                   )}
 
-                  {/* Mensaje de bloqueo */}
                   {!respuestaHabilitada && (
                     <div style={{
                       textAlign: 'center',
@@ -579,7 +550,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                       value={mensajeInput}
                       onChange={(e) => setMensajeInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleEnviarMensaje()}
-                      disabled={enviando || !respuestaHabilitada} // BLOQUEO AQUI
+                      disabled={enviando || !respuestaHabilitada}
                       style={!respuestaHabilitada ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
                     />
                   </div>
@@ -596,7 +567,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                 </div>
               </>
             ) : (
-              /* Placeholder cuando no hay chat seleccionado */
               <div className="chatv2-placeholder">
                 <div className="chatv2-placeholder-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
@@ -604,14 +574,13 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                   </svg>
                 </div>
                 <h3>Selecciona un contacto</h3>
-                <p>Elige un docente para iniciar una conversación.</p>
+                <p>Elige un docente de la lista para conversar.</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Estilos adicionales especificos (el resto viene de ChatDocenteV2 o CSS global) */}
       <style>{`
         .chatv2-pupilo-info {
           padding: 8px 16px;

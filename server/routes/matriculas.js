@@ -51,6 +51,7 @@ router.post('/', async (req, res) => {
             // Datos Apoderado (Puede ser existente o nuevo)
             rut_apoderado, nombres_apoderado, apellidos_apoderado,
             email_apoderado, telefono_apoderado, direccion_apoderado,
+            parentezco, // NUEVO CAMPO
 
             // Antecedentes
             colegio_procedencia, ultimo_curso_aprobado, promedio_notas_anterior,
@@ -92,7 +93,7 @@ router.post('/', async (req, res) => {
                         rut, nombres, apellidos, email, telefono, direccion, 
                         clave, estado, fecha_registro
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, 'activo', NOW())
-                `, [rut_apoderado, nombres_apoderado, apellidos_apoderado, email_apoderado, telefono_apoderado, direccion_apoderado, passTemp]); // Ojo: passTemp debería ser hash en prod
+                `, [rut_apoderado, nombres_apoderado, apellidos_apoderado, email_apoderado, telefono_apoderado, direccion_apoderado, passTemp]);
 
                 finalApoderadoId = nuevoAp.insertId;
             }
@@ -135,6 +136,7 @@ router.post('/', async (req, res) => {
                 nombres_alumno, apellidos_alumno, rut_alumno,
                 fecha_nacimiento_alumno, sexo_alumno, nacionalidad_alumno,
                 direccion_alumno, comuna_alumno, ciudad_alumno, email_alumno, telefono_alumno,
+                parentezco,
                 colegio_procedencia, ultimo_curso_aprobado, promedio_notas_anterior,
                 tiene_nee, detalle_nee, alergias, enfermedades_cronicas,
                 contacto_emergencia_nombre, contacto_emergencia_telefono,
@@ -147,6 +149,7 @@ router.post('/', async (req, res) => {
                 ?, ?, ?,
                 ?, ?, ?,
                 ?, ?, ?, ?, ?,
+                ?,
                 ?, ?, ?,
                 ?, ?, ?, ?,
                 ?, ?,
@@ -169,6 +172,7 @@ router.post('/', async (req, res) => {
             nombres_alumno, apellidos_alumno, rut_alumno,
             fecha_nacimiento_alumno || null, sexo_alumno || null, nacionalidad_alumno || 'Chilena',
             direccion_alumno || null, comuna_alumno || null, ciudad_alumno || null, email_alumno || null, telefono_alumno || null,
+            parentezco || 'Apoderado', // DEFAULT SI VACIO
             colegio_procedencia || null, ultimo_curso_aprobado || null, promedio_notas_anterior || null,
             tiene_nee ? 1 : 0, detalle_nee || null, alergias || null, enfermedades_cronicas || null,
             contacto_emergencia_nombre || null, contacto_emergencia_telefono || null,

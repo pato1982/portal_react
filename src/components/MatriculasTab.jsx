@@ -32,7 +32,8 @@ const MatriculasTab = ({ mostrarMensaje }) => {
 
         // Paso 3: APODERADO 
         rut_apoderado: '', nombres_apoderado: '', apellidos_apoderado: '',
-        email_apoderado: '', telefono_apoderado: '', direccion_apoderado: '', // Se llena manual o copia
+        email_apoderado: '', telefono_apoderado: '', direccion_apoderado: '',
+        parentezco: '', // NUEVO CAMPO
 
         // Paso 4: Salud
         contacto_emergencia_nombre: '', contacto_emergencia_telefono: '',
@@ -100,7 +101,9 @@ const MatriculasTab = ({ mostrarMensaje }) => {
     const siguientePaso = () => {
         if (seccionActual === 1 && !form.curso_asignado_id) { alert('Debe seleccionar curso y año'); return; }
         if (seccionActual === 2 && (!form.rut_alumno || !form.nombres_alumno)) { alert('Rut y Nombre Alumno obligatorios'); return; }
-        if (seccionActual === 3 && (!form.rut_apoderado || !form.nombres_apoderado)) { alert('Rut y Nombre Apoderado obligatorios'); return; }
+        if (seccionActual === 3 && (!form.rut_apoderado || !form.nombres_apoderado || !form.parentezco)) {
+            alert('Rut, Nombre y Parentezco del Apoderado son obligatorios'); return;
+        }
 
         setSeccionActual(prev => prev + 1);
     };
@@ -115,7 +118,8 @@ const MatriculasTab = ({ mostrarMensaje }) => {
 
             rut_apoderado: '15.222.333-4', nombres_apoderado: 'Héctor', apellidos_apoderado: 'Soto Pérez',
             email_apoderado: 'apoderado.demo@example.com', telefono_apoderado: '+56987654321',
-            direccion_apoderado: '', // Se asumirá la misma
+            parentezco: 'Padre', // DEMO
+            direccion_apoderado: '',
 
             tiene_nee: false, alergias: 'Ninguna',
             contacto_emergencia_nombre: 'María Muñoz (Madre)', contacto_emergencia_telefono: '+56911112222',
@@ -123,14 +127,13 @@ const MatriculasTab = ({ mostrarMensaje }) => {
             observaciones_apoderado: 'Alumno entusiasta.'
         }));
         setMismaDireccion(true);
-        alert('Datos cargados.');
+        alert('Datos cargados (Incluye Parentezco).');
     };
 
     const handleSubmit = async () => {
         if (!window.confirm('¿Confirmar matrícula?')) return;
         setMatriculando(true);
         try {
-            // Lógica final de dirección apoderado
             const dirApoderadoFinal = mismaDireccion ? form.direccion_alumno : form.direccion_apoderado;
 
             const payload = {
@@ -154,7 +157,7 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                 setForm({
                     anio_academico: new Date().getFullYear(), curso_asignado_id: '',
                     rut_alumno: '', nombres_alumno: '', apellidos_alumno: '',
-                    rut_apoderado: '', nombres_apoderado: '', apellidos_apoderado: '', email_apoderado: '',
+                    rut_apoderado: '', nombres_apoderado: '', apellidos_apoderado: '', email_apoderado: '', parentezco: '',
                     tiene_nee: false, detalle_nee: '', contacto_emergencia_nombre: '',
                     alumno_id_existente: null
                 });
@@ -187,7 +190,6 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                         <div style={{ width: `${(seccionActual / 5) * 100}%`, background: '#3182ce', transition: 'width 0.3s' }}></div>
                     </div>
 
-                    {/* SECCIONES PREVIAS IGUALES... AHORRO ESPACIO EN VISUALIZACIÓN PERO MANTENGO CÓDIGO */}
                     {seccionActual === 1 && (
                         <div>
                             <h4 style={{ marginBottom: '15px', color: '#2b6cb0' }}>1. Selección Académica</h4>
@@ -235,7 +237,7 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                         </div>
                     )}
 
-                    {/* SECCION 3: APODERADO - MODIFICADA CON SWITCH DE DIRECCION */}
+                    {/* SECCION 3: APODERADO */}
                     {seccionActual === 3 && (
                         <div>
                             <h4 style={{ marginBottom: '15px', color: '#dd6b20' }}>3. Datos del Apoderado</h4>
@@ -254,7 +256,20 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                                 <div className="form-group"><label>Teléfono</label><input type="text" name="telefono_apoderado" className="form-control" value={form.telefono_apoderado} onChange={handleChange} /></div>
                             </div>
 
-                            {/* PREGUNTA DIRECCIÓN INTELIGENTE */}
+                            {/* NUEVO ITEM: PARENTEZCO */}
+                            <div className="form-group">
+                                <label>Parentezco con el Alumno <span className="text-danger">*</span></label>
+                                <select name="parentezco" className="form-control" value={form.parentezco} onChange={handleChange} required>
+                                    <option value="">Seleccione relación...</option>
+                                    <option value="Padre">Padre</option>
+                                    <option value="Madre">Madre</option>
+                                    <option value="Abuelo/a">Abuelo/a</option>
+                                    <option value="Tío/a">Tío/a</option>
+                                    <option value="Tutor Legal">Tutor Legal</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+
                             <div style={{ marginTop: '15px', padding: '15px', border: '1px solid #ddd', borderRadius: '6px', background: '#fafafa' }}>
                                 <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>¿Vive en la misma dirección del alumno?</label>
 
@@ -277,7 +292,6 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                                     </label>
                                 </div>
 
-                                {/* Mostrar dirección del alumno bloqueada o campo vacío */}
                                 {mismaDireccion ? (
                                     <div className="form-group">
                                         <input type="text" className="form-control" value={form.direccion_alumno || '(Ingrese dirección en paso anterior)'} disabled style={{ backgroundColor: '#e2e8f0', color: '#4a5568' }} />
@@ -286,14 +300,7 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                                 ) : (
                                     <div className="form-group">
                                         <label>Ingrese Dirección del Apoderado:</label>
-                                        <input
-                                            type="text"
-                                            name="direccion_apoderado"
-                                            className="form-control"
-                                            value={form.direccion_apoderado}
-                                            onChange={handleChange}
-                                            placeholder="Calle, Número, Comuna..."
-                                        />
+                                        <input type="text" name="direccion_apoderado" className="form-control" value={form.direccion_apoderado} onChange={handleChange} placeholder="Calle, Número, Comuna..." />
                                     </div>
                                 )}
                             </div>
@@ -329,7 +336,7 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                                 <p><strong>Resumen:</strong></p>
                                 <ul>
                                     <li><strong>Alumno:</strong> {form.nombres_alumno} {form.apellidos_alumno}</li>
-                                    <li><strong>Apoderado:</strong> {form.nombres_apoderado} {form.apellidos_apoderado} ({form.rut_apoderado})</li>
+                                    <li><strong>Apoderado:</strong> {form.nombres_apoderado} {form.apellidos_apoderado} ({form.parentezco})</li>
                                     <li>
                                         <strong>Dirección Apoderado:</strong><br />
                                         {mismaDireccion ? (

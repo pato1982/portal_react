@@ -225,12 +225,52 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
           if (msg.direccion === 'recibido') {
             marcarConversacionLeida(conversacionActual, usuario.id);
           }
+
+          // Scroll
+          setTimeout(() => {
+            if (mensajesRef.current) mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
+          }, 100);
+
         } else {
-          // Es de otra conversación -> actualizar badges
-          actualizarNoLeidos();
-          // Si estamos en la lista, actualizar orden
-          if (!conversacionActual) {
-            cargarConversaciones();
+          // === ES DE OTRA CONVERSACIÓN O ESTAMOS EN LA LISTA ===
+
+          // 1. Badge Global
+          if (msg.direccion === 'recibido') {
+            setTotalNoLeidos(prev => prev + 1);
+            // Audio opcional
+          }
+
+          // 2. Actualizar lista de Conversaciones (mover al top)
+          setConversaciones(prevConvs => {
+            const index = prevConvs.findIndex(c => String(c.id) === String(msg.conversacion_id));
+            if (index >= 0) {
+              const existe = prevConvs[index];
+              const actualizada = {
+                ...existe,
+                ultimo_mensaje: msg.mensaje,
+                ultimo_mensaje_fecha: msg.fecha_envio || new Date().toISOString(),
+                mensajes_no_leidos: msg.direccion === 'recibido' ? (existe.mensajes_no_leidos || 0) + 1 : existe.mensajes_no_leidos
+              };
+              const nuevaLista = [...prevConvs];
+              nuevaLista.splice(index, 1);
+              return [actualizada, ...nuevaLista];
+            } else {
+              cargarConversaciones(); // Nueva conversación, recargar
+              return prevConvs;
+            }
+          });
+
+          // 3. Actualizar lista de Contactos (badges individuales)
+          if (msg.direccion === 'recibido') {
+            setContactos(prevContactos =>
+              prevContactos.map(c => {
+                const idUser = c.usuario_id || c.apoderado_usuario_id;
+                if (idUser && String(idUser) === String(msg.remitente_id)) {
+                  return { ...c, mensajes_no_leidos: (c.mensajes_no_leidos || 0) + 1 };
+                }
+                return c;
+              })
+            );
           }
         }
       };

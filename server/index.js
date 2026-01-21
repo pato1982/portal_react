@@ -5,6 +5,7 @@ const authRoutes = require('./routes/auth');
 const registroRoutes = require('./routes/registro');
 const chatRoutes = require('./routes/chat');
 const contactoRoutes = require('./routes/contacto');
+const matriculasRoutes = require('./routes/matriculas');
 require('dotenv').config();
 
 const app = express();
@@ -25,6 +26,9 @@ app.use('/api/chat', chatRoutes);
 
 // Rutas de contacto
 app.use('/api/contacto', contactoRoutes);
+
+// Rutas de matriculas
+app.use('/api/matriculas', matriculasRoutes);
 
 // ============================================
 // RUTAS DE ESTABLECIMIENTOS

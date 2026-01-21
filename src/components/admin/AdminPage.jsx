@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Header from '../Header';
 import AlumnosTab from '../AlumnosTab';
+import MatriculasTab from '../MatriculasTab';
 import DocentesTab from '../DocentesTab';
 import AsignacionesTab from '../AsignacionesTab';
 import NotasPorCursoTab from '../NotasPorCursoTab';
@@ -14,6 +15,7 @@ function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
 
     const tabs = [
         { id: 'alumnos', label: 'Gestión de Alumnos', desc: 'Matrículas, expedientes y base de datos de estudiantes.', icon: 'group', color: 'blue', img: '/assets/navigation/info.png', badge: 'Estudiantes', size: 'tall' },
+        { id: 'matriculas', label: 'Matrículas', desc: 'Asignar cursos anuales a alumnos existentes.', icon: 'badge', color: 'orange', img: '/assets/navigation/info.png', badge: 'Admisión', size: 'small' },
         { id: 'docentes', label: 'Cuerpo Docente', desc: 'Administración de profesores y personal.', icon: 'school', color: 'pink', img: '/assets/navigation/info.png', badge: 'Personal', size: 'small' },
         { id: 'asignacion-cursos', label: 'Cargas Académicas', desc: 'Asignar docentes a cursos y materias.', icon: 'assignment_ind', color: 'green', img: '/assets/navigation/progreso.png', badge: 'Cursos', size: 'small' },
         { id: 'notas-por-curso', label: 'Sábana de Notas', desc: 'Reportes académicos consolidados por nivel.', icon: 'menu_book', color: 'purple', img: '/assets/navigation/notas.png', badge: 'Calificaciones', size: 'tall' },
@@ -34,6 +36,7 @@ function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
     const renderTabContent = () => {
         switch (tabActual) {
             case 'alumnos': return <AlumnosTab mostrarMensaje={mostrarMensaje} />;
+            case 'matriculas': return <MatriculasTab mostrarMensaje={mostrarMensaje} />;
             case 'docentes': return <DocentesTab mostrarMensaje={mostrarMensaje} />;
             case 'asignacion-cursos': return <AsignacionesTab mostrarMensaje={mostrarMensaje} />;
             case 'notas-por-curso': return <NotasPorCursoTab mostrarMensaje={mostrarMensaje} />;

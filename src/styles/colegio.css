@@ -8365,152 +8365,88 @@ select.form-control {
 }
 
 /* TABLET MODO: "Igual que normal pero más chico" (601px - 950px) */
-@media (min-width: 601px) and (max-width: 950px) {
+/* TABLET REFACTOR (601px - 1100px): Full 3-column Layout */
+@media (min-width: 601px) and (max-width: 1100px) {
     .chatv2-modal {
         width: 98vw;
-        height: 85vh;
+        height: 90vh;
         max-width: none;
-        /* Aprovechar todo el ancho */
         display: flex;
-        /* Asegurar layout flex */
+        flex-direction: column;
+        /* Modal structure */
     }
 
-    /* 1. Navegación reducida */
+    .chatv2-content {
+        flex-direction: row;
+        /* Ensure 3 columns row */
+    }
+
+    /* 1. Nav visible siempre */
     .chatv2-nav {
-        width: 50px;
-        padding: 8px 4px;
+        display: flex !important;
+        width: 60px;
+        flex-direction: column;
+        padding: 12px 0;
     }
 
     .chatv2-nav-item {
-        padding: 8px 2px;
-        font-size: 9px;
-    }
-
-    .chatv2-nav-item svg {
-        width: 20px;
-        height: 20px;
+        padding: 12px 4px;
+        justify-content: center;
     }
 
     .chatv2-nav-item span {
-        font-size: 8px;
-        margin-top: 2px;
-    }
-
-    /* 2. Lista de Contactos compacta */
-    .chatv2-list {
-        width: 200px;
-        /* Ancho fijo reducido */
-        min-width: 180px;
-    }
-
-    .chatv2-search {
-        padding: 8px;
-    }
-
-    .chatv2-search input {
-        font-size: 12px;
-        padding: 6px 10px 6px 30px;
-    }
-
-    .chatv2-list-item {
-        padding: 8px 10px;
-        gap: 8px;
-    }
-
-    .chatv2-avatar {
-        width: 32px;
-        height: 32px;
-        font-size: 11px;
-    }
-
-    .chatv2-list-item-name {
-        font-size: 12px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .chatv2-list-item-preview {
-        font-size: 10px;
-    }
-
-    .chatv2-list-item-time {
+        display: block;
         font-size: 9px;
+        text-align: center;
+        margin-top: 4px;
     }
 
-    /* 3. Área de Chat escalada */
+    .chatv2-nav-item svg {
+        margin: 0;
+    }
+
+    /* 2. Lista visible siempre */
+    .chatv2-list {
+        display: flex !important;
+        width: 240px;
+        min-width: 0;
+        border-right: 1px solid #e2e8f0;
+    }
+
+    /* Ignorar ocultamiento JS en tablet */
+    .chatv2-list.hidden-mobile {
+        display: flex !important;
+    }
+
+    /* 3. Chat visible siempre */
     .chatv2-chat {
+        display: flex !important;
         flex: 1;
-        /* Ocupa el resto */
+        min-width: 0;
     }
 
-    .chatv2-header {
-        padding: 8px 12px;
-        height: 50px;
+    .chatv2-chat.hidden-mobile {
+        display: flex !important;
     }
 
-    .chatv2-header-title {
-        font-size: 14px;
+    .chatv2-back-btn {
+        display: none !important;
     }
 
+    /* No back button in tablet */
+
+    /* Ajustes compactos */
     .chatv2-chat-header {
-        padding: 8px 12px;
+        padding: 0 12px;
         height: 50px;
-    }
-
-    .chatv2-chat-header-name {
-        font-size: 13px;
-    }
-
-    .chatv2-chat-header-status {
-        font-size: 10px;
-    }
-
-    .chatv2-messages {
-        padding: 10px;
     }
 
     .chatv2-message {
         max-width: 85%;
     }
 
-    .chatv2-message-bubble {
-        padding: 6px 10px;
-        border-radius: 12px;
-    }
-
-    .chatv2-message-bubble p {
-        font-size: 12px;
-        /* Texto del mensaje más chico */
-    }
-
-    .chatv2-input-area {
-        padding: 8px 10px;
-        min-height: 50px;
-    }
-
-    .chatv2-input-wrapper {
-        min-height: 36px;
-    }
-
-    .chatv2-input-wrapper input {
-        height: 36px;
-        font-size: 12px;
-    }
-
-    .chatv2-send-btn {
-        width: 36px;
-        height: 36px;
-    }
-
-    .chatv2-send-btn svg {
-        width: 16px;
-        height: 16px;
-    }
-
     .chatv2-toggle-label {
         display: none;
-        /* Ocultar texto del toggle para ahorrar espacio */
     }
 }
 
@@ -8531,39 +8467,53 @@ select.form-control {
         transform: translateY(0);
     }
 
-    /* FIX: Contenedor en Columna para poner Nav abajo */
+    /* FIX: Contenedor en Columna */
     .chatv2-content {
         flex-direction: column;
         overflow: hidden;
+        position: relative;
     }
 
-    /* FIX: Mostrar Nav como Tabs inferiores */
+    /* FIX: Tabs Arriba (Top Nav) */
     .chatv2-nav {
         display: flex !important;
         flex-direction: row;
         width: 100%;
-        height: 55px;
-        order: 2;
-        /* Al final (abajo) */
+        height: 48px;
+        order: -1;
+        /* Mover al inicio */
         border-right: none;
-        border-top: 1px solid #e2e8f0;
-        background: white;
-        padding: 0;
+        border-bottom: 1px solid #e2e8f0;
+        border-top: none;
+        background: #fff;
         z-index: 50;
     }
 
     .chatv2-nav-item {
         flex: 1;
-        padding: 6px;
+        padding: 0;
         justify-content: center;
         border-radius: 0;
+        border-bottom: 2px solid transparent;
+        color: #64748b;
+    }
+
+    .chatv2-nav-item.active {
+        background: transparent;
+        border-bottom-color: #6366f1;
+        color: #6366f1;
     }
 
     .chatv2-nav-item span {
-        font-size: 10px;
-        margin-top: 2px;
+        font-size: 11px;
+        margin-top: 0;
+        margin-left: 6px;
         display: block !important;
-        /* Asegurar que se ve el texto */
+    }
+
+    .chatv2-nav-item svg {
+        width: 18px;
+        height: 18px;
     }
 
     .chatv2-list {
@@ -8571,17 +8521,32 @@ select.form-control {
         border-right: none;
         flex: 1;
         order: 1;
-        /* height: calc(100% - 55px);  Flex handle this usually */
+        overflow-y: auto;
+    }
+
+    /* Buscador Sticky */
+    .chatv2-search {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: white;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
 
     .chatv2-list.hidden-mobile {
         display: none;
     }
 
+    /* Chat en capa superior absoluta */
     .chatv2-chat {
-        width: 100%;
-        flex: 1;
-        order: 1;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+        background: #ffffff;
+        flex-direction: column;
     }
 
     .chatv2-chat.hidden-mobile {

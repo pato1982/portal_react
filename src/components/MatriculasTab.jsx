@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import config from '../config/env';
 
 const MatriculasTab = ({ mostrarMensaje }) => {
@@ -15,6 +15,21 @@ const MatriculasTab = ({ mostrarMensaje }) => {
 
     // POPUP ERROR
     const [errorPopup, setErrorPopup] = useState({ visible: false, titulo: '', mensaje: '' });
+
+    // Dropdown Curso custom
+    const [dropdownCursoAbierto, setDropdownCursoAbierto] = useState(false);
+    const dropdownRef = useRef(null);
+
+    // Cerrar dropdown al hacer clic fuera
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setDropdownCursoAbierto(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const [form, setForm] = useState({
         anio_academico: new Date().getFullYear(),
@@ -89,6 +104,11 @@ const MatriculasTab = ({ mostrarMensaje }) => {
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    };
+
+    const seleccionarCurso = (cursoId) => {
+        setForm(prev => ({ ...prev, curso_asignado_id: cursoId }));
+        setDropdownCursoAbierto(false);
     };
 
     const siguientePaso = () => {
@@ -187,24 +207,42 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                     {seccionActual === 1 && (
                         <div>
                             <h4 style={{ color: '#2b6cb0' }}>1. Selección Académica</h4>
-                            <div className="form-group" style={{ position: 'relative', marginBottom: '30px' }}>
-                                <label>Autocargar Alumno Existente (Opcional)</label>
-                                <input type="text" className="form-control" placeholder="Buscar RUT o Nombre..." value={busqueda} onChange={e => setBusqueda(e.target.value)} />
-                                {sugerencias.length > 0 && (
-                                    <div className="lista-flotante-sugerencias">
-                                        {sugerencias.map(a => (<div key={a.id} className="item-sugerencia" onClick={() => seleccionarAlumnoExistente(a)}>{a.nombre_completo} ({a.rut})</div>))}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Curso Destino <span className="text-danger">*</span></label>
-                                    <select name="curso_asignado_id" className="form-control" value={form.curso_asignado_id} onChange={handleChange}>
-                                        <option value="">Seleccione...</option>
-                                        {cursos.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                                    </select>
+                            <div className="matricula-paso1-grid">
+                                <div className="form-group matricula-busqueda" style={{ position: 'relative' }}>
+                                    <label>Autocargar Alumno Existente (Opcional)</label>
+                                    <input type="text" className="form-control" placeholder="Buscar RUT o Nombre..." value={busqueda} onChange={e => setBusqueda(e.target.value)} />
+                                    {sugerencias.length > 0 && (
+                                        <div className="lista-flotante-sugerencias">
+                                            {sugerencias.map(a => (<div key={a.id} className="item-sugerencia" onClick={() => seleccionarAlumnoExistente(a)}>{a.nombre_completo} ({a.rut})</div>))}
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="form-group"><label>Año</label><input type="number" name="anio_academico" className="form-control" value={form.anio_academico} onChange={handleChange} /></div>
+                                <div className="form-group matricula-curso">
+                                    <label>Curso Destino <span className="text-danger">*</span></label>
+                                    <div className="custom-dropdown-curso" ref={dropdownRef}>
+                                        <div
+                                            className="custom-dropdown-trigger form-control"
+                                            onClick={() => setDropdownCursoAbierto(!dropdownCursoAbierto)}
+                                        >
+                                            <span>{form.curso_asignado_id ? cursos.find(c => c.id == form.curso_asignado_id)?.nombre : 'Seleccione...'}</span>
+                                            <span className="dropdown-arrow">{dropdownCursoAbierto ? '▲' : '▼'}</span>
+                                        </div>
+                                        {dropdownCursoAbierto && (
+                                            <div className="custom-dropdown-options">
+                                                {cursos.map(c => (
+                                                    <div
+                                                        key={c.id}
+                                                        className={`custom-dropdown-option ${form.curso_asignado_id == c.id ? 'selected' : ''}`}
+                                                        onClick={() => seleccionarCurso(c.id)}
+                                                    >
+                                                        {c.nombre}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="form-group matricula-anio"><label>Año</label><input type="number" name="anio_academico" className="form-control" value={form.anio_academico} onChange={handleChange} /></div>
                             </div>
                         </div>
                     )}
@@ -212,16 +250,14 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                     {seccionActual === 2 && (
                         <div>
                             <h4 style={{ color: '#2b6cb0' }}>2. Datos del Alumno</h4>
-                            <div className="form-row">
-                                <div className="form-group"><label>RUT</label><input type="text" name="rut_alumno" className="form-control" value={form.rut_alumno} onChange={handleChange} /></div>
-                                <div className="form-group"><label>Nombres</label><input type="text" name="nombres_alumno" className="form-control" value={form.nombres_alumno} onChange={handleChange} /></div>
-                                <div className="form-group"><label>Apellidos</label><input type="text" name="apellidos_alumno" className="form-control" value={form.apellidos_alumno} onChange={handleChange} /></div>
+                            <div className="matricula-paso2-grid">
+                                <div className="form-group campo-rut"><label>RUT</label><input type="text" name="rut_alumno" className="form-control" value={form.rut_alumno} onChange={handleChange} /></div>
+                                <div className="form-group campo-nombres"><label>Nombres</label><input type="text" name="nombres_alumno" className="form-control" value={form.nombres_alumno} onChange={handleChange} /></div>
+                                <div className="form-group campo-apellidos"><label>Apellidos</label><input type="text" name="apellidos_alumno" className="form-control" value={form.apellidos_alumno} onChange={handleChange} /></div>
+                                <div className="form-group campo-fecha"><label>Fecha Nac.</label><input type="date" name="fecha_nacimiento_alumno" className="form-control" value={form.fecha_nacimiento_alumno} onChange={handleChange} /></div>
+                                <div className="form-group campo-sexo"><label>Sexo</label><select name="sexo_alumno" className="form-control" value={form.sexo_alumno} onChange={handleChange}><option value="">Select...</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></div>
+                                <div className="form-group campo-direccion"><label>Dirección</label><input type="text" name="direccion_alumno" className="form-control" value={form.direccion_alumno} onChange={handleChange} /></div>
                             </div>
-                            <div className="form-row">
-                                <div className="form-group"><label>Fecha Nac.</label><input type="date" name="fecha_nacimiento_alumno" className="form-control" value={form.fecha_nacimiento_alumno} onChange={handleChange} /></div>
-                                <div className="form-group"><label>Sexo</label><select name="sexo_alumno" className="form-control" value={form.sexo_alumno} onChange={handleChange}><option value="">Select...</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></div>
-                            </div>
-                            <div className="form-group"><label>Dirección</label><input type="text" name="direccion_alumno" className="form-control" value={form.direccion_alumno} onChange={handleChange} /></div>
                         </div>
                     )}
 
@@ -231,8 +267,8 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                             <div className="alert alert-warning" style={{ marginBottom: '15px', fontSize: '0.9em' }}>
                                 Ingrese el RUT del apoderado. Si existe, se cargarán sus datos (excepto dirección).
                             </div>
-                            <div className="form-row">
-                                <div className="form-group">
+                            <div className="matricula-paso3-grid">
+                                <div className="form-group campo-rut-apod">
                                     <label>RUT Apoderado <span className="text-danger">*</span></label>
                                     <input
                                         type="text"
@@ -240,30 +276,26 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                                         className="form-control"
                                         value={form.rut_apoderado}
                                         onChange={handleChange}
-                                        onBlur={handleBlurRutApoderado} // ACTIVADOR AUTOLLENADO
+                                        onBlur={handleBlurRutApoderado}
                                         placeholder="Ej: 15.222.333-4"
                                     />
                                 </div>
+                                <div className="form-group campo-parentezco">
+                                    <label>Parentezco</label>
+                                    <select name="parentezco" className="form-control" value={form.parentezco} onChange={handleChange} required>
+                                        <option value="">Seleccione...</option><option value="Padre">Padre</option><option value="Madre">Madre</option><option value="Abuelo/a">Abuelo/a</option><option value="Tío/a">Tío/a</option><option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div className="form-group campo-nombres-apod"><label>Nombres</label><input type="text" name="nombres_apoderado" className="form-control" value={form.nombres_apoderado} onChange={handleChange} /></div>
+                                <div className="form-group campo-apellidos-apod"><label>Apellidos</label><input type="text" name="apellidos_apoderado" className="form-control" value={form.apellidos_apoderado} onChange={handleChange} /></div>
+                                <div className="form-group campo-email-apod"><label>Email</label><input type="email" name="email_apoderado" className="form-control" value={form.email_apoderado} onChange={handleChange} /></div>
+                                <div className="form-group campo-telefono-apod"><label>Teléfono</label><input type="text" name="telefono_apoderado" className="form-control" value={form.telefono_apoderado} onChange={handleChange} /></div>
                             </div>
-                            <div className="form-row">
-                                <div className="form-group"><label>Nombres</label><input type="text" name="nombres_apoderado" className="form-control" value={form.nombres_apoderado} onChange={handleChange} /></div>
-                                <div className="form-group"><label>Apellidos</label><input type="text" name="apellidos_apoderado" className="form-control" value={form.apellidos_apoderado} onChange={handleChange} /></div>
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group"><label>Email</label><input type="email" name="email_apoderado" className="form-control" value={form.email_apoderado} onChange={handleChange} /></div>
-                                <div className="form-group"><label>Teléfono</label><input type="text" name="telefono_apoderado" className="form-control" value={form.telefono_apoderado} onChange={handleChange} /></div>
-                            </div>
-                            <div className="form-group">
-                                <label>Parentezco</label>
-                                <select name="parentezco" className="form-control" value={form.parentezco} onChange={handleChange} required>
-                                    <option value="">Seleccione...</option><option value="Padre">Padre</option><option value="Madre">Madre</option><option value="Abuelo/a">Abuelo/a</option><option value="Tío/a">Tío/a</option><option value="Otro">Otro</option>
-                                </select>
-                            </div>
-                            <div style={{ marginTop: '15px', padding: '15px', border: '1px solid #ddd', borderRadius: '6px', background: '#fafafa' }}>
+                            <div className="campo-direccion-apod" style={{ marginTop: '15px', padding: '15px', border: '1px solid #ddd', borderRadius: '6px', background: '#fafafa' }}>
                                 <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>¿Vive en la misma dirección del alumno?</label>
                                 <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
-                                    <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}><input type="radio" name="mismaDireccion" checked={mismaDireccion === true} onChange={() => setMismaDireccion(true)} /> ⚠️ Sí</label>
-                                    <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}><input type="radio" name="mismaDireccion" checked={mismaDireccion === false} onChange={() => setMismaDireccion(false)} /> 🏠 No</label>
+                                    <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}><input type="radio" name="mismaDireccion" checked={mismaDireccion === true} onChange={() => setMismaDireccion(true)} /> Sí</label>
+                                    <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}><input type="radio" name="mismaDireccion" checked={mismaDireccion === false} onChange={() => setMismaDireccion(false)} /> No</label>
                                 </div>
                                 {mismaDireccion ? (<div className="form-group"><input type="text" className="form-control" value={form.direccion_alumno || '(Misma del alumno)'} disabled style={{ backgroundColor: '#e2e8f0' }} /></div>) : (<div className="form-group"><input type="text" name="direccion_apoderado" className="form-control" value={form.direccion_apoderado} onChange={handleChange} placeholder="Ingrese Direcc. Apoderado" /></div>)}
                             </div>
@@ -273,11 +305,20 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                     {seccionActual === 4 && (
                         <div>
                             <h4 style={{ color: '#2b6cb0' }}>4. Salud y Emergencias</h4>
-                            <div className="form-group"><label style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><input type="checkbox" name="tiene_nee" checked={form.tiene_nee} onChange={handleChange} /> <span>¿NEE?</span></label></div>
+                            <div className="form-group">
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <input type="checkbox" name="tiene_nee" checked={form.tiene_nee} onChange={handleChange} />
+                                    <span>¿NEE?</span>
+                                    <span className="tooltip-nee">
+                                        <span className="tooltip-icon">?</span>
+                                        <span className="tooltip-text">NEE: Necesidades Educativas Especiales</span>
+                                    </span>
+                                </label>
+                            </div>
                             {form.tiene_nee && (<div className="form-group"><label>Detalle</label><textarea name="detalle_nee" className="form-control" value={form.detalle_nee} onChange={handleChange} /></div>)}
                             <div className="form-row"><div className="form-group"><label>Alergias</label><input type="text" name="alergias" className="form-control" value={form.alergias} onChange={handleChange} /></div></div>
                             <h5 style={{ marginTop: '20px' }}>Emergencia</h5>
-                            <div className="form-row">
+                            <div className="emergencia-row">
                                 <div className="form-group"><label>Contacto</label><input type="text" name="contacto_emergencia_nombre" className="form-control" value={form.contacto_emergencia_nombre} onChange={handleChange} /></div>
                                 <div className="form-group"><label>Teléfono</label><input type="text" name="contacto_emergencia_telefono" className="form-control" value={form.contacto_emergencia_telefono} onChange={handleChange} /></div>
                             </div>
@@ -299,10 +340,10 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                         </div>
                     )}
 
-                    <div className="form-actions" style={{ marginTop: '30px', display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="matricula-botones">
                         {seccionActual > 1 ? <button className="btn btn-secondary" onClick={anteriorPaso}>Atrás</button> : <div></div>}
                         {seccionActual < 5 ? <button className="btn btn-primary" onClick={siguientePaso}>Siguiente &rarr;</button> :
-                            <button className="btn btn-success" onClick={handleSubmit} disabled={matriculando} style={{ background: '#38a169', borderColor: '#38a169' }}>
+                            <button className="btn btn-success btn-confirmar" onClick={handleSubmit} disabled={matriculando}>
                                 {matriculando ? 'Validando...' : 'CONFIRMAR MATRÍCULA'}
                             </button>
                         }
@@ -314,7 +355,271 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                 .lista-flotante-sugerencias { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; z-index: 100; max-height: 200px; overflow-y: auto; }
                 .item-sugerencia { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee; }
                 .item-sugerencia:hover { background-color: #f7fafc; }
-                
+
+                /* Paso 1 - Grid Responsive */
+                .matricula-paso1-grid {
+                    display: grid;
+                    grid-template-columns: 2fr 1fr 1fr;
+                    gap: 16px;
+                    margin-bottom: 16px;
+                }
+                .matricula-paso1-grid .form-group {
+                    margin-bottom: 0;
+                }
+
+                /* Tablet (768px - 1024px) - mantener 3 columnas */
+                @media (max-width: 1024px) and (min-width: 481px) {
+                    .matricula-paso1-grid {
+                        grid-template-columns: 2fr 1fr 1fr;
+                        gap: 12px;
+                    }
+                }
+
+                /* Móvil (menos de 480px) - RUT arriba, curso y año abajo */
+                @media (max-width: 480px) {
+                    .matricula-paso1-grid {
+                        grid-template-columns: 1fr 1fr;
+                        gap: 12px;
+                    }
+                    .matricula-busqueda {
+                        grid-column: 1 / -1;
+                    }
+                    .matricula-curso {
+                        grid-column: 1;
+                    }
+                    .matricula-anio {
+                        grid-column: 2;
+                    }
+                }
+
+                /* Paso 2 - Grid Responsive */
+                .matricula-paso2-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr 1fr;
+                    gap: 16px;
+                }
+                .matricula-paso2-grid .form-group {
+                    margin-bottom: 0;
+                }
+
+                /* Tablet - mantener 3 columnas */
+                @media (max-width: 1024px) and (min-width: 481px) {
+                    .matricula-paso2-grid {
+                        grid-template-columns: 1fr 1fr 1fr;
+                        gap: 12px;
+                    }
+                }
+
+                /* Móvil - reordenar campos */
+                @media (max-width: 480px) {
+                    .matricula-paso2-grid {
+                        grid-template-columns: 1fr 1fr;
+                        grid-template-areas:
+                            "rut fecha"
+                            "nombres apellidos"
+                            "sexo direccion";
+                        gap: 12px;
+                    }
+                    .campo-nombres { grid-area: nombres; }
+                    .campo-apellidos { grid-area: apellidos; }
+                    .campo-rut { grid-area: rut; }
+                    .campo-fecha { grid-area: fecha; }
+                    .campo-sexo { grid-area: sexo; }
+                    .campo-direccion { grid-area: direccion; }
+                }
+
+                /* Paso 3 - Grid Responsive */
+                .matricula-paso3-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr 1fr;
+                    grid-template-areas:
+                        "rut-apod nombres-apod apellidos-apod"
+                        "parentezco telefono-apod email-apod";
+                    gap: 16px;
+                }
+                .matricula-paso3-grid .form-group {
+                    margin-bottom: 0;
+                }
+                .campo-rut-apod { grid-area: rut-apod; }
+                .campo-parentezco { grid-area: parentezco; }
+                .campo-nombres-apod { grid-area: nombres-apod; }
+                .campo-apellidos-apod { grid-area: apellidos-apod; }
+                .campo-email-apod { grid-area: email-apod; }
+                .campo-telefono-apod { grid-area: telefono-apod; }
+
+                /* Móvil Paso 3 - reordenar campos */
+                @media (max-width: 480px) {
+                    .matricula-paso3-grid {
+                        grid-template-columns: 1fr 1fr;
+                        grid-template-areas:
+                            "rut-apod parentezco"
+                            "nombres-apod apellidos-apod"
+                            "email-apod telefono-apod";
+                        gap: 12px;
+                    }
+
+                    .campo-direccion-apod {
+                        margin-top: 12px !important;
+                        padding: 12px !important;
+                    }
+                }
+
+                /* Custom Dropdown Curso */
+                .custom-dropdown-curso {
+                    position: relative;
+                    z-index: 1000;
+                }
+                .custom-dropdown-trigger {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    cursor: pointer;
+                    background: white;
+                }
+                .dropdown-arrow {
+                    font-size: 10px;
+                    color: #666;
+                }
+                .custom-dropdown-options {
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    background: white;
+                    border: 1px solid #ddd;
+                    border-top: none;
+                    border-radius: 0 0 4px 4px;
+                    max-height: 150px;
+                    overflow-y: auto;
+                    z-index: 9999;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+
+                /* Asegurar que los contenedores padres no corten el dropdown */
+                .matricula-paso1-grid {
+                    overflow: visible !important;
+                }
+                .card-body {
+                    overflow: visible !important;
+                }
+                .card {
+                    overflow: visible !important;
+                }
+                .custom-dropdown-option {
+                    padding: 10px 12px;
+                    cursor: pointer;
+                    border-bottom: 1px solid #eee;
+                    font-size: 14px;
+                }
+                .custom-dropdown-option:last-child {
+                    border-bottom: none;
+                }
+                .custom-dropdown-option:hover {
+                    background-color: #f7fafc;
+                }
+                .custom-dropdown-option.selected {
+                    background-color: #ebf8ff;
+                    color: #2b6cb0;
+                    font-weight: 500;
+                }
+
+                /* Botones de navegación */
+                .matricula-botones {
+                    margin-top: 30px;
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 12px;
+                }
+                .matricula-botones .btn-confirmar {
+                    background: #38a169;
+                    border-color: #38a169;
+                }
+
+                /* Botones en móvil */
+                @media (max-width: 480px) {
+                    .matricula-botones {
+                        margin-top: 16px;
+                        gap: 8px;
+                    }
+                    .matricula-botones .btn {
+                        flex: 1;
+                        padding: 6px 8px;
+                        font-size: 11px;
+                    }
+                    .matricula-botones .btn-confirmar {
+                        font-size: 10px;
+                        padding: 6px 4px;
+                    }
+                }
+
+                /* Tooltip NEE */
+                .tooltip-nee {
+                    position: relative;
+                    display: inline-flex;
+                    align-items: center;
+                    cursor: pointer;
+                }
+                .tooltip-icon {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 18px;
+                    height: 18px;
+                    color: #d69e2e;
+                    font-size: 12px;
+                    font-weight: bold;
+                    border: 1px solid #d69e2e;
+                    border-radius: 50%;
+                    background: transparent;
+                }
+                .tooltip-text {
+                    visibility: hidden;
+                    opacity: 0;
+                    position: absolute;
+                    left: 50%;
+                    top: 100%;
+                    transform: translateX(-50%);
+                    margin-top: 8px;
+                    background: #2d3748;
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    white-space: nowrap;
+                    z-index: 1000;
+                    transition: opacity 0.2s, visibility 0.2s;
+                }
+                .tooltip-text::before {
+                    content: '';
+                    position: absolute;
+                    bottom: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border: 6px solid transparent;
+                    border-bottom-color: #2d3748;
+                }
+                .tooltip-nee:hover .tooltip-text,
+                .tooltip-nee:active .tooltip-text {
+                    visibility: visible;
+                    opacity: 1;
+                }
+
+                /* Emergencia - siempre en fila */
+                .emergencia-row {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 16px;
+                }
+                .emergencia-row .form-group {
+                    margin-bottom: 0;
+                }
+                @media (max-width: 480px) {
+                    .emergencia-row {
+                        grid-template-columns: 1fr 1fr;
+                        gap: 12px;
+                    }
+                }
+
                 /* Modal Styles */
                 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; alignItems: center; z-index: 1000; }
                 .modal-content { background: white; padding: 0; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); overflow: hidden; }

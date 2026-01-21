@@ -3,6 +3,7 @@ import React from 'react';
 function TabsNav({ activeTab, setActiveTab }) {
   const tabs = [
     { id: 'alumnos', label: 'Alumnos' },
+    { id: 'matriculas', label: 'Matrículas' },
     { id: 'docentes', label: 'Docentes' },
     { id: 'asignacion-cursos', label: 'Curso/Asignaturas' },
     { id: 'notas-por-curso', label: 'Notas por Curso' },

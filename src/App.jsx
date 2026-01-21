@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Header from './components/Header';
 import TabsNav from './components/TabsNav';
 import AlumnosTab from './components/AlumnosTab';
+import MatriculasTab from './components/MatriculasTab';
 import DocentesTab from './components/DocentesTab';
 import AsignacionesTab from './components/AsignacionesTab';
 import NotasPorCursoTab from './components/NotasPorCursoTab';
@@ -43,6 +44,8 @@ function App() {
     switch (activeTab) {
       case 'alumnos':
         return <TabWrapper><AlumnosTab /></TabWrapper>;
+      case 'matriculas':
+        return <TabWrapper><MatriculasTab /></TabWrapper>;
       case 'docentes':
         return <TabWrapper><DocentesTab /></TabWrapper>;
       case 'asignacion-cursos':

@@ -44,7 +44,7 @@ const MatriculasTab = ({ mostrarMensaje }) => {
         parentezco: '',
 
         contacto_emergencia_nombre: '', contacto_emergencia_telefono: '',
-        tiene_nee: false, detalle_nee: '', alergias: '', enfermedades_cronicas: '',
+        tiene_nee: false, detalle_nee: '', alergias: 'Ninguna', enfermedades_cronicas: 'Ninguna',
 
         colegio_procedencia: '', ultimo_curso_aprobado: '', promedio_notas_anterior: '',
         observaciones_apoderado: '',
@@ -112,9 +112,42 @@ const MatriculasTab = ({ mostrarMensaje }) => {
     };
 
     const siguientePaso = () => {
-        if (seccionActual === 1 && !form.curso_asignado_id) { alert('Debe seleccionar curso y año'); return; }
-        if (seccionActual === 2 && (!form.rut_alumno || !form.nombres_alumno)) { alert('Datos Alumno incompletos'); return; }
-        if (seccionActual === 3 && (!form.rut_apoderado || !form.nombres_apoderado || !form.parentezco)) { alert('Datos Apoderado incompletos'); return; }
+        // PASO 1
+        if (seccionActual === 1) {
+            if (!form.curso_asignado_id || !form.anio_academico) {
+                alert('Debe seleccionar el Curso de Destino y Año Académico.'); return;
+            }
+        }
+
+        // PASO 2: Datos Alumno
+        if (seccionActual === 2) {
+            if (!form.rut_alumno || !form.nombres_alumno || !form.apellidos_alumno ||
+                !form.fecha_nacimiento_alumno || !form.sexo_alumno || !form.direccion_alumno) {
+                alert('Complete todos los datos del Alumno (RUT, Nombres, Apellidos, Fecha, Sexo, Dirección).'); return;
+            }
+        }
+
+        // PASO 3: Datos Apoderado
+        if (seccionActual === 3) {
+            if (!form.rut_apoderado || !form.nombres_apoderado || !form.apellidos_apoderado ||
+                !form.parentezco || !form.email_apoderado || !form.telefono_apoderado) {
+                alert('Complete todos los datos del Apoderado.'); return;
+            }
+            if (!mismaDireccion && !form.direccion_apoderado) {
+                alert('Ingrese la dirección del apoderado.'); return;
+            }
+        }
+
+        // PASO 4: Salud y Emergencia
+        if (seccionActual === 4) {
+            if (!form.contacto_emergencia_nombre || !form.contacto_emergencia_telefono) {
+                alert('Debe ingresar un Contacto de Emergencia (Nombre y Teléfono).'); return;
+            }
+            if (!form.alergias) {
+                alert('El campo Alergias es obligatorio (puede ser "Ninguna").'); return;
+            }
+        }
+
         setSeccionActual(prev => prev + 1);
     };
     const anteriorPaso = () => setSeccionActual(prev => prev - 1);
@@ -133,6 +166,11 @@ const MatriculasTab = ({ mostrarMensaje }) => {
     };
 
     const handleSubmit = async () => {
+        // Validar último paso
+        if (!form.colegio_procedencia) {
+            alert('Debe ingresar el Colegio de Procedencia.'); return;
+        }
+
         // VALIDACIÓN PREVIA EN BACKEND
         if (form.alumno_id_existente) {
             const valRes = await fetch(`${config.apiBaseUrl}/matriculas/validar-promocion`, {

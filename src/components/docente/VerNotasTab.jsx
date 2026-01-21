@@ -442,6 +442,7 @@ function VerNotasTabInternal({ docenteId, establecimientoId }) {
                   }}
                   options={cursos}
                   placeholder="Seleccionar"
+                  containerStyle={{ zIndex: 1005, position: 'relative' }}
                 />
               )}
               <SelectNativo

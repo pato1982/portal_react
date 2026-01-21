@@ -33,11 +33,17 @@
 - **Solución:** Se forzó un `zIndex: 1005` y `position: 'relative'` específico para el contenedor del selector de Curso en este componente.
 - **Resultado:** Al desplegar las opciones de curso en una tablet, la lista flota correctamente **por encima** de los demás campos, asegurando su visibilidad.
 
+### 7. Corrección Dropdown "Ver Notas" (Modo Tablet) (`VerNotasTab.jsx`)
+- **Problema:** Mismo comportamiento de superposición que en "Modificar Nota". El desplegable de Curso quedaba oculto o cortado en tablets.
+- **Solución:** Se aplicó la misma corrección de `zIndex: 1005` al contenedor del `SelectNativo` de Curso en esta pestaña.
+- **Resultado:** Navegación fluida y visible en tablets.
+
 ## Archivos Modificados
 - `src/components/MatriculasTab.jsx`
 - `src/components/DocentesTab.jsx`
 - `src/components/docente/AgregarNotaTab.jsx`
 - `src/components/docente/ModificarNotaTab.jsx`
+- `src/components/docente/VerNotasTab.jsx`
 - `server/index.js`
 - `RESUMEN_SESION_21_ENE_2026.md`
 

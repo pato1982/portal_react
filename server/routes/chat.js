@@ -412,7 +412,7 @@ router.get('/curso/:id/alumnos-chat', async (req, res) => {
 // ============================================
 router.get('/conversacion/:id/mensajes', async (req, res) => {
     const { id } = req.params;
-    const { usuario_id, limite = 50, offset = 0 } = req.query;
+    const { usuario_id, limite = 50, offset = 0, since_id } = req.query;
 
     if (!usuario_id) {
         return res.status(400).json({
@@ -435,31 +435,66 @@ router.get('/conversacion/:id/mensajes', async (req, res) => {
             });
         }
 
-        // Obtener mensajes
-        const [mensajes] = await pool.query(`
-            SELECT
-                m.id,
-                m.remitente_id,
-                m.mensaje,
-                m.tipo_mensaje,
-                m.archivo_url,
-                m.archivo_nombre,
-                m.archivo_tamano,
-                m.leido,
-                m.fecha_lectura,
-                m.editado,
-                m.fecha_edicion,
-                m.fecha_envio,
-                CASE WHEN m.remitente_id = ? THEN 'enviado' ELSE 'recibido' END AS direccion
-            FROM tb_chat_mensajes m
-            WHERE m.conversacion_id = ?
-            AND CASE
-                WHEN m.remitente_id = ? THEN m.eliminado_remitente = 0
-                ELSE m.eliminado_destinatario = 0
-            END
-            ORDER BY m.fecha_envio ASC
-            LIMIT ? OFFSET ?
-        `, [usuario_id, id, usuario_id, parseInt(limite), parseInt(offset)]);
+        let mensajes;
+
+        if (since_id) {
+            // Sincronización: Traer solo los nuevos después del último ID conocido
+            [mensajes] = await pool.query(`
+                SELECT
+                    m.id,
+                    m.remitente_id,
+                    m.mensaje,
+                    m.tipo_mensaje,
+                    m.archivo_url,
+                    m.archivo_nombre,
+                    m.archivo_tamano,
+                    m.leido,
+                    m.fecha_lectura,
+                    m.editado,
+                    m.fecha_edicion,
+                    m.fecha_envio,
+                    CASE WHEN m.remitente_id = ? THEN 'enviado' ELSE 'recibido' END AS direccion
+                FROM tb_chat_mensajes m
+                WHERE m.conversacion_id = ?
+                AND m.id > ?
+                AND CASE
+                    WHEN m.remitente_id = ? THEN m.eliminado_remitente = 0
+                    ELSE m.eliminado_destinatario = 0
+                END
+                ORDER BY m.id ASC
+            `, [usuario_id, id, since_id, usuario_id]);
+
+        } else {
+            // Carga inicial: Traer los ÚLTIMOS mensajes (Order DESC limit -> Order ASC)
+            // Esto asegura que veamos lo más reciente, no lo más antiguo
+            [mensajes] = await pool.query(`
+                SELECT * FROM (
+                    SELECT
+                        m.id,
+                        m.remitente_id,
+                        m.mensaje,
+                        m.tipo_mensaje,
+                        m.archivo_url,
+                        m.archivo_nombre,
+                        m.archivo_tamano,
+                        m.leido,
+                        m.fecha_lectura,
+                        m.editado,
+                        m.fecha_edicion,
+                        m.fecha_envio,
+                        CASE WHEN m.remitente_id = ? THEN 'enviado' ELSE 'recibido' END AS direccion
+                    FROM tb_chat_mensajes m
+                    WHERE m.conversacion_id = ?
+                    AND CASE
+                        WHEN m.remitente_id = ? THEN m.eliminado_remitente = 0
+                        ELSE m.eliminado_destinatario = 0
+                    END
+                    ORDER BY m.fecha_envio DESC
+                    LIMIT ? OFFSET ?
+                ) AS sub
+                ORDER BY sub.fecha_envio ASC
+            `, [usuario_id, id, usuario_id, parseInt(limite), parseInt(offset)]);
+        }
 
         res.json({
             success: true,
@@ -633,6 +668,32 @@ router.post('/mensaje', async (req, res) => {
             'SELECT * FROM tb_chat_mensajes WHERE id = ?',
             [resultado.insertId]
         );
+
+        // --- SOCKET.IO EMIT (Real-time) ---
+        if (req.io) {
+            try {
+                // Determinar quién es el otro usuario
+                const otroUsuarioId = (conversacion.usuario1_id == remitente_id)
+                    ? conversacion.usuario2_id
+                    : conversacion.usuario1_id;
+
+                // 1. Notificar al DESTINATARIO
+                req.io.to(`user_${otroUsuarioId}`).emit('nuevo_mensaje', {
+                    ...mensajeInsertado[0],
+                    direccion: 'recibido', // Importante para que se pinte a la izquierda
+                    conversacion_id: parseInt(conversacion_id)
+                });
+
+                // 2. Notificar al REMITENTE (Sync multi-tab/multi-device)
+                req.io.to(`user_${remitente_id}`).emit('nuevo_mensaje', {
+                    ...mensajeInsertado[0],
+                    direccion: 'enviado',
+                    conversacion_id: parseInt(conversacion_id)
+                });
+            } catch (e) {
+                console.error("Error emitiendo socket:", e);
+            }
+        }
 
         res.json({
             success: true,

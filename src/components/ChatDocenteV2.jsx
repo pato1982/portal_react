@@ -14,6 +14,7 @@ import {
   enviarMensajeMasivo,
   obtenerConversaciones
 } from '../services/chatService';
+import socketService from '../services/socketService';
 
 function ChatDocenteV2({ usuario, establecimientoId }) {
   const { mostrarMensaje } = useMensaje();
@@ -151,33 +152,36 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     const idConv = Number(conversacionActual);
     const esConversacionValida = idConv && !isNaN(idConv) && idConv > 0;
 
-    // ESTRATEGIA ROBUSTA TIPO WHATSAPP:
-    // Sincronización agnóstica de tipos (string/number)
+    // ESTRATEGIA OPTIMIZADA (SYNC REAL-TIME):
     if (esConversacionValida) {
       try {
-        // Pedir los ultimos 50 mensajes de la conversación actual para asegurar cobertura
-        const resultado = await obtenerMensajes(idConv, usuario.id, 50, 0);
+        // Calcular el último ID que tenemos para pedir solo deltas
+        const obtenerMaxId = () => {
+          if (!mensajes || mensajes.length === 0) return 0;
+          const ids = mensajes.map(m => Number(m.id)).filter(id => !isNaN(id) && id > 0);
+          return ids.length > 0 ? Math.max(...ids) : 0;
+        };
 
-        if (resultado.success && resultado.data) {
-          const mensajesRemotos = resultado.data;
+        const ultimoId = obtenerMaxId();
+
+        // Pedir solo mensajes nuevos (sinceId)
+        const resultado = await obtenerMensajes(idConv, usuario.id, 50, 0, ultimoId);
+
+        if (resultado.success && resultado.data && resultado.data.length > 0) {
+          const nuevosMensajes = resultado.data;
 
           setMensajes(prev => {
-            // Usar Strings para la comparación de IDs y evitar problemas de tipo
             const idsLocales = new Set(prev.map(m => String(m.id)));
-            // Encontrar mensajes remotos que NO tenemos localmente
-            const nuevos = mensajesRemotos.filter(m => !idsLocales.has(String(m.id)));
+            const realmenteNuevos = nuevosMensajes.filter(m => !idsLocales.has(String(m.id)));
 
-            if (nuevos.length === 0) return prev;
+            if (realmenteNuevos.length === 0) return prev;
 
-            // Combinar y asegurar orden cronológico
-            const combinados = [...prev, ...nuevos].sort((a, b) =>
+            return [...prev, ...realmenteNuevos].sort((a, b) =>
               new Date(a.fecha_envio) - new Date(b.fecha_envio)
             );
-            return combinados;
           });
 
-          // Si encontramos cosas nuevas recibidas, marcar leído inmediatamente
-          const tengoNuevosRecibidos = mensajesRemotos.some(m =>
+          const tengoNuevosRecibidos = nuevosMensajes.some(m =>
             m.direccion === 'recibido' && m.leido === 0
           );
 
@@ -201,7 +205,43 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
         }
       } catch (e) { console.error('Error polling lista:', e); }
     }
-  }, [usuario?.id, establecimientoId, chatAbierto, conversacionActual, actualizarNoLeidos, ultimoTimestamp]);
+  }, [usuario?.id, establecimientoId, chatAbierto, conversacionActual, actualizarNoLeidos, ultimoTimestamp, mensajes]);
+
+  // ==================== SOCKET.IO ====================
+  useEffect(() => {
+    if (usuario?.id) {
+      const socket = socketService.connect(usuario.id);
+
+      const handleNuevoMensaje = (msg) => {
+        // Si el mensaje es para la conversación actual abierta
+        if (conversacionActual && String(msg.conversacion_id) === String(conversacionActual)) {
+          setMensajes(prev => {
+            // Evitar duplicados
+            if (prev.some(m => String(m.id) === String(msg.id))) return prev;
+            return [...prev, msg];
+          });
+
+          // Si lo recibimos nosotros y estamos viendo el chat, marcarlo leído
+          if (msg.direccion === 'recibido') {
+            marcarConversacionLeida(conversacionActual, usuario.id);
+          }
+        } else {
+          // Es de otra conversación -> actualizar badges
+          actualizarNoLeidos();
+          // Si estamos en la lista, actualizar orden
+          if (!conversacionActual) {
+            cargarConversaciones();
+          }
+        }
+      };
+
+      socket.on('nuevo_mensaje', handleNuevoMensaje);
+
+      return () => {
+        socket.off('nuevo_mensaje', handleNuevoMensaje);
+      };
+    }
+  }, [usuario?.id, conversacionActual]);
 
   // ==================== EFECTOS ====================
 
@@ -216,8 +256,8 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
 
   useEffect(() => {
     if (chatAbierto && puedeUsarChat) {
-      // Polling más agresivo cuando el chat está abierto
-      pollingRef.current = setInterval(verificarNuevosMensajes, 2000);
+      // Polling de respaldo (Intervalo largo porque usamos Sockets)
+      pollingRef.current = setInterval(verificarNuevosMensajes, 30000);
     }
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);

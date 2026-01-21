@@ -9,11 +9,44 @@ const matriculasRoutes = require('./routes/matriculas');
 require('dotenv').config();
 
 const app = express();
+const http = require('http');
+const { Server } = require('socket.io');
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*", // Ajustar según config real si es necesario
+        methods: ["GET", "POST", "PUT", "DELETE"]
+    }
+});
+
 const PORT = process.env.PORT || 3001;
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+// Middleware para disponibilizar io en las rutas
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
+// Gestión de conexiones Socket.io
+io.on('connection', (socket) => {
+    console.log('Cliente conectado al socket:', socket.id);
+
+    // Evento para que el usuario se una a su "sala personal"
+    // Esto permite enviarle notificaciones directas (ej: user_123)
+    socket.on('join_user', (userId) => {
+        const roomName = `user_${userId}`;
+        socket.join(roomName);
+        console.log(`Usuario ${userId} unido a sala ${roomName}`);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Cliente desconectado del socket:', socket.id);
+    });
+});
 
 // Rutas de autenticación
 app.use('/api/auth', authRoutes);
@@ -4600,8 +4633,8 @@ app.get('/api/health', async (req, res) => {
     });
 });
 
-// Iniciar servidor
-app.listen(PORT, async () => {
+// Iniciar servidor http (con socket.io)
+server.listen(PORT, async () => {
     console.log(`\n🚀 Servidor corriendo en http://localhost:${PORT}`);
     console.log(`📋 Endpoints disponibles:`);
     console.log(`   -- Autenticación --`);

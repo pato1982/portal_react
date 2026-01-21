@@ -91,7 +91,7 @@ export const obtenerConversaciones = async (usuarioId, establecimientoId) => {
  * @param {number} offset - Offset para paginacion
  * @returns {Promise<Object>} Lista de mensajes
  */
-export const obtenerMensajes = async (conversacionId, usuarioId, limite = 50, offset = 0) => {
+export const obtenerMensajes = async (conversacionId, usuarioId, limite = 50, offset = 0, sinceId = null) => {
   if (config.isDemoMode()) {
     return {
       success: true,
@@ -103,10 +103,13 @@ export const obtenerMensajes = async (conversacionId, usuarioId, limite = 50, of
   }
 
   try {
-    const response = await fetch(
-      `${config.apiBaseUrl}/chat/conversacion/${conversacionId}/mensajes?usuario_id=${usuarioId}&limite=${limite}&offset=${offset}`,
-      { headers: getAuthHeaders() }
-    );
+    let url = `${config.apiBaseUrl}/chat/conversacion/${conversacionId}/mensajes?usuario_id=${usuarioId}&limite=${limite}&offset=${offset}`;
+
+    if (sinceId) {
+      url += `&since_id=${sinceId}`;
+    }
+
+    const response = await fetch(url, { headers: getAuthHeaders() });
 
     const data = await response.json();
 

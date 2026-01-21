@@ -28,6 +28,7 @@ const SelectMovilLocal = ({ label, value, valueName, onChange, options, placehol
 
 // Modal de edicion COMPLETO CON PESTAÑAS
 const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar }) => {
+  const { isMobile } = useResponsive();
   const [activeTab, setActiveTab] = useState('alumno'); // 'alumno' | 'apoderado'
   const [loading, setLoading] = useState(true);
   const [datosCompletos, setDatosCompletos] = useState(null);
@@ -131,10 +132,9 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
           <button className="modal-close" onClick={onCerrar}>&times;</button>
         </div>
 
-        {/* Pestañas del Modal */}
         <div className="modal-tabs">
-          <button type="button" className={`modal-tab-btn ${activeTab === 'alumno' ? 'active' : ''}`} onClick={() => setActiveTab('alumno')}>👤 Datos Alumno</button>
-          <button type="button" className={`modal-tab-btn ${activeTab === 'apoderado' ? 'active' : ''}`} onClick={() => setActiveTab('apoderado')}>👪 Apoderado</button>
+          <button type="button" className={`modal-tab-btn ${activeTab === 'alumno' ? 'active' : ''}`} onClick={() => setActiveTab('alumno')}>Datos Alumno</button>
+          <button type="button" className={`modal-tab-btn ${activeTab === 'apoderado' ? 'active' : ''}`} onClick={() => setActiveTab('apoderado')}>Apoderado</button>
         </div>
 
         <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
@@ -142,9 +142,9 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
             <>
               <div className="grid-responsive">
                 <div className="form-group">
-                  <label>Curso Actual</label>
+                  <label>{isMobile ? 'Curso' : 'Curso Actual'}</label>
                   <select className="form-control" name="curso_id" value={formAlumno.curso_id} onChange={handleChange}>
-                    <option value="">Sin Curso (Pendiente Matricula)</option>
+                    <option value="">{isMobile ? 'Pendiente' : 'Sin Curso (Pendiente Matricula)'}</option>
                     {cursos.map(c => (<option key={c.id} value={c.id}>{c.nombre}</option>))}
                   </select>
                 </div>
@@ -161,7 +161,7 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
                   <input type="text" className="form-control" name="apellidos" value={formAlumno.apellidos} onChange={handleChange} />
                 </div>
                 <div className="form-group">
-                  <label>Dirección</label>
+                  <label>{isMobile ? 'Dir.' : 'Dirección'}</label>
                   <input type="text" className="form-control" name="direccion" value={formAlumno.direccion} onChange={handleChange} />
                 </div>
                 <div className="form-group">
@@ -174,18 +174,18 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
               </div>
 
               {/* Sección Salud y Emergencia (Editable) */}
-              <div className="section-divider">Salud y Emergencia</div>
+              <div className="section-divider">{isMobile ? 'Salud / Emerg.' : 'Salud y Emergencia'}</div>
               <div className="grid-responsive">
                 <div className="form-group">
                   <label>Alergias</label>
                   <input type="text" className="form-control" name="alergias" value={formAlumno.alergias} onChange={handleChange} placeholder="Ninguna" />
                 </div>
                 <div className="form-group">
-                  <label title="Enfermedades Crónicas">Enf. Crónicas</label>
+                  <label title="Enfermedades Crónicas">{isMobile ? 'Enf. Crón.' : 'Enf. Crónicas'}</label>
                   <input type="text" className="form-control" name="enfermedades_cronicas" value={formAlumno.enfermedades_cronicas} onChange={handleChange} placeholder="Ninguna" />
                 </div>
                 <div className="form-group">
-                  <label title="Necesidades Educativas Especiales">Nec. Esp. (NEE)</label>
+                  <label title="Necesidades Educativas Especiales">{isMobile ? 'NEE' : 'Nec. Esp. (NEE)'}</label>
                   <select className="form-control" name="tiene_nee" value={formAlumno.tiene_nee} onChange={handleChange}>
                     <option value="0">No</option>
                     <option value="1">Sí</option>
@@ -198,11 +198,11 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
                   </div>
                 )}
                 <div className="form-group">
-                  <label>Cont. Emergencia</label>
+                  <label>{isMobile ? 'Cont. Emerg.' : 'Cont. Emergencia'}</label>
                   <input type="text" className="form-control" name="contacto_emergencia_nombre" value={formAlumno.contacto_emergencia_nombre} onChange={handleChange} />
                 </div>
                 <div className="form-group">
-                  <label>Tel. Emergencia</label>
+                  <label>{isMobile ? 'Tel. Emerg.' : 'Tel. Emergencia'}</label>
                   <input type="text" className="form-control" name="contacto_emergencia_telefono" value={formAlumno.contacto_emergencia_telefono} onChange={handleChange} />
                 </div>
               </div>

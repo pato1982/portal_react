@@ -32,14 +32,20 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
   const [loading, setLoading] = useState(true);
   const [datosCompletos, setDatosCompletos] = useState(null);
 
-  // Formulario editable del alumno
+  // Formulario editable del alumno (+ Salud)
   const [formAlumno, setFormAlumno] = useState({
     curso_id: '',
     rut: '',
     nombres: '',
     apellidos: '',
     direccion: '',
-    sexo: ''
+    sexo: '',
+    alergias: '',
+    enfermedades_cronicas: '',
+    tiene_nee: '0',
+    detalle_nee: '',
+    contacto_emergencia_nombre: '',
+    contacto_emergencia_telefono: ''
   });
 
   const [guardando, setGuardando] = useState(false);
@@ -60,7 +66,13 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
             nombres: al.nombres || '',
             apellidos: al.apellidos || '',
             direccion: al.direccion || '',
-            sexo: al.sexo || ''
+            sexo: al.sexo || '',
+            alergias: al.alergias || '',
+            enfermedades_cronicas: al.enfermedades_cronicas || '',
+            tiene_nee: al.tiene_nee ? '1' : '0',
+            detalle_nee: al.detalle_nee || '',
+            contacto_emergencia_nombre: al.contacto_emergencia_nombre || '',
+            contacto_emergencia_telefono: al.contacto_emergencia_telefono || ''
           });
         } else {
           alert("Error cargando ficha");
@@ -81,10 +93,9 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          rut: formAlumno.rut,
-          nombres: formAlumno.nombres,
-          apellidos: formAlumno.apellidos,
+          ...formAlumno,
           curso_id: formAlumno.curso_id ? parseInt(formAlumno.curso_id) : null,
+          tiene_nee: formAlumno.tiene_nee === '1' ? 1 : 0,
           usuario_modificacion: 'Administrador'
         })
       });
@@ -162,32 +173,37 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
                 </div>
               </div>
 
-              {/* Sección Salud y Emergencia (Solo Lectura desde Matricula) */}
-              <div className="section-divider">Antecedentes de Salud y Emergencia</div>
-              <div className="grid-responsive info-readonly-grid">
-                <div className="info-item">
+              {/* Sección Salud y Emergencia (Editable) */}
+              <div className="section-divider">Salud y Emergencia</div>
+              <div className="grid-responsive">
+                <div className="form-group">
                   <label>Alergias</label>
-                  <div className="readonly-val">{datosCompletos.alumno.alergias || 'Ninguna reportada'}</div>
+                  <input type="text" className="form-control" name="alergias" value={formAlumno.alergias} onChange={handleChange} placeholder="Ninguna" />
                 </div>
-                <div className="info-item">
-                  <label>Enfermedades Crónicas</label>
-                  <div className="readonly-val">{datosCompletos.alumno.enfermedades_cronicas || 'Ninguna reportada'}</div>
+                <div className="form-group">
+                  <label title="Enfermedades Crónicas">Enf. Crónicas</label>
+                  <input type="text" className="form-control" name="enfermedades_cronicas" value={formAlumno.enfermedades_cronicas} onChange={handleChange} placeholder="Ninguna" />
                 </div>
-                <div className="info-item">
-                  <label>Necesidades Especiales (NEE)</label>
-                  <div className="readonly-val">
-                    {datosCompletos.alumno.tiene_nee === 1 ? (
-                      <span className="badge-warning">Sí: {datosCompletos.alumno.detalle_nee}</span>
-                    ) : 'No'}
+                <div className="form-group">
+                  <label title="Necesidades Educativas Especiales">Nec. Esp. (NEE)</label>
+                  <select className="form-control" name="tiene_nee" value={formAlumno.tiene_nee} onChange={handleChange}>
+                    <option value="0">No</option>
+                    <option value="1">Sí</option>
+                  </select>
+                </div>
+                {formAlumno.tiene_nee === '1' && (
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label>Detalle NEE</label>
+                    <input type="text" className="form-control" name="detalle_nee" value={formAlumno.detalle_nee} onChange={handleChange} placeholder="Especifique..." />
                   </div>
+                )}
+                <div className="form-group">
+                  <label>Cont. Emergencia</label>
+                  <input type="text" className="form-control" name="contacto_emergencia_nombre" value={formAlumno.contacto_emergencia_nombre} onChange={handleChange} />
                 </div>
-                <div className="info-item">
-                  <label>Contacto Emergencia</label>
-                  <div className="readonly-val">{datosCompletos.alumno.contacto_emergencia_nombre || '-'}</div>
-                </div>
-                <div className="info-item">
+                <div className="form-group">
                   <label>Tel. Emergencia</label>
-                  <div className="readonly-val">{datosCompletos.alumno.contacto_emergencia_telefono || '-'}</div>
+                  <input type="text" className="form-control" name="contacto_emergencia_telefono" value={formAlumno.contacto_emergencia_telefono} onChange={handleChange} />
                 </div>
               </div>
 

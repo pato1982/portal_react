@@ -169,6 +169,7 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
                   <select className="form-control" name="sexo" value={formAlumno.sexo} onChange={handleChange}>
                     <option value="Masculino">Masculino</option>
                     <option value="Femenino">Femenino</option>
+                    <option value="Otro">Otro</option>
                   </select>
                 </div>
               </div>

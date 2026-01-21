@@ -255,7 +255,7 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                                 <div className="form-group campo-nombres"><label>Nombres</label><input type="text" name="nombres_alumno" className="form-control" value={form.nombres_alumno} onChange={handleChange} /></div>
                                 <div className="form-group campo-apellidos"><label>Apellidos</label><input type="text" name="apellidos_alumno" className="form-control" value={form.apellidos_alumno} onChange={handleChange} /></div>
                                 <div className="form-group campo-fecha"><label>Fecha Nac.</label><input type="date" name="fecha_nacimiento_alumno" className="form-control" value={form.fecha_nacimiento_alumno} onChange={handleChange} /></div>
-                                <div className="form-group campo-sexo"><label>Sexo</label><select name="sexo_alumno" className="form-control" value={form.sexo_alumno} onChange={handleChange}><option value="">Select...</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></div>
+                                <div className="form-group campo-sexo"><label>Sexo</label><select name="sexo_alumno" className="form-control" value={form.sexo_alumno} onChange={handleChange}><option value="">Select...</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option><option value="Otro">Otro</option></select></div>
                                 <div className="form-group campo-direccion"><label>Dirección</label><input type="text" name="direccion_alumno" className="form-control" value={form.direccion_alumno} onChange={handleChange} /></div>
                             </div>
                         </div>
@@ -589,14 +589,26 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                     z-index: 1000;
                     transition: opacity 0.2s, visibility 0.2s;
                 }
-                .tooltip-text::before {
-                    content: '';
-                    position: absolute;
-                    bottom: 100%;
-                    left: 50%;
-                    transform: translateX(-50%);
                     border: 6px solid transparent;
                     border-bottom-color: #2d3748;
+                }
+                .tooltip-nee:hover .tooltip-text {
+                    visibility: visible;
+                    opacity: 1;
+                }
+
+                @media (max-width: 480px) {
+                    .tooltip-text {
+                        left: 0;
+                        transform: none;
+                        white-space: normal;
+                        width: 200px;
+                        text-align: left;
+                    }
+                    .tooltip-text::before {
+                        left: 10px;
+                        transform: none;
+                    }
                 }
                 .tooltip-nee:hover .tooltip-text,
                 .tooltip-nee:active .tooltip-text {

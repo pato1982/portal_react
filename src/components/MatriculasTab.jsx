@@ -8,6 +8,9 @@ const MatriculasTab = ({ mostrarMensaje }) => {
     const [seccionActual, setSeccionActual] = useState(1);
     const [matriculando, setMatriculando] = useState(false);
 
+    // Checkbox UI para dirección
+    const [mismaDireccion, setMismaDireccion] = useState(true);
+
     // Datos maestros
     const [cursos, setCursos] = useState([]);
     const [alumnosExistentes, setAlumnosExistentes] = useState([]);
@@ -27,11 +30,11 @@ const MatriculasTab = ({ mostrarMensaje }) => {
         fecha_nacimiento_alumno: '', sexo_alumno: '', nacionalidad_alumno: 'Chilena',
         direccion_alumno: '', comuna_alumno: '', ciudad_alumno: '', telefono_alumno: '', email_alumno: '',
 
-        // Paso 3: APODERADO (NUEVO)
+        // Paso 3: APODERADO 
         rut_apoderado: '', nombres_apoderado: '', apellidos_apoderado: '',
-        email_apoderado: '', telefono_apoderado: '', direccion_apoderado: '',
+        email_apoderado: '', telefono_apoderado: '', direccion_apoderado: '', // Se llena manual o copia
 
-        // Paso 4: Salud y Emergencia
+        // Paso 4: Salud
         contacto_emergencia_nombre: '', contacto_emergencia_telefono: '',
         tiene_nee: false, detalle_nee: '', alergias: '', enfermedades_cronicas: '',
 
@@ -39,7 +42,6 @@ const MatriculasTab = ({ mostrarMensaje }) => {
         colegio_procedencia: '', ultimo_curso_aprobado: '', promedio_notas_anterior: '',
         observaciones_apoderado: '',
 
-        // Metadata interna
         alumno_id_existente: null
     });
 
@@ -63,7 +65,7 @@ const MatriculasTab = ({ mostrarMensaje }) => {
         } catch (e) { console.error(e); }
     };
 
-    // Buscador
+    // Buscador Logic
     useEffect(() => {
         if (busqueda.length > 2) {
             const term = busqueda.toLowerCase();
@@ -84,9 +86,7 @@ const MatriculasTab = ({ mostrarMensaje }) => {
             nombres_alumno: alumno.nombres,
             apellidos_alumno: alumno.apellidos,
         }));
-        setBusqueda('');
-        setSugerencias([]);
-        setSeccionActual(2);
+        setBusqueda(''); setSugerencias([]); setSeccionActual(2);
     };
 
     const handleChange = (e) => {
@@ -98,20 +98,14 @@ const MatriculasTab = ({ mostrarMensaje }) => {
     };
 
     const siguientePaso = () => {
-        if (seccionActual === 1 && !form.curso_asignado_id) {
-            alert('Debe seleccionar curso y año'); return;
-        }
-        if (seccionActual === 2 && (!form.rut_alumno || !form.nombres_alumno)) {
-            alert('Rut y Nombre Alumno son obligatorios'); return;
-        }
-        if (seccionActual === 3 && (!form.rut_apoderado || !form.nombres_apoderado)) {
-            alert('Rut y Nombre Apoderado son obligatorios'); return;
-        }
+        if (seccionActual === 1 && !form.curso_asignado_id) { alert('Debe seleccionar curso y año'); return; }
+        if (seccionActual === 2 && (!form.rut_alumno || !form.nombres_alumno)) { alert('Rut y Nombre Alumno obligatorios'); return; }
+        if (seccionActual === 3 && (!form.rut_apoderado || !form.nombres_apoderado)) { alert('Rut y Nombre Apoderado obligatorios'); return; }
+
         setSeccionActual(prev => prev + 1);
     };
     const anteriorPaso = () => setSeccionActual(prev => prev - 1);
 
-    // ✅ DEMO DATA
     const llenarDatosPrueba = () => {
         setForm(prev => ({
             ...prev,
@@ -119,27 +113,30 @@ const MatriculasTab = ({ mostrarMensaje }) => {
             fecha_nacimiento_alumno: '2016-05-15', sexo_alumno: 'Masculino',
             direccion_alumno: 'Calle Falsa 123', comuna_alumno: 'Santiago',
 
-            // Apoderado
             rut_apoderado: '15.222.333-4', nombres_apoderado: 'Héctor', apellidos_apoderado: 'Soto Pérez',
             email_apoderado: 'apoderado.demo@example.com', telefono_apoderado: '+56987654321',
-            direccion_apoderado: 'Calle Falsa 123',
+            direccion_apoderado: '', // Se asumirá la misma
 
             tiene_nee: false, alergias: 'Ninguna',
             contacto_emergencia_nombre: 'María Muñoz (Madre)', contacto_emergencia_telefono: '+56911112222',
             colegio_procedencia: 'Jardín Infantil Solcito',
             observaciones_apoderado: 'Alumno entusiasta.'
         }));
-        alert('Datos cargados. Revisa el Paso 3 para ver al Apoderado.');
+        setMismaDireccion(true);
+        alert('Datos cargados.');
     };
 
     const handleSubmit = async () => {
         if (!window.confirm('¿Confirmar matrícula?')) return;
         setMatriculando(true);
         try {
+            // Lógica final de dirección apoderado
+            const dirApoderadoFinal = mismaDireccion ? form.direccion_alumno : form.direccion_apoderado;
+
             const payload = {
                 establecimiento_id: 1,
-                // ya no hardcodeamos apoderado_id, el back lo resolverá con los datos
-                ...form
+                ...form,
+                direccion_apoderado: dirApoderadoFinal
             };
 
             const res = await fetch(`${config.apiBaseUrl}/matriculas`, {
@@ -185,12 +182,12 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                 </div>
 
                 <div className="card-body">
-                    {/* Barra de progreso 5 pasos */}
+                    {/* Barra de progreso */}
                     <div style={{ display: 'flex', marginBottom: '20px', background: '#eee', height: '4px', borderRadius: '2px' }}>
                         <div style={{ width: `${(seccionActual / 5) * 100}%`, background: '#3182ce', transition: 'width 0.3s' }}></div>
                     </div>
 
-                    {/* SECCION 1: ACADÉMICA */}
+                    {/* SECCIONES PREVIAS IGUALES... AHORRO ESPACIO EN VISUALIZACIÓN PERO MANTENGO CÓDIGO */}
                     {seccionActual === 1 && (
                         <div>
                             <h4 style={{ marginBottom: '15px', color: '#2b6cb0' }}>1. Selección Académica</h4>
@@ -218,7 +215,6 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                         </div>
                     )}
 
-                    {/* SECCION 2: ALUMNO */}
                     {seccionActual === 2 && (
                         <div>
                             <h4 style={{ marginBottom: '15px', color: '#2b6cb0' }}>2. Datos del Alumno</h4>
@@ -239,12 +235,12 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                         </div>
                     )}
 
-                    {/* SECCION 3: APODERADO (NUEVA) */}
+                    {/* SECCION 3: APODERADO - MODIFICADA CON SWITCH DE DIRECCION */}
                     {seccionActual === 3 && (
                         <div>
                             <h4 style={{ marginBottom: '15px', color: '#dd6b20' }}>3. Datos del Apoderado</h4>
                             <div className="alert alert-warning" style={{ marginBottom: '20px' }}>
-                                Si el apoderado ya existe (mismo RUT), se vinculará automáticamente. Si es nuevo, se creará una cuenta.
+                                Si el apoderado ya existe (mismo RUT), se vinculará automáticamente.
                             </div>
                             <div className="form-row">
                                 <div className="form-group"><label>RUT Apoderado <span className="text-danger">*</span></label><input type="text" name="rut_apoderado" className="form-control" value={form.rut_apoderado} onChange={handleChange} placeholder="Ej: 15.222.333-4" /></div>
@@ -255,13 +251,55 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                             </div>
                             <div className="form-row">
                                 <div className="form-group"><label>Email</label><input type="email" name="email_apoderado" className="form-control" value={form.email_apoderado} onChange={handleChange} /></div>
-                                <div className="form-group"><label>Teléfono</label><input type="text" name="telefono_apoderado" className="form-control" value={form.telefono_apoderado} onChange={handleChange} placeholder="+569..." /></div>
+                                <div className="form-group"><label>Teléfono</label><input type="text" name="telefono_apoderado" className="form-control" value={form.telefono_apoderado} onChange={handleChange} /></div>
                             </div>
-                            <div className="form-group"><label>Dirección (si es distinta al alumno)</label><input type="text" name="direccion_apoderado" className="form-control" value={form.direccion_apoderado} onChange={handleChange} /></div>
+
+                            {/* PREGUNTA DIRECCIÓN INTELIGENTE */}
+                            <div style={{ marginTop: '15px', padding: '15px', border: '1px solid #ddd', borderRadius: '6px', background: '#fafafa' }}>
+                                <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>¿Vive en la misma dirección del alumno?</label>
+
+                                <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
+                                    <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <input
+                                            type="radio"
+                                            name="mismaDireccion"
+                                            checked={mismaDireccion === true}
+                                            onChange={() => setMismaDireccion(true)}
+                                        /> ⚠️ Sí, usar misma dirección
+                                    </label>
+                                    <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <input
+                                            type="radio"
+                                            name="mismaDireccion"
+                                            checked={mismaDireccion === false}
+                                            onChange={() => setMismaDireccion(false)}
+                                        /> 🏠 No, ingresar otra
+                                    </label>
+                                </div>
+
+                                {/* Mostrar dirección del alumno bloqueada o campo vacío */}
+                                {mismaDireccion ? (
+                                    <div className="form-group">
+                                        <input type="text" className="form-control" value={form.direccion_alumno || '(Ingrese dirección en paso anterior)'} disabled style={{ backgroundColor: '#e2e8f0', color: '#4a5568' }} />
+                                        <small className="text-muted">Se usará la dirección del Paso 2.</small>
+                                    </div>
+                                ) : (
+                                    <div className="form-group">
+                                        <label>Ingrese Dirección del Apoderado:</label>
+                                        <input
+                                            type="text"
+                                            name="direccion_apoderado"
+                                            className="form-control"
+                                            value={form.direccion_apoderado}
+                                            onChange={handleChange}
+                                            placeholder="Calle, Número, Comuna..."
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 
-                    {/* SECCION 4: SALUD */}
                     {seccionActual === 4 && (
                         <div>
                             <h4 style={{ marginBottom: '15px', color: '#2b6cb0' }}>4. Salud y Emergencias</h4>
@@ -273,7 +311,6 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                             {form.tiene_nee && (<div className="form-group"><label>Detalle</label><textarea name="detalle_nee" className="form-control" value={form.detalle_nee} onChange={handleChange} /></div>)}
                             <div className="form-row">
                                 <div className="form-group"><label>Alergias</label><input type="text" name="alergias" className="form-control" value={form.alergias} onChange={handleChange} /></div>
-                                <div className="form-group"><label>Enfermedades</label><input type="text" name="enfermedades_cronicas" className="form-control" value={form.enfermedades_cronicas} onChange={handleChange} /></div>
                             </div>
                             <h5 style={{ marginTop: '20px' }}>Emergencia</h5>
                             <div className="form-row">
@@ -283,26 +320,29 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                         </div>
                     )}
 
-                    {/* SECCION 5: CONFIRMACIÓN */}
                     {seccionActual === 5 && (
                         <div>
                             <h4 style={{ marginBottom: '15px', color: '#2b6cb0' }}>5. Resumen Final</h4>
-                            <div className="form-group"><label>Colegio Procedencia</label><input type="text" name="colegio_procedencia" className="form-control" value={form.colegio_procedencia} onChange={handleChange} /></div>
                             <div className="form-group"><label>Observaciones</label><textarea name="observaciones_apoderado" className="form-control" value={form.observaciones_apoderado} onChange={handleChange} /></div>
 
                             <div style={{ marginTop: '30px', padding: '15px', background: '#ebf8ff', border: '1px solid #bee3f8', borderRadius: '8px' }}>
-                                <p><strong>Resumen de Datos:</strong></p>
+                                <p><strong>Resumen:</strong></p>
                                 <ul>
-                                    <li><strong>Alumno:</strong> {form.nombres_alumno} {form.apellidos_alumno} ({form.rut_alumno})</li>
+                                    <li><strong>Alumno:</strong> {form.nombres_alumno} {form.apellidos_alumno}</li>
                                     <li><strong>Apoderado:</strong> {form.nombres_apoderado} {form.apellidos_apoderado} ({form.rut_apoderado})</li>
-                                    <li><strong>Curso:</strong> {cursos.find(c => c.id == form.curso_asignado_id)?.nombre || '---'}</li>
+                                    <li>
+                                        <strong>Dirección Apoderado:</strong><br />
+                                        {mismaDireccion ? (
+                                            <span style={{ color: '#2b6cb0' }}>⚠️ Misma del alumno: {form.direccion_alumno}</span>
+                                        ) : (
+                                            <span style={{ color: '#2f855a' }}>🏠 Ppia: {form.direccion_apoderado}</span>
+                                        )}
+                                    </li>
                                 </ul>
-                                <p style={{ fontSize: '0.9em', color: '#666' }}>Si el apoderado no existe, se creará una cuenta nueva para él.</p>
                             </div>
                         </div>
                     )}
 
-                    {/* NAVEGACIÓN */}
                     <div className="form-actions" style={{ marginTop: '30px', display: 'flex', justifyContent: 'space-between' }}>
                         {seccionActual > 1 ? <button className="btn btn-secondary" onClick={anteriorPaso}>Atrás</button> : <div></div>}
                         {seccionActual < 5 ? <button className="btn btn-primary" onClick={siguientePaso}>Siguiente &rarr;</button> :

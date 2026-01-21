@@ -237,6 +237,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
           // 1. Badge Global
           if (msg.direccion === 'recibido') {
             setTotalNoLeidos(prev => prev + 1);
+            actualizarNoLeidos();
             // Audio opcional
           }
 

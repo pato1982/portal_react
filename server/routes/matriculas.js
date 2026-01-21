@@ -100,7 +100,7 @@ router.post('/', async (req, res) => {
         }
 
         // -------------------------------------------------------------
-        // 2. PERIODO Y ALUMNO
+        // 2. PERIODO Y ALUMNO (Crear alumno si no existe en tabla maestra)
         // -------------------------------------------------------------
         let periodoId = periodo_matricula_id;
         if (!periodoId) {
@@ -119,10 +119,48 @@ router.post('/', async (req, res) => {
             }
         }
 
+        // --- GESTIÓN MAESTRA DE ALUMNO ---
         let finalAlumnoId = alumno_id;
+
         if (!finalAlumnoId) {
+            // 1. Buscar por RUT en tabla maestra
             const [alumnosExistentes] = await connection.query('SELECT id FROM tb_alumnos WHERE rut = ?', [rut_alumno]);
-            if (alumnosExistentes.length > 0) finalAlumnoId = alumnosExistentes[0].id;
+
+            if (alumnosExistentes.length > 0) {
+                finalAlumnoId = alumnosExistentes[0].id;
+            } else {
+                // 2. CREAR ALUMNO EN TB_ALUMNOS (Para que exista en el resto del sistema)
+                // Generamos contraseña simple (ej. primeros 4 digitos rut)
+                const passAlumno = rut_alumno.replace(/\./g, '').substring(0, 4);
+
+                const [nuevoAl] = await connection.query(`
+                    INSERT INTO tb_alumnos (
+                        rut, nombres, apellidos, 
+                        fecha_nacimiento, genero, 
+                        direccion, comuna, ciudad, 
+                        email, telefono, 
+                        establecimiento_id, 
+                        curso_actual_id,
+                        clave, estado, fecha_registro
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'activo', NOW())
+                `, [
+                    rut_alumno,
+                    nombres_alumno,
+                    apellidos_alumno,
+                    fecha_nacimiento_alumno || null,
+                    sexo_alumno || null,
+                    direccion_alumno || null,
+                    comuna_alumno || null,
+                    ciudad_alumno || null,
+                    email_alumno || null,
+                    telefono_alumno || null,
+                    establecimiento_id,
+                    curso_asignado_id || null, // Asignar al curso inmediatamente
+                    passAlumno
+                ]);
+
+                finalAlumnoId = nuevoAl.insertId;
+            }
         }
 
         // -------------------------------------------------------------

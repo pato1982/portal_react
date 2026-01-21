@@ -632,20 +632,15 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
             </>
           ) : (
             <>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label>Curso</label>
-                <select
-                  className="form-control"
-                  value={filtroCurso}
-                  onChange={(e) => { setFiltroCurso(e.target.value); setFiltroAlumno(''); }}
-                  style={{ fontSize: '13px' }}
-                >
-                  <option value="">Todos</option>
-                  {cursos.map(c => (
-                    <option key={c.id} value={c.id}>{formatearCurso(c.nombre)}</option>
-                  ))}
-                </select>
-              </div>
+              {/* Filtrar por curso con Custom SelectNativo para Tablet y Desktop */}
+              <SelectNativo
+                label="Curso"
+                value={filtroCurso}
+                onChange={(e) => { setFiltroCurso(e.target.value); setFiltroAlumno(''); }}
+                options={cursos.map(c => ({ ...c, nombre: formatearCurso(c.nombre) }))}
+                placeholder="Todos"
+                containerStyle={{ flex: 1, marginBottom: 0 }}
+              />
 
               {filtroCurso && (
                 <div className="form-group" style={{ flex: 1 }}>

@@ -694,6 +694,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
                   }}
                   options={cursos}
                   placeholder="Seleccionar curso"
+                  containerStyle={{ zIndex: 1005, position: 'relative' }}
                 />
               )}
               <SelectNativo

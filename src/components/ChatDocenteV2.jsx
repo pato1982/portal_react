@@ -123,6 +123,14 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
       if (resultado.success) {
         setMensajes(resultado.data || []);
         await marcarConversacionLeida(conversacionId, usuario.id);
+
+        // Actualizar contadores inmediatamente
+        actualizarNoLeidos();
+
+        setConversaciones(prev => prev.map(c =>
+          String(c.id) === String(conversacionId) ? { ...c, mensajes_no_leidos: 0 } : c
+        ));
+
         setUltimoTimestamp(new Date().toISOString());
       }
     } catch (error) {

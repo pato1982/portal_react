@@ -271,7 +271,12 @@ function DocentesTab() {
           mostrarMensaje('Exito', 'Docente eliminado correctamente', 'success');
           cargarDocentes();
         } else {
-          mostrarMensaje('Error', data.error || 'Error al eliminar', 'error');
+          if (data.asignaciones && data.asignaciones.length > 0) {
+            const lista = data.asignaciones.map(a => `- ${a.curso} (${a.asignatura})`).join('\n');
+            alert(`No se puede eliminar al docente porque tiene cargas académicas activas:\n\n${lista}\n\nDebe reasignar estos cursos a otro docente antes de eliminarlo.`);
+          } else {
+            mostrarMensaje('Error', data.error || 'Error al eliminar', 'error');
+          }
         }
       } catch (error) {
         mostrarMensaje('Error', 'Error de conexion', 'error');

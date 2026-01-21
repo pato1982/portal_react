@@ -1493,6 +1493,27 @@ app.delete('/api/docentes/:id', async (req, res) => {
     try {
         await connection.beginTransaction();
 
+        // 0. VERIFICAR ASIGNACIONES ACTIVAS
+        const [asignacionesActivas] = await connection.query(`
+            SELECT c.nombre AS curso, a.nombre AS asignatura
+            FROM tb_asignaciones asig
+            JOIN tb_cursos c ON asig.curso_id = c.id
+            JOIN tb_asignaturas a ON asig.asignatura_id = a.id
+            WHERE asig.docente_id = ? 
+              AND asig.establecimiento_id = ?
+              AND asig.activo = 1
+              AND asig.anio_academico = YEAR(CURDATE())
+        `, [id, establecimiento_id]);
+
+        if (asignacionesActivas.length > 0) {
+            await connection.rollback();
+            return res.json({
+                success: false,
+                error: 'Docente con asignaciones activas',
+                asignaciones: asignacionesActivas
+            });
+        }
+
         // 1. Obtener datos del docente para el log
         const [docenteActual] = await connection.query(`
             SELECT d.rut, d.nombres, d.apellidos, d.email, e.nombre as establecimiento_nombre
@@ -2410,6 +2431,28 @@ app.post('/api/asignaciones', async (req, res) => {
         const asignacionesExistentes = [];
 
         for (const asignatura_id of asignaturas) {
+            // Verificar si EL CURSO ya tiene asignada esta ASIGNATURA a OTRO docente
+            const [ocupado] = await connection.query(`
+                SELECT d.nombres, d.apellidos 
+                FROM tb_asignaciones a
+                JOIN tb_docentes d ON a.docente_id = d.id
+                WHERE a.curso_id = ? 
+                  AND a.asignatura_id = ? 
+                  AND a.anio_academico = ? 
+                  AND a.activo = 1
+                  AND a.docente_id != ?
+            `, [curso_id, asignatura_id, anio, docente_id]);
+
+            if (ocupado.length > 0) {
+                await connection.rollback();
+                const [asigInfo] = await connection.query('SELECT nombre FROM tb_asignaturas WHERE id = ?', [asignatura_id]);
+                const nombreAsig = asigInfo[0]?.nombre || 'Asignatura';
+                return res.status(400).json({
+                    success: false,
+                    error: `El curso ya tiene la asignatura "${nombreAsig}" asignada al docente ${ocupado[0].nombres} ${ocupado[0].apellidos}. Debe liberar esa asignación primero.`
+                });
+            }
+
             // Verificar si ya existe la asignacion
             const [existe] = await connection.query(`
                 SELECT id, activo FROM tb_asignaciones

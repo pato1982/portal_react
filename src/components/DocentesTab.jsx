@@ -79,7 +79,7 @@ const ModalEditarDocente = ({ docente, asignaturas, onGuardar, onCerrar }) => {
           <button className="modal-close" onClick={onCerrar}>&times;</button>
         </div>
         <div className="modal-body">
-          <div className="form-row">
+          <div className="form-row form-row-mobile-2col">
             <div className="form-group">
               <label>Nombres</label>
               <input type="text" className="form-control" name="nombres" value={formEditar.nombres} onChange={handleChange} />
@@ -89,6 +89,15 @@ const ModalEditarDocente = ({ docente, asignaturas, onGuardar, onCerrar }) => {
               <input type="text" className="form-control" name="apellidos" value={formEditar.apellidos} onChange={handleChange} />
             </div>
           </div>
+          <style>{`
+            @media (max-width: 768px) {
+              .form-row-mobile-2col {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+              }
+            }
+          `}</style>
           <div className="form-row">
             <div className="form-group">
               <label>RUT</label>

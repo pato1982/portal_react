@@ -26,40 +26,68 @@ const SelectMovilLocal = ({ label, value, valueName, onChange, options, placehol
   </div>
 );
 
-// Modal de edicion
-const ModalEditarAlumno = ({ alumno, cursos, onGuardar, onCerrar }) => {
-  const [formEditar, setFormEditar] = useState({
-    curso_id: alumno?.curso_id || '',
-    rut: alumno?.rut || '',
-    nombres: alumno?.nombres || '',
-    apellidos: alumno?.apellidos || ''
+// Modal de edicion COMPLETO CON PESTAÑAS
+const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar }) => {
+  const [activeTab, setActiveTab] = useState('alumno'); // 'alumno' | 'apoderado'
+  const [loading, setLoading] = useState(true);
+  const [datosCompletos, setDatosCompletos] = useState(null);
+
+  // Formulario editable del alumno
+  const [formAlumno, setFormAlumno] = useState({
+    curso_id: '',
+    rut: '',
+    nombres: '',
+    apellidos: '',
+    direccion: '',
+    sexo: ''
   });
+
   const [guardando, setGuardando] = useState(false);
 
+  // Cargar datos completos al abrir
+  useEffect(() => {
+    const fetchDetalle = async () => {
+      try {
+        const res = await fetch(`${config.apiBaseUrl}/alumnos/${alumnoInicial.id}/detalle`);
+        const json = await res.json();
+        if (json.success) {
+          setDatosCompletos(json.data);
+          // Pre-llenar formulario alumno
+          const al = json.data.alumno;
+          setFormAlumno({
+            curso_id: al.curso_id || '',
+            rut: al.rut || '',
+            nombres: al.nombres || '',
+            apellidos: al.apellidos || '',
+            direccion: al.direccion || '',
+            sexo: al.sexo || ''
+          });
+        } else {
+          alert("Error cargando ficha");
+        }
+      } catch (e) { console.error(e); } finally { setLoading(false); }
+    };
+    fetchDetalle();
+  }, [alumnoInicial]);
+
   const handleChange = (e) => {
-    setFormEditar({ ...formEditar, [e.target.name]: e.target.value });
+    setFormAlumno({ ...formAlumno, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async () => {
-    if (!formEditar.rut || !formEditar.nombres || !formEditar.apellidos) {
-      alert('Complete todos los campos obligatorios');
-      return;
-    }
-
     setGuardando(true);
     try {
-      const response = await fetch(`${config.apiBaseUrl}/alumnos/${alumno.id}`, {
+      const response = await fetch(`${config.apiBaseUrl}/alumnos/${alumnoInicial.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          rut: formEditar.rut,
-          nombres: formEditar.nombres,
-          apellidos: formEditar.apellidos,
-          curso_id: formEditar.curso_id ? parseInt(formEditar.curso_id) : null,
-          usuario_modificacion: 'Administrador' // TODO: obtener del contexto
+          rut: formAlumno.rut,
+          nombres: formAlumno.nombres,
+          apellidos: formAlumno.apellidos,
+          curso_id: formAlumno.curso_id ? parseInt(formAlumno.curso_id) : null,
+          usuario_modificacion: 'Administrador'
         })
       });
-
       const data = await response.json();
       if (data.success) {
         onGuardar();
@@ -74,45 +102,110 @@ const ModalEditarAlumno = ({ alumno, cursos, onGuardar, onCerrar }) => {
     }
   };
 
+  if (loading) return (
+    <div className="modal-overlay">
+      <div className="modal" style={{ padding: '40px', textAlign: 'center' }}>
+        <div className="spinner" style={{ margin: '0 auto 15px', border: '4px solid #f3f3f3', borderTop: '4px solid #3b82f6', borderRadius: '50%', width: '30px', height: '30px', animation: 'spin 1s linear infinite' }}></div>
+        Cargando ficha del alumno...
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    </div>
+  );
+
   return (
     <div className="modal-overlay" onClick={onCerrar}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal modal-xl" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Editar Alumno</h3>
+          <h3>Ficha del Alumno: {datosCompletos?.alumno?.nombres} {datosCompletos?.alumno?.apellidos}</h3>
           <button className="modal-close" onClick={onCerrar}>&times;</button>
         </div>
-        <div className="modal-body">
-          <div className="form-row">
-            <div className="form-group">
-              <label>Curso</label>
-              <select className="form-control" name="curso_id" value={formEditar.curso_id} onChange={handleChange}>
-                <option value="">Seleccionar...</option>
-                {cursos.map(curso => (<option key={curso.id} value={curso.id}>{curso.nombre}</option>))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>RUT</label>
-              <input type="text" className="form-control" name="rut" value={formEditar.rut} onChange={handleChange} />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Nombres</label>
-              <input type="text" className="form-control" name="nombres" value={formEditar.nombres} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label>Apellidos</label>
-              <input type="text" className="form-control" name="apellidos" value={formEditar.apellidos} onChange={handleChange} />
-            </div>
-          </div>
+
+        {/* Pestañas del Modal */}
+        <div className="modal-tabs">
+          <button type="button" className={`modal-tab-btn ${activeTab === 'alumno' ? 'active' : ''}`} onClick={() => setActiveTab('alumno')}>👤 Datos Alumno</button>
+          <button type="button" className={`modal-tab-btn ${activeTab === 'apoderado' ? 'active' : ''}`} onClick={() => setActiveTab('apoderado')}>👪 Apoderado</button>
         </div>
+
+        <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+          {activeTab === 'alumno' && (
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Curso Actual</label>
+                  <select className="form-control" name="curso_id" value={formAlumno.curso_id} onChange={handleChange}>
+                    <option value="">Sin Curso (Pendiente Matricula)</option>
+                    {cursos.map(c => (<option key={c.id} value={c.id}>{c.nombre}</option>))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>RUT</label>
+                  <input type="text" className="form-control" name="rut" value={formAlumno.rut} onChange={handleChange} />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group"><label>Nombres</label><input type="text" className="form-control" name="nombres" value={formAlumno.nombres} onChange={handleChange} /></div>
+                <div className="form-group"><label>Apellidos</label><input type="text" className="form-control" name="apellidos" value={formAlumno.apellidos} onChange={handleChange} /></div>
+              </div>
+              <div className="form-row">
+                <div className="form-group"><label>Dirección</label><input type="text" className="form-control" name="direccion" value={formAlumno.direccion} onChange={handleChange} placeholder="Calle, Número, Comuna" /></div>
+                <div className="form-group">
+                  <label>Sexo</label>
+                  <select className="form-control" name="sexo" value={formAlumno.sexo} onChange={handleChange}>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                  </select>
+                </div>
+              </div>
+              {datosCompletos.alumno.matricula_id && (
+                <div style={{ marginTop: '15px', padding: '10px', background: '#f0fdf4', borderRadius: '6px', border: '1px solid #bbf7d0', color: '#166534', fontSize: '0.9em' }}>
+                  ✅ Alumno con matrícula activa (ID: {datosCompletos.alumno.matricula_id}) para el año {datosCompletos.alumno.anio_academico}.
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTab === 'apoderado' && (
+            <div className="info-readonly">
+              {datosCompletos.apoderado ? (
+                <>
+                  <div className="info-section-title" style={{ fontWeight: 'bold', color: '#1e40af', marginBottom: '10px', borderBottom: '2px solid #e0e7ff', paddingBottom: '5px' }}>Datos del Responsable</div>
+                  <div className="info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <div className="info-item"><label style={{ fontSize: '0.85em', color: '#666' }}>Nombre Completo</label><div style={{ fontWeight: 500 }}>{datosCompletos.apoderado.nombres} {datosCompletos.apoderado.apellidos}</div></div>
+                    <div className="info-item"><label style={{ fontSize: '0.85em', color: '#666' }}>RUT</label><div style={{ fontWeight: 500 }}>{datosCompletos.apoderado.rut}</div></div>
+                    <div className="info-item"><label style={{ fontSize: '0.85em', color: '#666' }}>Parentesco</label><div style={{ fontWeight: 500, color: '#2563eb' }}>{datosCompletos.apoderado.parentezco}</div></div>
+                    <div className="info-item"><label style={{ fontSize: '0.85em', color: '#666' }}>Email</label><div style={{ fontWeight: 500 }}>{datosCompletos.apoderado.email}</div></div>
+                    <div className="info-item"><label style={{ fontSize: '0.85em', color: '#666' }}>Teléfono</label><div style={{ fontWeight: 500 }}>{datosCompletos.apoderado.telefono}</div></div>
+                  </div>
+                  <div className="info-item" style={{ marginTop: '15px' }}><label style={{ fontSize: '0.85em', color: '#666' }}>Dirección</label><div style={{ fontWeight: 500 }}>{datosCompletos.apoderado.direccion}</div></div>
+                </>
+              ) : (
+                <div className="empty-state" style={{ textAlign: 'center', padding: '30px', background: '#f9fafb', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '10px' }}>🤷‍♂️</div>
+                  <h4 style={{ margin: '0 0 5px 0', color: '#374151' }}>Sin Apoderado Asignado</h4>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9em' }}>Este alumno no tiene un apoderado vinculado en su matrícula vigente.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onCerrar} disabled={guardando}>Cancelar</button>
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={guardando}>
-            {guardando ? 'Guardando...' : 'Guardar Cambios'}
-          </button>
+          <button className="btn btn-secondary" onClick={onCerrar} disabled={guardando}>Cerrar</button>
+          {activeTab === 'alumno' && (
+            <button className="btn btn-primary" onClick={handleSubmit} disabled={guardando}>
+              {guardando ? 'Guardando...' : 'Guardar Cambios'}
+            </button>
+          )}
         </div>
       </div>
+      <style>{`
+        .modal-xl { max-width: 700px; width: 90%; }
+        .modal-tabs { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 20px; padding: 0 20px; }
+        .modal-tab-btn { flex: 1; padding: 12px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: #64748b; transition: all 0.2s; font-size: 1rem; }
+        .modal-tab-btn:hover { color: #3b82f6; background: #f8fafc; }
+        .modal-tab-btn.active { border-bottom-color: #3b82f6; color: #2563eb; background: #eff6ff; font-weight: 600; }
+        .modal-body { padding: 0 20px 20px; }
+      `}</style>
     </div>
   );
 };

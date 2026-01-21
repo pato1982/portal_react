@@ -57,9 +57,7 @@ app.get('/api/establecimientos', async (req, res) => {
 // RUTAS DE ALUMNOS
 // ============================================
 
-// GET /api/alumnos - Obtener todos los alumnos con sus cursos
-// Campos: curso, rut, fecha_nacimiento, nombres, apellidos, sexo
-// Query params opcionales: curso_id (para filtrar por curso)
+// GET /api/alumnos - Obtener todos los alumnos con sus cursos (USANDO MATRIC ULAS)
 app.get('/api/alumnos', async (req, res) => {
     const { curso_id } = req.query;
 
@@ -76,8 +74,8 @@ app.get('/api/alumnos', async (req, res) => {
         c.nombre AS curso_nombre,
         c.id AS curso_id
       FROM tb_alumnos a
-      LEFT JOIN tb_alumno_establecimiento ae ON a.id = ae.alumno_id AND ae.activo = 1
-      LEFT JOIN tb_cursos c ON ae.curso_id = c.id
+      LEFT JOIN tb_matriculas m ON a.id = m.alumno_id AND m.activo = 1 AND m.anio_academico = 2026
+      LEFT JOIN tb_cursos c ON m.curso_asignado_id = c.id
       WHERE a.activo = 1
     `;
 
@@ -100,7 +98,7 @@ app.get('/api/alumnos', async (req, res) => {
     }
 });
 
-// GET /api/alumnos/por-curso - Obtener alumnos agrupados por curso
+// GET /api/alumnos/por-curso - Obtener alumnos agrupados por curso (USANDO MATRICULAS)
 app.get('/api/alumnos/por-curso', async (req, res) => {
     try {
         const [rows] = await pool.query(`
@@ -115,8 +113,8 @@ app.get('/api/alumnos/por-curso', async (req, res) => {
         c.nombre AS curso_nombre,
         c.id AS curso_id
       FROM tb_alumnos a
-      LEFT JOIN tb_alumno_establecimiento ae ON a.id = ae.alumno_id AND ae.activo = 1
-      LEFT JOIN tb_cursos c ON ae.curso_id = c.id
+      LEFT JOIN tb_matriculas m ON a.id = m.alumno_id AND m.activo = 1 AND m.anio_academico = 2026
+      LEFT JOIN tb_cursos c ON m.curso_asignado_id = c.id
       WHERE a.activo = 1
       ORDER BY c.nombre, a.apellidos, a.nombres
     `);
@@ -135,6 +133,51 @@ app.get('/api/alumnos/por-curso', async (req, res) => {
     } catch (error) {
         console.error('Error al obtener alumnos por curso:', error);
         res.status(500).json({ success: false, error: 'Error al obtener alumnos' });
+    }
+});
+
+// GET /api/alumnos/:id/detalle - Obtener ficha completa (Alumno + Apoderado + Matricula Actual)
+app.get('/api/alumnos/:id/detalle', async (req, res) => {
+    try {
+        const { id } = req.params;
+        // 1. Datos Alumno y Matricula Actual
+        const [alumnoRows] = await pool.query(`
+            SELECT 
+                a.*, 
+                m.id as matricula_id,
+                m.anio_academico,
+                m.estado as estado_matricula,
+                m.tipo_matricula,
+                c.id as curso_id,
+                c.nombre as curso_nombre
+            FROM tb_alumnos a
+            LEFT JOIN tb_matriculas m ON a.id = m.alumno_id AND m.activo = 1 AND m.anio_academico = 2026
+            LEFT JOIN tb_cursos c ON m.curso_asignado_id = c.id
+            WHERE a.id = ?
+        `, [id]);
+
+        if (alumnoRows.length === 0) return res.status(404).json({ success: false, error: 'Alumno no encontrado' });
+        const alumno = alumnoRows[0];
+
+        // 2. Datos Apoderado (Desde la matricula, que es la fuente de verdad de la relacion actual)
+        let apoderado = null;
+        if (alumno.matricula_id) {
+            const [apodRows] = await pool.query(`
+                SELECT 
+                    ap.*,
+                    m.parentezco
+                FROM tb_matriculas m
+                JOIN tb_apoderados ap ON m.apoderado_id = ap.id
+                WHERE m.id = ?
+             `, [alumno.matricula_id]);
+            if (apodRows.length > 0) apoderado = apodRows[0];
+        }
+
+        res.json({ success: true, data: { alumno, apoderado } });
+
+    } catch (error) {
+        console.error('Error al obtener detalle alumno:', error);
+        res.status(500).json({ success: false, error: 'Error del servidor' });
     }
 });
 

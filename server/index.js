@@ -148,6 +148,12 @@ app.get('/api/alumnos/:id/detalle', async (req, res) => {
                 m.anio_academico,
                 m.estado as estado_matricula,
                 m.tipo_matricula,
+                m.alergias,
+                m.enfermedades_cronicas,
+                m.tiene_nee,
+                m.detalle_nee,
+                m.contacto_emergencia_nombre,
+                m.contacto_emergencia_telefono,
                 c.id as curso_id,
                 c.nombre as curso_nombre
             FROM tb_alumnos a

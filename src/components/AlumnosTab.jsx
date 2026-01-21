@@ -126,10 +126,10 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
           <button type="button" className={`modal-tab-btn ${activeTab === 'apoderado' ? 'active' : ''}`} onClick={() => setActiveTab('apoderado')}>👪 Apoderado</button>
         </div>
 
-        <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+        <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           {activeTab === 'alumno' && (
             <>
-              <div className="form-row">
+              <div className="grid-responsive">
                 <div className="form-group">
                   <label>Curso Actual</label>
                   <select className="form-control" name="curso_id" value={formAlumno.curso_id} onChange={handleChange}>
@@ -141,13 +141,18 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
                   <label>RUT</label>
                   <input type="text" className="form-control" name="rut" value={formAlumno.rut} onChange={handleChange} />
                 </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group"><label>Nombres</label><input type="text" className="form-control" name="nombres" value={formAlumno.nombres} onChange={handleChange} /></div>
-                <div className="form-group"><label>Apellidos</label><input type="text" className="form-control" name="apellidos" value={formAlumno.apellidos} onChange={handleChange} /></div>
-              </div>
-              <div className="form-row">
-                <div className="form-group"><label>Dirección</label><input type="text" className="form-control" name="direccion" value={formAlumno.direccion} onChange={handleChange} placeholder="Calle, Número, Comuna" /></div>
+                <div className="form-group">
+                  <label>Nombres</label>
+                  <input type="text" className="form-control" name="nombres" value={formAlumno.nombres} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label>Apellidos</label>
+                  <input type="text" className="form-control" name="apellidos" value={formAlumno.apellidos} onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                  <label>Dirección</label>
+                  <input type="text" className="form-control" name="direccion" value={formAlumno.direccion} onChange={handleChange} />
+                </div>
                 <div className="form-group">
                   <label>Sexo</label>
                   <select className="form-control" name="sexo" value={formAlumno.sexo} onChange={handleChange}>
@@ -156,9 +161,39 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
                   </select>
                 </div>
               </div>
+
+              {/* Sección Salud y Emergencia (Solo Lectura desde Matricula) */}
+              <div className="section-divider">Antecedentes de Salud y Emergencia</div>
+              <div className="grid-responsive info-readonly-grid">
+                <div className="info-item">
+                  <label>Alergias</label>
+                  <div className="readonly-val">{datosCompletos.alumno.alergias || 'Ninguna reportada'}</div>
+                </div>
+                <div className="info-item">
+                  <label>Enfermedades Crónicas</label>
+                  <div className="readonly-val">{datosCompletos.alumno.enfermedades_cronicas || 'Ninguna reportada'}</div>
+                </div>
+                <div className="info-item">
+                  <label>Necesidades Especiales (NEE)</label>
+                  <div className="readonly-val">
+                    {datosCompletos.alumno.tiene_nee === 1 ? (
+                      <span className="badge-warning">Sí: {datosCompletos.alumno.detalle_nee}</span>
+                    ) : 'No'}
+                  </div>
+                </div>
+                <div className="info-item">
+                  <label>Contacto Emergencia</label>
+                  <div className="readonly-val">{datosCompletos.alumno.contacto_emergencia_nombre || '-'}</div>
+                </div>
+                <div className="info-item">
+                  <label>Tel. Emergencia</label>
+                  <div className="readonly-val">{datosCompletos.alumno.contacto_emergencia_telefono || '-'}</div>
+                </div>
+              </div>
+
               {datosCompletos.alumno.matricula_id && (
-                <div style={{ marginTop: '15px', padding: '10px', background: '#f0fdf4', borderRadius: '6px', border: '1px solid #bbf7d0', color: '#166534', fontSize: '0.9em' }}>
-                  ✅ Alumno con matrícula activa (ID: {datosCompletos.alumno.matricula_id}) para el año {datosCompletos.alumno.anio_academico}.
+                <div className="matricula-badge">
+                  ✅ Matrícula Activa {datosCompletos.alumno.anio_academico} (ID: {datosCompletos.alumno.matricula_id})
                 </div>
               )}
             </>
@@ -166,24 +201,18 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
 
           {activeTab === 'apoderado' && (
             <div className="info-readonly">
-              {datosCompletos.apoderado ? (
-                <>
-                  <div className="info-section-title" style={{ fontWeight: 'bold', color: '#1e40af', marginBottom: '10px', borderBottom: '2px solid #e0e7ff', paddingBottom: '5px' }}>Datos del Responsable</div>
-                  <div className="info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                    <div className="info-item"><label style={{ fontSize: '0.85em', color: '#666' }}>Nombre Completo</label><div style={{ fontWeight: 500 }}>{datosCompletos.apoderado.nombres} {datosCompletos.apoderado.apellidos}</div></div>
-                    <div className="info-item"><label style={{ fontSize: '0.85em', color: '#666' }}>RUT</label><div style={{ fontWeight: 500 }}>{datosCompletos.apoderado.rut}</div></div>
-                    <div className="info-item"><label style={{ fontSize: '0.85em', color: '#666' }}>Parentesco</label><div style={{ fontWeight: 500, color: '#2563eb' }}>{datosCompletos.apoderado.parentezco}</div></div>
-                    <div className="info-item"><label style={{ fontSize: '0.85em', color: '#666' }}>Email</label><div style={{ fontWeight: 500 }}>{datosCompletos.apoderado.email}</div></div>
-                    <div className="info-item"><label style={{ fontSize: '0.85em', color: '#666' }}>Teléfono</label><div style={{ fontWeight: 500 }}>{datosCompletos.apoderado.telefono}</div></div>
-                  </div>
-                  <div className="info-item" style={{ marginTop: '15px' }}><label style={{ fontSize: '0.85em', color: '#666' }}>Dirección</label><div style={{ fontWeight: 500 }}>{datosCompletos.apoderado.direccion}</div></div>
-                </>
-              ) : (
-                <div className="empty-state" style={{ textAlign: 'center', padding: '30px', background: '#f9fafb', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '24px', marginBottom: '10px' }}>🤷‍♂️</div>
-                  <h4 style={{ margin: '0 0 5px 0', color: '#374151' }}>Sin Apoderado Asignado</h4>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9em' }}>Este alumno no tiene un apoderado vinculado en su matrícula vigente.</p>
-                </div>
+              <div className="info-section-title">Datos del Responsable</div>
+              {/* Siempre mostramos la grilla, si no hay datos usamos string vacio */}
+              <div className="grid-responsive info-grid">
+                <div className="info-item"><label>Nombre Completo</label><div className="data-val">{datosCompletos.apoderado ? `${datosCompletos.apoderado.nombres} ${datosCompletos.apoderado.apellidos}` : '- - -'}</div></div>
+                <div className="info-item"><label>RUT</label><div className="data-val">{datosCompletos.apoderado?.rut || '- - -'}</div></div>
+                <div className="info-item"><label>Parentesco</label><div className="data-val highlight">{datosCompletos.apoderado?.parentezco || '- - -'}</div></div>
+                <div className="info-item"><label>Email</label><div className="data-val">{datosCompletos.apoderado?.email || '- - -'}</div></div>
+                <div className="info-item"><label>Teléfono</label><div className="data-val">{datosCompletos.apoderado?.telefono || '- - -'}</div></div>
+                <div className="info-item"><label>Dirección</label><div className="data-val">{datosCompletos.apoderado?.direccion || '- - -'}</div></div>
+              </div>
+              {!datosCompletos.apoderado && (
+                <p className="missing-data-msg">⚠️ No hay apoderado vinculado a la matrícula vigente.</p>
               )}
             </div>
           )}
@@ -199,7 +228,39 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
         </div>
       </div>
       <style>{`
-        .modal-xl { max-width: 700px; width: 90%; }
+        .modal-xl { max-width: 900px; width: 95%; }
+        
+        /* Grid System: 2 cols on mobile, 3 cols on tablet/desktop */
+        .grid-responsive { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 20px;
+        }
+        @media (min-width: 768px) {
+            .grid-responsive { grid-template-columns: 1fr 1fr 1fr; }
+        }
+        
+        .section-divider {
+            font-size: 0.95rem; font-weight: 700; color: #4b5563;
+            border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; margin: 25px 0 15px 0;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        
+        /* Estilos de inputs en el modal para que se ajusten al grid */
+        .form-control { width: 100%; box-sizing: border-box; }
+        .form-group label { font-weight: 500; font-size: 0.9em; margin-bottom: 4px; display: block; }
+        
+        /* Estilos de ReadOnly Info */
+        .info-item label { display: block; font-size: 0.8rem; color: #6b7280; margin-bottom: 2px; text-transform: uppercase; font-weight: 600; }
+        .readonly-val, .data-val { font-weight: 500; color: #1f2937; min-height: 24px; padding: 4px 0; border-bottom: 1px dotted #e5e7eb; }
+        
+        .badge-warning { background: #fff7ed; color: #c2410c; padding: 2px 8px; border-radius: 12px; font-size: 0.85em; border: 1px solid #fed7aa; display: inline-block;}
+        .highlight { color: #2563eb; font-weight: 600; }
+        
+        .matricula-badge { margin-top: 15px; padding: 10px; background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0; color: #166534; font-size: 0.9em; text-align: center; font-weight: 500; }
+        .missing-data-msg { text-align: center; color: #ef4444; background: #fef2f2; padding: 10px; border-radius: 6px; margin-top: 15px; font-size: 0.9em; }
+
         .modal-tabs { display: flex; border-bottom: 1px solid #ddd; margin-bottom: 20px; padding: 0 20px; }
         .modal-tab-btn { flex: 1; padding: 12px; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: #64748b; transition: all 0.2s; font-size: 1rem; }
         .modal-tab-btn:hover { color: #3b82f6; background: #f8fafc; }

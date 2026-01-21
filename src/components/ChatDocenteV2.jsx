@@ -221,8 +221,8 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
       const socket = socketService.connect(usuario.id);
 
       const handleNuevoMensaje = (msg) => {
-        // Si el mensaje es para la conversación actual abierta
-        if (conversacionActual && String(msg.conversacion_id) === String(conversacionActual)) {
+        // Si el mensaje es para la conversación actual abierta Y el chat está visible
+        if (chatAbierto && conversacionActual && String(msg.conversacion_id) === String(conversacionActual)) {
           setMensajes(prev => {
             // Evitar duplicados
             if (prev.some(m => String(m.id) === String(msg.id))) return prev;
@@ -290,7 +290,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
         socket.off('nuevo_mensaje', handleNuevoMensaje);
       };
     }
-  }, [usuario?.id, conversacionActual]);
+  }, [usuario?.id, conversacionActual, chatAbierto]);
 
   // ==================== EFECTOS ====================
 

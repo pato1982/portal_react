@@ -50,7 +50,7 @@ const MatriculasTab = ({ mostrarMensaje }) => {
         observaciones_apoderado: '',
 
         // Metadata interna
-        alumno_id_existente: null // Si seleccionamos uno del buscador
+        alumno_id_existente: null
     });
 
     // ----------------------------------------------------
@@ -99,11 +99,10 @@ const MatriculasTab = ({ mostrarMensaje }) => {
             rut_alumno: alumno.rut,
             nombres_alumno: alumno.nombres,
             apellidos_alumno: alumno.apellidos,
-            // Pre-llenar otros si tuvieramos la data completa en /alumnos
         }));
         setBusqueda('');
         setSugerencias([]);
-        setSeccionActual(2); // Saltar directo a completar ficha
+        setSeccionActual(2);
     };
 
     // ----------------------------------------------------
@@ -118,7 +117,6 @@ const MatriculasTab = ({ mostrarMensaje }) => {
     };
 
     const siguientePaso = () => {
-        // Validaciones simples por paso
         if (seccionActual === 1 && !form.curso_asignado_id) {
             alert('Debe seleccionar curso y año');
             return;
@@ -132,16 +130,46 @@ const MatriculasTab = ({ mostrarMensaje }) => {
 
     const anteriorPaso = () => setSeccionActual(prev => prev - 1);
 
+    // ✅ FUNCIÓN DE DEMO
+    const llenarDatosPrueba = () => {
+        setForm(prev => ({
+            ...prev,
+            rut_alumno: '25.999.888-K',
+            nombres_alumno: 'Ejemplito Andrés',
+            apellidos_alumno: 'Pérez González',
+            fecha_nacimiento_alumno: '2016-05-15',
+            sexo_alumno: 'Masculino',
+            nacionalidad_alumno: 'Chilena',
+            direccion_alumno: 'Av. Siempre Viva 123',
+            comuna_alumno: 'Providencia',
+            ciudad_alumno: 'Santiago',
+            telefono_alumno: '+56911223344',
+            email_alumno: 'ejemplito@colegio.cl',
+
+            tiene_nee: true,
+            detalle_nee: 'Requiere apoyo en lectura',
+            alergias: 'Polvo, Mani',
+            enfermedades_cronicas: 'Asma leve',
+            contacto_emergencia_nombre: 'María González (Madre)',
+            contacto_emergencia_telefono: '+56988776655',
+
+            colegio_procedencia: 'Escuela Básica Las Lilas',
+            ultimo_curso_aprobado: '3° Básico',
+            promedio_notas_anterior: '6.5',
+            observaciones_apoderado: 'El alumno es muy participativo pero se distrae fácil.'
+        }));
+        alert('Datos de prueba cargados. Navega por las pestañas para verlos.');
+    };
+
     const handleSubmit = async () => {
         if (!window.confirm('¿Confirmar matrícula?')) return;
 
         setMatriculando(true);
         try {
             const payload = {
-                establecimiento_id: 1, // TODO: Contexto
-                apoderado_id: 1, // TODO: Contexto de admin o selector de apoderado
-                alumno_id: form.alumno_id_existente, // null si es nuevo
-
+                establecimiento_id: 1,
+                apoderado_id: 1,
+                alumno_id: form.alumno_id_existente,
                 ...form
             };
 
@@ -156,7 +184,6 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                 if (mostrarMensaje) mostrarMensaje('Éxito', 'Alumno matriculado correctamente', 'success');
                 else alert('Matrícula guardada exitosamente');
 
-                // Reset
                 setForm({
                     anio_academico: new Date().getFullYear(),
                     curso_asignado_id: '',
@@ -181,14 +208,30 @@ const MatriculasTab = ({ mostrarMensaje }) => {
         }
     };
 
-    // ----------------------------------------------------
-    // RENDERIZADO
-    // ----------------------------------------------------
     return (
         <div className="tab-panel active" style={{ maxWidth: '1000px', margin: '0 auto' }}>
             <div className="card">
                 <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3>Ficha de Matrícula {form.anio_academico}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h3>Ficha de Matrícula {form.anio_academico}</h3>
+                        {/* BOTÓN DEMO */}
+                        <button
+                            onClick={llenarDatosPrueba}
+                            style={{
+                                cursor: 'pointer',
+                                background: '#ecc94b',
+                                color: '#000',
+                                border: 'none',
+                                borderRadius: '4px',
+                                padding: '4px 10px',
+                                fontSize: '0.85em',
+                                fontWeight: 'bold'
+                            }}
+                            title="Autollenar formulario para pruebas"
+                        >
+                            ⚡ Demo
+                        </button>
+                    </div>
                     <div style={{ fontSize: '14px', color: '#666' }}>
                         Paso {seccionActual} de 4
                     </div>

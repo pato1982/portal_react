@@ -479,36 +479,50 @@ function ProgresoTab({ pupilo }) {
     <div className="tab-panel active">
       <style>{`
         /* --- ESTILOS GENERALES (DESKTOP) --- */
-        /* Objetivo Desktop: 3 filas de 2 KPIs (2 columnas verticales de 3) */
         
         .progreso-layout {
           display: flex;
           gap: 20px;
-          align-items: flex-start;
+          align-items: stretch; /* ESTIRAR hijos para igualar altura */
           width: 100%;
+          min-height: 480px; /* Altura mínima base para alinear */
         }
         
-        /* Los gráficos ocupan el espacio disponible */
+        /* Los contenedores de gráficos (Columna Izq y Der) */
         .progreso-layout > .card {
           flex: 1; 
-          min-width: 0; /* Prevenir desbordamiento flex */
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          /* Forzar altura consistente */
+        }
+        
+        .progreso-layout > .card .card-body {
+          flex: 1; /* Ocupar todo el espacio vertical disponible en la card */
+          display: flex; /* Para centrar contenido si es necesario */
+          flex-direction: column;
+          position: relative;
+          min-height: 400px; /* Asegurar altura interna para el gráfico */
+          padding: 10px; /* Resetear padding si es necesario */
         }
 
-        /* Contenedor central de KPIs en Desktop: Row para poner las dos columnas lado a lado */
+        /* Contenedor central de KPIs en Desktop */
         .progreso-kpis-central {
-          width: 280px; /* Ancho fijo para mantener proporción */
+          width: 280px; 
           flex-shrink: 0;
           display: flex;
-          flex-direction: row; /* Columna 1 | Columna 2 */
+          flex-direction: row; 
           gap: 15px;
+          align-items: stretch; /* Estirar columnas internas */
         }
 
-        /* Cada columna de KPIs es vertical en Desktop */
+        /* Columnas internas de KPIs */
         .kpis-columna {
           flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 15px;
+          justify-content: space-between; /* Distribuir verticalmente (Arriba, Medio, Abajo) */
+          gap: 15px; 
         }
 
         /* Tarjeta individual de KPI */
@@ -521,7 +535,8 @@ function ProgresoTab({ pupilo }) {
           gap: 12px;
           box-shadow: 0 1px 3px rgba(0,0,0,0.1);
           border: 1px solid #e2e8f0;
-          height: 100%; /* Llenar altura si es necesario */
+          flex: 1; /* Cada KPI toma 1/3 de la altura disponible de su columna */
+          max-height: 32%; /* Evitar que crezcan demasiado si hay poco contenido */
         }
 
         .kpi-icon {
@@ -534,7 +549,6 @@ function ProgresoTab({ pupilo }) {
           flex-shrink: 0;
         }
 
-        /* Colores de iconos */
         .kpi-icon.promedio { background: #eff6ff; color: #3b82f6; }
         .kpi-icon.asistencia { background: #f0fdf4; color: #10b981; }
         .kpi-icon.ranking { background: #f3e8ff; color: #8b5cf6; }
@@ -560,86 +574,114 @@ function ProgresoTab({ pupilo }) {
           font-weight: 500;
         }
         
-        /* Contenedor explícito para el Chart para evitar colapso */
+        /* Contenedor del Chart: Altura Absoluta para evitar colapso */
         .chart-container {
           position: relative;
-          height: 300px; 
           width: 100%;
+          height: 100%; /* Llenar el card-body */
+          min-height: 350px; /* Mínimo garantizado */
+        }
+        
+        /* Asegurar que el canvas ocupe todo */
+        .chart-container canvas {
+           width: 100% !important;
+           height: 100% !important;
         }
 
 
         /* --- TABLET (max-width: 1024px) --- */
-        /* Objetivo: Mantener lo que al usuario le gustó (Horizontal scroll / strip) */
         @media (max-width: 1024px) {
           .progreso-layout {
             flex-direction: column;
+            align-items: normal; /* Reset stretch */
+            gap: 20px; /* Restaurar gap */
           }
           
           .progreso-layout > .card {
             width: 100%;
             flex: none;
+            min-height: auto; /* Dejar que la altura sea automática */
+          }
+          
+          .progreso-layout > .card .card-body {
+             min-height: 300px; /* Un poco menos alto en tablet */
           }
 
           .progreso-kpis-central {
             width: 100%;
             flex-direction: row; 
-            justify-content: space-between;
+            justify-content: flex-start; /* Alinear al inicio para scroll */
             flex-wrap: nowrap;
             gap: 10px;
             overflow-x: auto;
-            padding-bottom: 5px;
+            padding-bottom: 8px; /* Scrollbar space */
           }
 
           .kpis-columna {
-             flex-direction: row;
+             flex-direction: row; /* Deshacer columna vertical */
              gap: 10px;
-             flex: 1;
+             flex: none; /* No estirar, usar contenido */
+             display: contents; /* 'contents' hace que los hijos directos (cards) sean hijos del grid/flex padre (kpis-central) */
           }
 
-          /* Ajustes de tamaño Tablet */
+          /* Ajustar tarjetas individuales para tablet: TODOS IGUALES */
           .kpi-card-vertical {
-            min-width: 90px;
-            padding: 10px 8px;
-            flex: 1; /* Distribuir espacio */
+            min-width: 120px; /* Ancho fijo mínimo */
+            width: 120px;     /* Ancho fijo objetivo */
+            flex: 0 0 auto;   /* No crecer, no encoger, base auto */
+            padding: 10px 5px;
+            height: auto;
+            max-height: none;
+            flex-direction: column; 
+            text-align: center; 
+            justify-content: center;
           }
           
-          .kpi-icon { width: 32px; height: 32px; }
+          /* Icono visible en tablet pero arriba */
+          .kpi-card-vertical .kpi-icon { 
+             display: flex; 
+             margin-bottom: 5px; 
+             width: 32px; 
+             height: 32px;
+          }
           .kpi-icon svg { width: 18px; height: 18px; }
+
           .kpi-valor { font-size: 1.1rem; }
           .kpi-label { font-size: 0.7rem; }
-          .kpi-card-vertical .kpi-icon { display: none; } /* Opcional: Ocultar icono en tablet si falta espacio, o dejarlo */
-          .kpi-card-vertical { flex-direction: column; text-align: center; justify-content: center; } /* Vertical layout dentro de la card para ahorrar ancho */
-        }
-        
-        /* Restaurar icono visible si se prefiere */
-        @media (max-width: 1024px) {
-           .kpi-card-vertical .kpi-icon { display: flex; margin-bottom: 5px; }
         }
 
 
         /* --- MOBILE (max-width: 768px) --- */
-        /* Objetivo: 2 filas de 3 KPIs */
-        /* Estructura DOM: [Columna1 (3 items)] [Columna2 (3 items)] */
-        /* Para lograr 2 filas (la de arriba y la de abajo), necesitamos que 
-           Columna1 sea la Fila 1 y Columna2 sea la Fila 2. */
-           
         @media (max-width: 768px) {
           .progreso-kpis-central {
-            flex-direction: column; /* Apilar los contenedores Columna1 y Columna2 verticalmente */
-            overflow-x: visible; /* Quitar scroll horizontal de tablet */
+            flex-direction: column; 
+            overflow-x: visible;
             gap: 10px;
+            display: flex; /* Restaurar flex normal, quitar 'contents' effect wrapper */
           }
 
+          /* Reset de 'contents' en .kpis-columna para mobile si se usó arriba */
           .kpis-columna {
-            flex-direction: row; /* Items dentro de la columna se ponen uno al lado del otro */
+            display: flex; 
+            flex-direction: row;
             width: 100%;
             gap: 10px;
+            flex: none;
           }
 
           .kpi-card-vertical {
-            flex: 1; /* Cada card ocupa 1/3 del ancho */
-            min-width: 0; /* Permitir encoger */
+            flex: 1; /* Volver a flex 1 para ocupar ancho equitativo */
+            width: auto;
+            min-width: 0; 
             padding: 8px;
+            flex-direction: row; /* Icono al lado */
+            text-align: left;
+            justify-content: flex-start;
+          }
+          
+          .kpi-card-vertical .kpi-icon {
+             margin-bottom: 0;
+             margin-right: 8px;
           }
 
           .kpi-valor { font-size: 1rem; }

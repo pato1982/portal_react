@@ -303,111 +303,120 @@ function ProgresoTab({ pupilo }) {
       return nombre;
     };
 
-    const ctx = chartAsignaturasRef.current.getContext('2d');
-    const labels = asignaturas.map(abreviarAsignatura); // Aplicar abreviatura
-    const data = asignaturas.map(asig => promediosPorAsignatura[asig] || 0);
+    // Timeout para asegurar renderizado correcto
+    const timer = setTimeout(() => {
+      if (!chartAsignaturasRef.current) return;
 
-    const colors = asignaturas.map(asig => {
-      const nota = promediosPorAsignatura[asig] || 0;
-      if (nota >= 6.0) return '#10b981';
-      if (nota >= 5.0) return '#3b82f6';
-      if (nota >= 4.0) return '#f59e0b';
-      return '#ef4444';
-    });
+      const ctx = chartAsignaturasRef.current.getContext('2d');
+      if (!ctx) return;
 
-    // Plugin para mostrar notas dentro de las barras
-    const notasEnBarrasPlugin = {
-      id: 'notasEnBarras',
-      afterDatasetsDraw: (chart) => {
-        const ctx = chart.ctx;
-        const meta = chart.getDatasetMeta(0);
+      const labels = asignaturas.map(abreviarAsignatura);
+      const data = asignaturas.map(asig => promediosPorAsignatura[asig] || 0);
 
-        // Tamaño de fuente según dispositivo
-        let fontSize = 11; // Desktop
-        if (isMobile) {
-          fontSize = 8;
-        } else if (isTablet) {
-          fontSize = 9;
-        }
+      const colors = asignaturas.map(asig => {
+        const nota = promediosPorAsignatura[asig] || 0;
+        if (nota >= 6.0) return '#10b981';
+        if (nota >= 5.0) return '#3b82f6';
+        if (nota >= 4.0) return '#f59e0b';
+        return '#ef4444';
+      });
 
-        ctx.save();
-        ctx.font = `bold ${fontSize}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#ffffff';
+      // Plugin para mostrar notas dentro de las barras
+      const notasEnBarrasPlugin = {
+        id: 'notasEnBarras',
+        afterDatasetsDraw: (chart) => {
+          const ctx = chart.ctx;
+          const meta = chart.getDatasetMeta(0);
 
-        meta.data.forEach((bar, index) => {
-          const nota = data[index];
-          if (nota && nota > 0) {
-            const x = bar.x;
-            const y = bar.y + (bar.height / 2);
-
-            // Solo mostrar si la barra es suficientemente alta
-            if (bar.height > 15) {
-              ctx.fillText(nota.toFixed(1), x, y);
-            }
+          // Tamaño de fuente según dispositivo
+          let fontSize = 11; // Desktop
+          if (isMobile) {
+            fontSize = 8;
+          } else if (isTablet) {
+            fontSize = 9;
           }
-        });
 
-        ctx.restore();
-      }
-    };
+          ctx.save();
+          ctx.font = `bold ${fontSize}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#ffffff';
 
-    chartAsignaturasInstance.current = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels, // Usar labels abreviados
-        datasets: [{
-          label: 'Promedio',
-          data: data,
-          backgroundColor: colors,
-          borderRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
+          meta.data.forEach((bar, index) => {
+            const nota = data[index];
+            if (nota && nota > 0) {
+              const x = bar.x;
+              const y = bar.y + (bar.height / 2);
+
+              // Solo mostrar si la barra es suficientemente alta
+              if (bar.height > 15) {
+                ctx.fillText(nota.toFixed(1), x, y);
+              }
+            }
+          });
+
+          ctx.restore();
+        }
+      };
+
+      chartAsignaturasInstance.current = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels, // Usar labels abreviados
+          datasets: [{
+            label: 'Promedio',
+            data: data,
+            backgroundColor: colors,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                // Mostrar nombre completo en el tooltip
+                title: (tooltipItems) => {
+                  const index = tooltipItems[0].dataIndex;
+                  return asignaturas[index];
+                }
+              }
+            }
           },
-          tooltip: {
-            callbacks: {
-              // Mostrar nombre completo en el tooltip
-              title: (tooltipItems) => {
-                const index = tooltipItems[0].dataIndex;
-                return asignaturas[index];
+          scales: {
+            y: {
+              min: 1,
+              max: 8,
+              ticks: {
+                stepSize: 1,
+                callback: function (value) {
+                  return value === 8 ? ' ' : value;
+                }
+              },
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
               }
             }
           }
         },
-        scales: {
-          y: {
-            min: 1,
-            max: 8,
-            ticks: {
-              stepSize: 1,
-              callback: function (value) {
-                return value === 8 ? ' ' : value;
-              }
-            },
-            grid: {
-              color: 'rgba(0, 0, 0, 0.05)'
-            }
-          },
-          x: {
-            grid: {
-              display: false
-            }
-          }
-        }
-      },
-      plugins: [notasEnBarrasPlugin]
-    });
+        plugins: [notasEnBarrasPlugin]
+      });
+    }, 150);
 
     return () => {
+      clearTimeout(timer);
       if (chartAsignaturasInstance.current) {
         chartAsignaturasInstance.current.destroy();
+        chartAsignaturasInstance.current = null;
       }
     };
   }, [datosProgreso, isMobile, isTablet]);
@@ -494,7 +503,6 @@ function ProgresoTab({ pupilo }) {
           min-width: 0;
           display: flex;
           flex-direction: column;
-          /* Forzar altura consistente */
         }
         
         .progreso-layout > .card .card-body {
@@ -580,12 +588,14 @@ function ProgresoTab({ pupilo }) {
           width: 100%;
           height: 100%; /* Llenar el card-body */
           min-height: 350px; /* Mínimo garantizado */
+          flex-grow: 1;
         }
         
-        /* Asegurar que el canvas ocupe todo */
+        /* Asegurar que el canvas funcione bien */
         .chart-container canvas {
-           width: 100% !important;
-           height: 100% !important;
+           display: block;
+           width: 100%;
+           height: 100%;
         }
 
 

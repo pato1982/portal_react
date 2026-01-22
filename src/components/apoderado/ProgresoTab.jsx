@@ -15,6 +15,7 @@ function ProgresoTab({ pupilo }) {
 
   // Estados para datos de la API
   const [datosProgreso, setDatosProgreso] = useState(null);
+  const [notasRaw, setNotasRaw] = useState([]); // Nuevas notas para calcular promedios dinámicos
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,6 +24,7 @@ function ProgresoTab({ pupilo }) {
     const cargarProgreso = async () => {
       if (!pupilo?.id) {
         setDatosProgreso(null);
+        setNotasRaw([]);
         return;
       }
 
@@ -30,17 +32,28 @@ function ProgresoTab({ pupilo }) {
       setError('');
 
       try {
-        const url = `${config.apiBaseUrl}/apoderado/pupilo/${pupilo.id}/progreso`;
-        const response = await fetch(url);
-        const data = await response.json();
+        // 1. Cargar Progreso General
+        const urlProgreso = `${config.apiBaseUrl}/apoderado/pupilo/${pupilo.id}/progreso`;
+        const resProgreso = await fetch(urlProgreso);
+        const dataProgreso = await resProgreso.json();
 
-        if (data.success) {
-          setDatosProgreso(data.data);
+        if (dataProgreso.success) {
+          setDatosProgreso(dataProgreso.data);
         } else {
-          setError(data.error || 'Error al cargar progreso');
+          setError(dataProgreso.error || 'Error al cargar progreso');
         }
+
+        // 2. Cargar Notas Detalladas (para filtrado por asignatura)
+        const urlNotas = `${config.apiBaseUrl}/apoderado/pupilo/${pupilo.id}/notas`;
+        const resNotas = await fetch(urlNotas);
+        const dataNotas = await resNotas.json();
+
+        if (dataNotas.success && Array.isArray(dataNotas.data)) {
+          setNotasRaw(dataNotas.data);
+        }
+
       } catch (err) {
-        console.error('Error cargando progreso:', err);
+        console.error('Error cargando datos:', err);
         setError('Error de conexion');
       } finally {
         setCargando(false);
@@ -73,23 +86,50 @@ function ProgresoTab({ pupilo }) {
 
   // Datos mensuales para el grafico
   const datosMensuales = useMemo(() => {
-    if (!datosProgreso || !datosProgreso.promediosMensuales) {
-      return [];
-    }
+    if (!datosProgreso) return [];
 
     const mesesOrden = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // Mar - Dic
-    const datos = [];
+
+    // CASO 1: Si es "todas", usar el pre-calculado del backend
+    if (asignaturaSeleccionada === 'todas') {
+      if (!datosProgreso.promediosMensuales) return [];
+      const datos = [];
+      mesesOrden.forEach(mes => {
+        if (datosProgreso.promediosMensuales[mes] !== undefined) {
+          datos.push(datosProgreso.promediosMensuales[mes]);
+        } else {
+          datos.push(null);
+        }
+      });
+      return datos;
+    }
+
+    // CASO 2: Si hay una asignatura seleccionada, calcular desde notasRaw
+    const datosCalculados = [];
 
     mesesOrden.forEach(mes => {
-      if (datosProgreso.promediosMensuales[mes] !== undefined) {
-        datos.push(datosProgreso.promediosMensuales[mes]);
+      // Filtrar notas de la asignatura y del mes correspondiente
+      const notasDelMes = notasRaw.filter(n => {
+        if (n.asignatura !== asignaturaSeleccionada) return false;
+        if (!n.nota || n.es_pendiente) return false;
+
+        // n.fecha viene como string "YYYY-MM-DD" o fecha completa
+        const fecha = new Date(n.fecha || n.fecha_evaluacion);
+        // getMonth() es 0-indexed (0=Enero, 2=Marzo). Sumamos 1.
+        return (fecha.getMonth() + 1) === mes;
+      });
+
+      if (notasDelMes.length > 0) {
+        const suma = notasDelMes.reduce((acc, curr) => acc + parseFloat(curr.nota), 0);
+        const promedio = (suma / notasDelMes.length).toFixed(1);
+        datosCalculados.push(parseFloat(promedio));
       } else {
-        datos.push(null); // Sin datos para este mes
+        datosCalculados.push(null);
       }
     });
 
-    return datos;
-  }, [datosProgreso]);
+    return datosCalculados;
+  }, [datosProgreso, notasRaw, asignaturaSeleccionada]);
 
   // Calcular variaciones porcentuales
   const variaciones = useMemo(() => {
@@ -437,6 +477,53 @@ function ProgresoTab({ pupilo }) {
 
   return (
     <div className="tab-panel active">
+      <style>{`
+        .progreso-layout {
+          display: flex;
+          gap: 20px;
+          align-items: flex-start;
+          flex-wrap: wrap; /* Permitir wrap por defecto para respuesta fluida */
+        }
+        
+        .progreso-layout > .card {
+          flex: 1; /* Ocupar espacio disponible equitativamente */
+          min-width: 300px; /* Ancho mínimo antes de colapsar */
+        }
+
+        .progreso-kpis-central {
+          width: 280px;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        /* MEDIA QUERIES */
+
+        /* Tablet (y Móvil grande): Stackear todo, cards ocupan 100% */
+        @media (max-width: 1024px) {
+          .progreso-layout {
+            flex-direction: column;
+          }
+          
+          .progreso-layout > .card {
+            width: 100%;
+            flex: none;
+          }
+
+          .progreso-kpis-central {
+            width: 100%;
+            flex-direction: row; /* KPIs horizontales para ahorrar espacio vertical */
+            justify-content: center;
+            flex-wrap: wrap;
+          }
+
+          .kpis-columna {
+             flex-direction: row; /* Sub-columnas a filas */
+             gap: 10px;
+          }
+        }
+      `}</style>
       {/* Layout de 3 columnas */}
       <div className="progreso-layout">
         {/* Columna Izquierda: Rendimiento Mensual */}

@@ -410,7 +410,11 @@ function ProgresoTab({ pupilo }) {
         },
         plugins: [notasEnBarrasPlugin]
       });
-    }, 150);
+
+      // Forzar resize para asegurar ajuste
+      chartAsignaturasInstance.current.resize();
+
+    }, 200); // Aumentar un poco el timeout a 200ms
 
     return () => {
       clearTimeout(timer);
@@ -822,7 +826,7 @@ function ProgresoTab({ pupilo }) {
             <h3>Promedio por Asignatura</h3>
           </div>
           <div className="card-body">
-            <div className="chart-container">
+            <div className="chart-container" style={{ position: 'relative', height: '100%', minHeight: '350px', width: '100%' }}>
               <canvas ref={chartAsignaturasRef}></canvas>
             </div>
           </div>

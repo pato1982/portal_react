@@ -16,10 +16,11 @@ async function poblarDatosApoderado() {
         console.log('Conectado a la BD...');
 
         // 1. Datos del Alumno y Curso (detectados anteriormente)
-        const alumnoId = 1;
-        const cursoId = 1;
+        // 1. Datos del Alumno y Curso (detectados anteriormente)
+        const alumnoId = 121; // Florencia Soto
+        const cursoId = 1; // 1° Basico A
         const establecimientoId = 1; // Asumimos ID 1
-        const anio = 2024;
+        const anio = 2026;
 
         // Obtener detalles del alumno para llenar la matricula
         const [alus] = await connection.query('SELECT * FROM tb_alumnos WHERE id = ?', [alumnoId]);

@@ -42,6 +42,15 @@ async function poblarDatos() {
 
         console.log(`Usando ${asignaturas.length} asignaturas para generar notas.`);
 
+        // Obtener un usuario ID válido para usar como docente/remitente y evitar errores de FK
+        const [usuarios] = await connection.query("SELECT id FROM tb_usuarios WHERE activo = 1 LIMIT 1");
+        if (usuarios.length === 0) {
+            console.error("No se encontró ningún usuario activo en tb_usuarios.");
+            return;
+        }
+        const usuarioGenericoId = usuarios[0].id;
+        console.log(`Usando usuario ID ${usuarioGenericoId} como docente/remitente genérico.`);
+
         // 2. Insertar NOTAS
         console.log('--- Generando Notas ---');
         await connection.query('DELETE FROM tb_notas WHERE alumno_id = ?', [alumnoId]);
@@ -59,8 +68,8 @@ async function poblarDatos() {
                     await connection.query(`
                         INSERT INTO tb_notas 
                         (alumno_id, asignatura_id, curso_id, docente_id, establecimiento_id, trimestre, nota, fecha_evaluacion, tipo_evaluacion_id, activo, anio_academico)
-                        VALUES (?, ?, ?, 1, ?, ?, ?, ?, 1, 1, ?)
-                    `, [alumnoId, asig.id, cursoId, establecimientoId, tri, notaFinal, fecha, anio]);
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?)
+                    `, [alumnoId, asig.id, cursoId, usuarioGenericoId, establecimientoId, tri, notaFinal, fecha, anio]);
                 }
             }
         }
@@ -97,14 +106,14 @@ async function poblarDatos() {
         await connection.query(`
             INSERT INTO tb_observaciones_alumno 
             (alumno_id, establecimiento_id, curso_id, docente_id, anio_academico, trimestre, fecha, tipo, categoria, titulo, descripcion, activo)
-            VALUES (?, ?, ?, 1, ?, 1, NOW(), 'positiva', 'conductual', 'Buena participación', 'Participa activamente en clases.', 1)
-        `, [alumnoId, establecimientoId, cursoId, anio]);
+            VALUES (?, ?, ?, ?, ?, 1, NOW(), 'positiva', 'conductual', 'Buena participación', 'Participa activamente en clases.', 1)
+        `, [alumnoId, establecimientoId, cursoId, usuarioGenericoId, anio]);
 
         await connection.query(`
             INSERT INTO tb_observaciones_alumno 
             (alumno_id, establecimiento_id, curso_id, docente_id, anio_academico, trimestre, fecha, tipo, categoria, titulo, descripcion, activo)
-            VALUES (?, ?, ?, 1, ?, 1, DATE_SUB(NOW(), INTERVAL 2 DAY), 'negativa', 'responsabilidad', 'Materiales olvidados', 'Olvida sus materiales de trabajo.', 1)
-        `, [alumnoId, establecimientoId, cursoId, anio]);
+            VALUES (?, ?, ?, ?, ?, 1, DATE_SUB(NOW(), INTERVAL 2 DAY), 'negativa', 'responsabilidad', 'Materiales olvidados', 'Olvida sus materiales de trabajo.', 1)
+        `, [alumnoId, establecimientoId, cursoId, usuarioGenericoId, anio]);
         console.log('Observaciones generadas en tb_observaciones_alumno.');
 
         // 5. Insertar COMUNICADOS
@@ -116,16 +125,16 @@ async function poblarDatos() {
         */
         const [resCom1] = await connection.query(`
             INSERT INTO tb_comunicados (titulo, mensaje, tipo, remitente_id, establecimiento_id, fecha_envio, activo)
-            VALUES ('Reunión de Apoderados', 'Se cita a reunión de apoderados para el día Viernes a las 19:00 hrs.', 'informativo', 1, ?, NOW(), 1)
-        `, [establecimientoId]);
+            VALUES ('Reunión de Apoderados', 'Se cita a reunión de apoderados para el día Viernes a las 19:00 hrs.', 'informativo', ?, ?, NOW(), 1)
+        `, [usuarioGenericoId, establecimientoId]);
 
         // Vincular al curso
         await connection.query('INSERT INTO tb_comunicado_curso (comunicado_id, curso_id) VALUES (?, ?)', [resCom1.insertId, cursoId]);
 
         const [resCom2] = await connection.query(`
             INSERT INTO tb_comunicados (titulo, mensaje, tipo, remitente_id, establecimiento_id, fecha_envio, activo)
-            VALUES ('Feria Científica', 'Recordar traer materiales para la feria científica.', 'academico', 1, ?, DATE_SUB(NOW(), INTERVAL 5 DAY), 1)
-        `, [establecimientoId]);
+            VALUES ('Feria Científica', 'Recordar traer materiales para la feria científica.', 'academico', ?, ?, DATE_SUB(NOW(), INTERVAL 5 DAY), 1)
+        `, [usuarioGenericoId, establecimientoId]);
 
         await connection.query('INSERT INTO tb_comunicado_curso (comunicado_id, curso_id) VALUES (?, ?)', [resCom2.insertId, cursoId]);
 

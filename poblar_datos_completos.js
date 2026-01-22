@@ -10,10 +10,10 @@ const config = {
 
 /*
   Script para poblar datos completos de un alumno (Florencia, ID 121)
-  - Notas
-  - Asistencia
-  - Anotaciones
-  - Comunicados (para el curso)
+  - Notas (tb_notas)
+  - Asistencia (tb_asistencia)
+  - Anotaciones (tb_observaciones_alumno)
+  - Comunicados (tb_comunicados)
 */
 
 async function poblarDatos() {
@@ -27,14 +27,7 @@ async function poblarDatos() {
         const establecimientoId = 1;
         const anio = 2026;
 
-        // 1. Obtener Asignaturas del Curso (usando tb_asignaciones o tb_asignaturas directas si están vinculadas por malla)
-        // Como no tengo claro la malla, buscaré asignaturas activas y seleccionaré 4 comunes.
-
-        /* 
-           Nota: En este sistema, las asignaturas se relacionan al curso vía tb_asignaciones (docente->curso->asig).
-           O quizás existe tb_curso_asignatura. 
-           Voy a buscar asignaturas generales.
-        */
+        // 1. Obtener Asignaturas
         const [asignaturas] = await connection.query(`
             SELECT id, nombre FROM tb_asignaturas 
             WHERE activo = 1 
@@ -43,103 +36,107 @@ async function poblarDatos() {
         `, [establecimientoId]);
 
         if (asignaturas.length === 0) {
-            console.log("No se encontraron asignaturas. Creando asignaturas dummy...");
-            // Crear si no existen (solo para demo)
-            const materias = ['Matemática', 'Lenguaje', 'Historia', 'Ciencias'];
-            for (const mat of materias) {
-                await connection.query('INSERT INTO tb_asignaturas (nombre, codigo, establecimiento_id, activo) VALUES (?, ?, ?, 1)', [mat, mat.substring(0, 3).toUpperCase(), establecimientoId]);
-            }
-            // Recargar
-            const [asignaturasNuevas] = await connection.query(`SELECT id, nombre FROM tb_asignaturas WHERE activo = 1 AND establecimiento_id = ? LIMIT 5`, [establecimientoId]);
-            asignaturas.push(...asignaturasNuevas);
+            console.log("No se encontraron asignaturas. Usando IDs manuales 1,2,3,4.");
+            asignaturas.push({ id: 1, nombre: 'Matemática' }, { id: 2, nombre: 'Lenguaje' });
         }
 
         console.log(`Usando ${asignaturas.length} asignaturas para generar notas.`);
 
         // 2. Insertar NOTAS
         console.log('--- Generando Notas ---');
-        // Limpiar notas previas de este alumno para evitar duplicados masivos si corre de nuevo
         await connection.query('DELETE FROM tb_notas WHERE alumno_id = ?', [alumnoId]);
 
         const trimestres = [1, 2, 3];
 
         for (const asig of asignaturas) {
             for (const tri of trimestres) {
-                // Generar 3 notas por trimestre
                 for (let i = 0; i < 3; i++) {
-                    const nota = (Math.random() * (7.0 - 4.0) + 4.0).toFixed(1); // Notas entre 4.0 y 7.0
-                    // A veces una roja
+                    const nota = (Math.random() * (7.0 - 4.0) + 4.0).toFixed(1);
                     const notaFinal = Math.random() > 0.9 ? (Math.random() * (3.9 - 2.0) + 2.0).toFixed(1) : nota;
+                    const fecha = `${anio}-0${tri + 2}-${10 + i}`;
 
-                    const fecha = `${anio}-0${tri + 2}-${10 + i}`; // Fechas ficticias mar/abr/may...
-
+                    // Estructura tb_notas: alumno_id, asignatura_id, curso_id, docente_id, establecimiento_id, trimestre, nota, fecha_evaluacion, tipo_evaluacion_id, activo
                     await connection.query(`
                         INSERT INTO tb_notas 
-                        (alumno_id, asignatura_id, curso_id, docente_id, establecimiento_id, trimestre, nota, fecha_evaluacion, tipo_evaluacion_id, fecha_registro)
-                        VALUES (?, ?, ?, 1, ?, ?, ?, ?, 1, NOW())
+                        (alumno_id, asignatura_id, curso_id, docente_id, establecimiento_id, trimestre, nota, fecha_evaluacion, tipo_evaluacion_id, activo)
+                        VALUES (?, ?, ?, 1, ?, ?, ?, ?, 1, 1)
                     `, [alumnoId, asig.id, cursoId, establecimientoId, tri, notaFinal, fecha]);
                 }
             }
         }
-        console.log('Notas generadas.');
+        console.log('Notas generadas en tb_notas.');
 
         // 3. Insertar ASISTENCIA
         console.log('--- Generando Asistencia ---');
         await connection.query('DELETE FROM tb_asistencia WHERE alumno_id = ?', [alumnoId]);
 
-        // Generar asistencia para un mes (ej: Marzo)
         for (let dia = 1; dia <= 20; dia++) {
-            // Saltamos fines de semana simple (simulado)
             if (dia % 7 === 6 || dia % 7 === 0) continue;
 
             const estadoRand = Math.random();
             let estado = 'presente';
             if (estadoRand > 0.90) estado = 'ausente';
-            else if (estadoRand > 0.85) estado = 'tardio';
+            else if (estadoRand > 0.85) estado = 'atrasado'; // Enum en SQL dice 'atrasado', no 'tardio'
 
             const fecha = `${anio}-03-${String(dia).padStart(2, '0')}`;
 
+            // Estructura tb_asistencia: alumno_id, curso_id, establecimiento_id, fecha, estado, activo
             await connection.query(`
                 INSERT INTO tb_asistencia
-                (alumno_id, curso_id, establecimiento_id, fecha, estado, activo)
-                VALUES (?, ?, ?, ?, ?, 1)
-            `, [alumnoId, cursoId, establecimientoId, fecha, estado]);
+                (alumno_id, curso_id, establecimiento_id, fecha, estado, activo, anio_academico, trimestre)
+                VALUES (?, ?, ?, ?, ?, 1, ?, 1)
+            `, [alumnoId, cursoId, establecimientoId, fecha, estado, anio]);
         }
-        console.log('Asistencia generada.');
+        console.log('Asistencia generada en tb_asistencia.');
 
-        // 4. Insertar ANOTACIONES
-        console.log('--- Generando Anotaciones ---');
-        await connection.query('DELETE FROM tb_anotaciones WHERE alumno_id = ?', [alumnoId]);
+        // 4. Insertar ANOTACIONES (tb_observaciones_alumno)
+        console.log('--- Generando Observaciones/Anotaciones ---');
+        await connection.query('DELETE FROM tb_observaciones_alumno WHERE alumno_id = ?', [alumnoId]);
+
+        // Estructura tb_observaciones_alumno: alumno_id, establecimiento_id, curso_id, docente_id, anio_academico, trimestre, fecha, tipo, categoria, titulo, descripcion, activo
+        await connection.query(`
+            INSERT INTO tb_observaciones_alumno 
+            (alumno_id, establecimiento_id, curso_id, docente_id, anio_academico, trimestre, fecha, tipo, categoria, titulo, descripcion, activo)
+            VALUES (?, ?, ?, 1, ?, 1, NOW(), 'positiva', 'conductual', 'Buena participación', 'Participa activamente en clases.', 1)
+        `, [alumnoId, establecimientoId, cursoId, anio]);
 
         await connection.query(`
-            INSERT INTO tb_anotaciones (alumno_id, tipo, descripcion, fecha, docente_id, establecimiento_id, activo)
-            VALUES (?, 'positiva', 'Participa activamente en clases.', NOW(), 1, ?, 1)
-        `, [alumnoId, establecimientoId]);
-
-        await connection.query(`
-            INSERT INTO tb_anotaciones (alumno_id, tipo, descripcion, fecha, docente_id, establecimiento_id, activo)
-            VALUES (?, 'negativa', 'Olvida sus materiales de trabajo.', DATE_SUB(NOW(), INTERVAL 2 DAY), 1, ?, 1)
-        `, [alumnoId, establecimientoId]);
-        console.log('Anotaciones generadas.');
+            INSERT INTO tb_observaciones_alumno 
+            (alumno_id, establecimiento_id, curso_id, docente_id, anio_academico, trimestre, fecha, tipo, categoria, titulo, descripcion, activo)
+            VALUES (?, ?, ?, 1, ?, 1, DATE_SUB(NOW(), INTERVAL 2 DAY), 'negativa', 'responsabilidad', 'Materiales olvidados', 'Olvida sus materiales de trabajo.', 1)
+        `, [alumnoId, establecimientoId, cursoId, anio]);
+        console.log('Observaciones generadas en tb_observaciones_alumno.');
 
         // 5. Insertar COMUNICADOS
         console.log('--- Generando Comunicados ---');
-        // Comunicado general al curso
-        await connection.query(`
-            INSERT INTO tb_comunicados (titulo, contenido, tipo_destinatario, destinatario_id, establecimiento_id, fecha_envio, enviado_por, activo)
-            VALUES 
-            ('Reunión de Apoderados', 'Se cita a reunión de apoderados para el día Viernes a las 19:00 hrs.', 'curso', ?, ?, NOW(), 1, 1),
-            ('Feria Científica', 'Recordar traer materiales para la feria científica.', 'curso', ?, ?, DATE_SUB(NOW(), INTERVAL 5 DAY), 1, 1)
-        `, [cursoId, establecimientoId, cursoId, establecimientoId]);
+        // Usar remitente_id=1 (Admin por defecto)
+        /* 
+           OJO: tb_comunicados vincula con tb_comunicado_curso para destinatarios tipo 'curso'.
+           Pero primero creamos el comunicado.
+        */
+        const [resCom1] = await connection.query(`
+            INSERT INTO tb_comunicados (titulo, mensaje, tipo, remitente_id, establecimiento_id, fecha_envio, activo)
+            VALUES ('Reunión de Apoderados', 'Se cita a reunión de apoderados para el día Viernes a las 19:00 hrs.', 'informativo', 1, ?, NOW(), 1)
+        `, [establecimientoId]);
 
-        console.log('Comunicados generados.');
+        // Vincular al curso
+        await connection.query('INSERT INTO tb_comunicado_curso (comunicado_id, curso_id) VALUES (?, ?)', [resCom1.insertId, cursoId]);
+
+        const [resCom2] = await connection.query(`
+            INSERT INTO tb_comunicados (titulo, mensaje, tipo, remitente_id, establecimiento_id, fecha_envio, activo)
+            VALUES ('Feria Científica', 'Recordar traer materiales para la feria científica.', 'academico', 1, ?, DATE_SUB(NOW(), INTERVAL 5 DAY), 1)
+        `, [establecimientoId]);
+
+        await connection.query('INSERT INTO tb_comunicado_curso (comunicado_id, curso_id) VALUES (?, ?)', [resCom2.insertId, cursoId]);
+
+        console.log('Comunicados generados y vinculados.');
 
         console.log('=========================================');
-        console.log(' Datos Completos Generados para Florencia');
+        console.log(' Datos Completos Generados Correctamente ');
         console.log('=========================================');
 
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error detallado:', error);
     } finally {
         if (connection) await connection.end();
     }

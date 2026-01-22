@@ -75,8 +75,8 @@ async function poblarDatos() {
 
                     await connection.query(`
                         INSERT INTO tb_notas 
-                        (alumno_id, asignatura_id, curso_id, docente_id, establecimiento_id, trimestre, nota, fecha_evaluacion, tipo_evaluacion_id, registrado_por, fecha_registro)
-                        VALUES (?, ?, ?, 1, ?, ?, ?, ?, 1, 1, NOW())
+                        (alumno_id, asignatura_id, curso_id, docente_id, establecimiento_id, trimestre, nota, fecha_evaluacion, tipo_evaluacion_id, fecha_registro)
+                        VALUES (?, ?, ?, 1, ?, ?, ?, ?, 1, NOW())
                     `, [alumnoId, asig.id, cursoId, establecimientoId, tri, notaFinal, fecha]);
                 }
             }
@@ -101,8 +101,8 @@ async function poblarDatos() {
 
             await connection.query(`
                 INSERT INTO tb_asistencia
-                (alumno_id, curso_id, establecimiento_id, fecha, estado, activo, registrado_por)
-                VALUES (?, ?, ?, ?, ?, 1, 1)
+                (alumno_id, curso_id, establecimiento_id, fecha, estado, activo)
+                VALUES (?, ?, ?, ?, ?, 1)
             `, [alumnoId, cursoId, establecimientoId, fecha, estado]);
         }
         console.log('Asistencia generada.');
@@ -117,7 +117,7 @@ async function poblarDatos() {
         `, [alumnoId, establecimientoId]);
 
         await connection.query(`
-            INSERT INTO tb_anotaciones (alumno_id, tipo, 'negativa', descripcion, fecha, docente_id, establecimiento_id, activo)
+            INSERT INTO tb_anotaciones (alumno_id, tipo, descripcion, fecha, docente_id, establecimiento_id, activo)
             VALUES (?, 'negativa', 'Olvida sus materiales de trabajo.', DATE_SUB(NOW(), INTERVAL 2 DAY), 1, ?, 1)
         `, [alumnoId, establecimientoId]);
         console.log('Anotaciones generadas.');

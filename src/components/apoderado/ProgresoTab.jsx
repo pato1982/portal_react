@@ -513,14 +513,34 @@ function ProgresoTab({ pupilo }) {
 
           .progreso-kpis-central {
             width: 100%;
-            flex-direction: row; /* KPIs horizontales para ahorrar espacio vertical */
-            justify-content: center;
-            flex-wrap: wrap;
+            flex-direction: row; /* KPIs horizontales */
+            justify-content: space-between; /* Distribuir espacio */
+            flex-wrap: nowrap; /* Intentar mantener en una fila si es posible, o wrap controlado */
+            gap: 10px;
+            overflow-x: auto; /* Scroll horizontal si es muy estrecho, aunque intentaremos ajustar */
+            padding-bottom: 5px; /* Espacio para scrollbar si aparece */
           }
 
           .kpis-columna {
-             flex-direction: row; /* Sub-columnas a filas */
+             flex-direction: row;
              gap: 10px;
+             flex: 1;
+             justify-content: space-around;
+          }
+
+          /* Ajustar tarjetas individuales para tablet */
+          .kpi-card-vertical {
+            min-width: 80px; /* Reducir ancho mínimo */
+            padding: 10px 5px; /* Reducir padding lateral */
+            flex: 1;
+          }
+          
+          .kpi-data .kpi-valor {
+            font-size: 1.2rem; /* Reducir tamaño de fuente del valor */
+          }
+          
+          .kpi-data .kpi-label {
+            font-size: 0.7rem; /* Reducir tamaño de fuente del label */
           }
         }
       `}</style>

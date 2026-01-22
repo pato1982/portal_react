@@ -58,9 +58,9 @@ async function poblarDatos() {
                     // Estructura tb_notas: alumno_id, asignatura_id, curso_id, docente_id, establecimiento_id, trimestre, nota, fecha_evaluacion, tipo_evaluacion_id, activo
                     await connection.query(`
                         INSERT INTO tb_notas 
-                        (alumno_id, asignatura_id, curso_id, docente_id, establecimiento_id, trimestre, nota, fecha_evaluacion, tipo_evaluacion_id, activo)
-                        VALUES (?, ?, ?, 1, ?, ?, ?, ?, 1, 1)
-                    `, [alumnoId, asig.id, cursoId, establecimientoId, tri, notaFinal, fecha]);
+                        (alumno_id, asignatura_id, curso_id, docente_id, establecimiento_id, trimestre, nota, fecha_evaluacion, tipo_evaluacion_id, activo, anio_academico)
+                        VALUES (?, ?, ?, 1, ?, ?, ?, ?, 1, 1, ?)
+                    `, [alumnoId, asig.id, cursoId, establecimientoId, tri, notaFinal, fecha, anio]);
                 }
             }
         }

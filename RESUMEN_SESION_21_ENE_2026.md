@@ -38,12 +38,18 @@
 - **Solución:** Se aplicó la misma corrección de `zIndex: 1005` al contenedor del `SelectNativo` de Curso en esta pestaña.
 - **Resultado:** Navegación fluida y visible en tablets.
 
+### 8. Identificación Docente en Header (`DocentePage.jsx`)
+- **Mejora UX:** Se movió el nombre del docente logueado a la sección izquierda del encabezado ("Brand"), con un tamaño de fuente destacado.
+- **Objetivo:** Que el docente siempre tenga claridad inmediata de la sesión activa junto al logo del portal.
+- **Limpieza:** Se eliminó la duplicidad del nombre en la barra derecha, dejando esa área para la selección de establecimiento y fecha.
+
 ## Archivos Modificados
 - `src/components/MatriculasTab.jsx`
 - `src/components/DocentesTab.jsx`
 - `src/components/docente/AgregarNotaTab.jsx`
 - `src/components/docente/ModificarNotaTab.jsx`
 - `src/components/docente/VerNotasTab.jsx`
+- `src/components/docente/DocentePage.jsx`
 - `server/index.js`
 - `RESUMEN_SESION_21_ENE_2026.md`
 

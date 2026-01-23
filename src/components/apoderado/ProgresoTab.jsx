@@ -34,10 +34,16 @@ function ProgresoTab({ pupilo }) {
       try {
         // 1. Cargar Progreso General
         const urlProgreso = `${config.apiBaseUrl}/apoderado/pupilo/${pupilo.id}/progreso`;
+        console.log('[DEBUG ProgresoTab] Fetching progreso from:', urlProgreso);
         const resProgreso = await fetch(urlProgreso);
         const dataProgreso = await resProgreso.json();
 
+        console.log('[DEBUG ProgresoTab] Respuesta API progreso:', dataProgreso);
+
         if (dataProgreso.success) {
+          console.log('[DEBUG ProgresoTab] Datos recibidos:', dataProgreso.data);
+          console.log('[DEBUG ProgresoTab] Asignaturas:', dataProgreso.data.asignaturas);
+          console.log('[DEBUG ProgresoTab] PromediosPorAsignatura:', dataProgreso.data.promediosPorAsignatura);
           setDatosProgreso(dataProgreso.data);
         } else {
           setError(dataProgreso.error || 'Error al cargar progreso');
@@ -257,7 +263,7 @@ function ProgresoTab({ pupilo }) {
     };
   }, [datosProgreso, datosMensuales, variaciones, asignaturaSeleccionada]);
 
-  // Grafico de promedios por asignatura
+  // Grafico moderno de promedios por asignatura
   useEffect(() => {
     if (!chartAsignaturasRef.current || !datosProgreso) return;
 
@@ -269,19 +275,19 @@ function ProgresoTab({ pupilo }) {
 
     if (!asignaturas || asignaturas.length === 0) return;
 
-    // Función simple para abreviar asignaturas
-    const abreviarAsignatura = (nombre) => {
+    // Función para abreviar asignaturas según dispositivo
+    const abreviarAsignatura = (nombre, corto = false) => {
       if (!nombre) return '';
-      const map = {
+      const mapCorto = {
         'Matemáticas': 'Mat',
-        'Lenguaje y Comunicación': 'Leng',
-        'Lenguaje': 'Leng',
-        'Historia, Geografía y Ciencias Sociales': 'Hist',
-        'Historia': 'Hist',
-        'Ciencias Naturales': 'C.Nat',
-        'Ciencias': 'Cien',
-        'Educación Física y Salud': 'Ed.Fís',
-        'Educación Física': 'Ed.Fís',
+        'Lenguaje y Comunicación': 'Len',
+        'Lenguaje': 'Len',
+        'Historia, Geografía y Ciencias Sociales': 'His',
+        'Historia': 'His',
+        'Ciencias Naturales': 'C.N',
+        'Ciencias': 'Cie',
+        'Educación Física y Salud': 'E.F',
+        'Educación Física': 'E.F',
         'Artes Visuales': 'Art',
         'Artes': 'Art',
         'Música': 'Mús',
@@ -289,69 +295,111 @@ function ProgresoTab({ pupilo }) {
         'Inglés': 'Ing',
         'Orientación': 'Ori',
         'Religión': 'Rel',
-        'Química': 'Quím',
+        'Química': 'Quí',
         'Física': 'Fís',
-        'Biología': 'Biol'
+        'Biología': 'Bio'
       };
-      // Si está en el mapa, devolver abreviatura
+      const mapLargo = {
+        'Matemáticas': 'Matemát.',
+        'Lenguaje y Comunicación': 'Lenguaje',
+        'Lenguaje': 'Lenguaje',
+        'Historia, Geografía y Ciencias Sociales': 'Historia',
+        'Historia': 'Historia',
+        'Ciencias Naturales': 'Cs. Nat.',
+        'Ciencias': 'Ciencias',
+        'Educación Física y Salud': 'Ed. Física',
+        'Educación Física': 'Ed. Física',
+        'Artes Visuales': 'Artes V.',
+        'Artes': 'Artes',
+        'Música': 'Música',
+        'Tecnología': 'Tecnol.',
+        'Inglés': 'Inglés',
+        'Orientación': 'Orient.',
+        'Religión': 'Religión',
+        'Química': 'Química',
+        'Física': 'Física',
+        'Biología': 'Biología'
+      };
+
+      const map = corto ? mapCorto : mapLargo;
       if (map[nombre]) return map[nombre];
 
-      // Si no, intentar abreviar algorítmicamente (primeras 3 letras o iniciales si es muy largo)
-      if (nombre.length > 10) {
-        return nombre.substring(0, 4) + '.';
-      }
-      return nombre;
+      return corto ? nombre.substring(0, 3) : (nombre.length > 8 ? nombre.substring(0, 7) + '.' : nombre);
     };
 
-    // Timeout para asegurar renderizado correcto
     const timer = setTimeout(() => {
       if (!chartAsignaturasRef.current) return;
 
       const ctx = chartAsignaturasRef.current.getContext('2d');
       if (!ctx) return;
 
-      const labels = asignaturas.map(abreviarAsignatura);
+      // Labels según dispositivo
+      const labels = asignaturas.map(a => abreviarAsignatura(a, isMobile));
       const data = asignaturas.map(asig => promediosPorAsignatura[asig] || 0);
 
-      const colors = asignaturas.map(asig => {
-        const nota = promediosPorAsignatura[asig] || 0;
-        if (nota >= 6.0) return '#10b981';
-        if (nota >= 5.0) return '#3b82f6';
-        if (nota >= 4.0) return '#f59e0b';
-        return '#ef4444';
-      });
+      // Crear gradientes para cada barra
+      const createGradient = (ctx, nota) => {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        if (nota >= 6.0) {
+          gradient.addColorStop(0, '#34d399');
+          gradient.addColorStop(1, '#059669');
+        } else if (nota >= 5.0) {
+          gradient.addColorStop(0, '#60a5fa');
+          gradient.addColorStop(1, '#2563eb');
+        } else if (nota >= 4.0) {
+          gradient.addColorStop(0, '#fbbf24');
+          gradient.addColorStop(1, '#d97706');
+        } else {
+          gradient.addColorStop(0, '#f87171');
+          gradient.addColorStop(1, '#dc2626');
+        }
+        return gradient;
+      };
 
-      // Plugin para mostrar notas dentro de las barras
-      const notasEnBarrasPlugin = {
-        id: 'notasEnBarras',
+      const backgroundColors = data.map(nota => createGradient(ctx, nota));
+
+      // Plugin para mostrar notas encima de las barras
+      const notasEncimaPlugin = {
+        id: 'notasEncima',
         afterDatasetsDraw: (chart) => {
           const ctx = chart.ctx;
           const meta = chart.getDatasetMeta(0);
 
-          // Tamaño de fuente según dispositivo
-          let fontSize = 11; // Desktop
-          if (isMobile) {
-            fontSize = 8;
-          } else if (isTablet) {
-            fontSize = 9;
-          }
+          let fontSize = isMobile ? 9 : (isTablet ? 10 : 12);
 
           ctx.save();
-          ctx.font = `bold ${fontSize}px Arial`;
           ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#ffffff';
+          ctx.textBaseline = 'bottom';
 
           meta.data.forEach((bar, index) => {
             const nota = data[index];
             if (nota && nota > 0) {
               const x = bar.x;
-              const y = bar.y + (bar.height / 2);
+              const y = bar.y - 8;
 
-              // Solo mostrar si la barra es suficientemente alta
-              if (bar.height > 15) {
-                ctx.fillText(nota.toFixed(1), x, y);
-              }
+              // Fondo redondeado para la nota
+              const text = nota.toFixed(1);
+              ctx.font = `bold ${fontSize}px 'Segoe UI', system-ui, sans-serif`;
+              const textWidth = ctx.measureText(text).width;
+
+              // Pill background
+              const pillPadding = isMobile ? 4 : 6;
+              const pillHeight = fontSize + 6;
+              const pillWidth = textWidth + (pillPadding * 2);
+              const pillX = x - pillWidth / 2;
+              const pillY = y - pillHeight + 2;
+
+              // Color del pill según nota
+              let pillColor = nota >= 6.0 ? '#059669' : (nota >= 5.0 ? '#2563eb' : (nota >= 4.0 ? '#d97706' : '#dc2626'));
+
+              ctx.fillStyle = pillColor;
+              ctx.beginPath();
+              ctx.roundRect(pillX, pillY, pillWidth, pillHeight, 4);
+              ctx.fill();
+
+              // Texto blanco
+              ctx.fillStyle = '#ffffff';
+              ctx.fillText(text, x, y);
             }
           });
 
@@ -362,27 +410,62 @@ function ProgresoTab({ pupilo }) {
       chartAsignaturasInstance.current = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: labels, // Usar labels abreviados
+          labels: labels,
           datasets: [{
             label: 'Promedio',
             data: data,
-            backgroundColor: colors,
-            borderRadius: 6
+            backgroundColor: backgroundColors,
+            borderRadius: {
+              topLeft: 8,
+              topRight: 8,
+              bottomLeft: 0,
+              bottomRight: 0
+            },
+            borderSkipped: false,
+            barPercentage: isMobile ? 0.7 : 0.65,
+            categoryPercentage: isMobile ? 0.85 : 0.8
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: {
+            duration: 800,
+            easing: 'easeOutQuart'
+          },
+          layout: {
+            padding: {
+              top: 30
+            }
+          },
           plugins: {
             legend: {
               display: false
             },
             tooltip: {
+              enabled: true,
+              backgroundColor: 'rgba(15, 23, 42, 0.95)',
+              titleFont: {
+                size: 13,
+                weight: '600',
+                family: "'Segoe UI', system-ui, sans-serif"
+              },
+              bodyFont: {
+                size: 12,
+                family: "'Segoe UI', system-ui, sans-serif"
+              },
+              padding: 12,
+              cornerRadius: 8,
+              displayColors: false,
               callbacks: {
-                // Mostrar nombre completo en el tooltip
                 title: (tooltipItems) => {
                   const index = tooltipItems[0].dataIndex;
                   return asignaturas[index];
+                },
+                label: (context) => {
+                  const nota = context.parsed.y;
+                  let estado = nota >= 6.0 ? 'Excelente' : (nota >= 5.0 ? 'Bueno' : (nota >= 4.0 ? 'Suficiente' : 'Insuficiente'));
+                  return [`Promedio: ${nota.toFixed(1)}`, `Estado: ${estado}`];
                 }
               }
             }
@@ -390,31 +473,49 @@ function ProgresoTab({ pupilo }) {
           scales: {
             y: {
               min: 1,
-              max: 8,
+              max: 7.5,
               ticks: {
                 stepSize: 1,
-                callback: function (value) {
-                  return value === 8 ? ' ' : value;
-                }
+                font: {
+                  size: isMobile ? 10 : 11,
+                  family: "'Segoe UI', system-ui, sans-serif"
+                },
+                color: '#64748b',
+                callback: (value) => value <= 7 ? value : ''
               },
               grid: {
-                color: 'rgba(0, 0, 0, 0.05)'
+                color: 'rgba(148, 163, 184, 0.1)',
+                drawBorder: false
+              },
+              border: {
+                display: false
               }
             },
             x: {
+              ticks: {
+                font: {
+                  size: isMobile ? 9 : (isTablet ? 10 : 11),
+                  weight: '500',
+                  family: "'Segoe UI', system-ui, sans-serif"
+                },
+                color: '#475569',
+                maxRotation: isMobile ? 45 : 0,
+                minRotation: isMobile ? 45 : 0
+              },
               grid: {
+                display: false
+              },
+              border: {
                 display: false
               }
             }
           }
         },
-        plugins: [notasEnBarrasPlugin]
+        plugins: [notasEncimaPlugin]
       });
 
-      // Forzar resize para asegurar ajuste
       chartAsignaturasInstance.current.resize();
-
-    }, 200); // Aumentar un poco el timeout a 200ms
+    }, 150);
 
     return () => {
       clearTimeout(timer);
@@ -668,7 +769,7 @@ function ProgresoTab({ pupilo }) {
         /* --- MOBILE (max-width: 768px) --- */
         @media (max-width: 768px) {
           .progreso-kpis-central {
-            flex-direction: column; 
+            flex-direction: column;
             overflow-x: visible;
             gap: 10px;
             display: flex; /* Restaurar flex normal, quitar 'contents' effect wrapper */
@@ -676,7 +777,7 @@ function ProgresoTab({ pupilo }) {
 
           /* Reset de 'contents' en .kpis-columna para mobile si se usó arriba */
           .kpis-columna {
-            display: flex; 
+            display: flex;
             flex-direction: row;
             width: 100%;
             gap: 10px;
@@ -686,13 +787,13 @@ function ProgresoTab({ pupilo }) {
           .kpi-card-vertical {
             flex: 1; /* Volver a flex 1 para ocupar ancho equitativo */
             width: auto;
-            min-width: 0; 
+            min-width: 0;
             padding: 8px;
             flex-direction: row; /* Icono al lado */
             text-align: left;
             justify-content: flex-start;
           }
-          
+
           .kpi-card-vertical .kpi-icon {
              margin-bottom: 0;
              margin-right: 8px;
@@ -700,6 +801,185 @@ function ProgresoTab({ pupilo }) {
 
           .kpi-valor { font-size: 1rem; }
           .kpi-label { font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        }
+
+        /* ========================================= */
+        /* ESTILOS GRÁFICO MODERNO DE ASIGNATURAS   */
+        /* ========================================= */
+
+        .chart-asignaturas-card {
+          background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+          border: 1px solid #e2e8f0;
+          overflow: hidden;
+        }
+
+        .chart-header-modern {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px 20px !important;
+          background: linear-gradient(90deg, #f8fafc 0%, #ffffff 100%);
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .chart-title-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .chart-icon {
+          width: 36px;
+          height: 36px;
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .chart-header-modern h3 {
+          font-size: 1rem;
+          font-weight: 600;
+          color: #1e293b;
+          margin: 0;
+        }
+
+        .chart-legend-mini {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 0.7rem;
+          font-weight: 500;
+          color: #64748b;
+        }
+
+        .legend-item .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+
+        .legend-item.excelente .dot { background: linear-gradient(135deg, #34d399 0%, #059669 100%); }
+        .legend-item.bueno .dot { background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%); }
+        .legend-item.suficiente .dot { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); }
+        .legend-item.insuficiente .dot { background: linear-gradient(135deg, #f87171 0%, #dc2626 100%); }
+
+        .chart-asignaturas-card .card-body {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          min-height: 350px;
+          padding: 15px;
+        }
+
+        .chart-container-modern {
+          position: relative;
+          width: 100%;
+          flex: 1;
+          min-height: 320px;
+          height: 320px;
+        }
+
+        .chart-container-modern canvas {
+          display: block;
+          max-width: 100%;
+        }
+
+        /* --- Responsive Gráfico Moderno TABLET --- */
+        @media (max-width: 1024px) {
+          .chart-header-modern {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 16px !important;
+          }
+
+          .chart-legend-mini {
+            width: 100%;
+            justify-content: flex-start;
+          }
+
+          .chart-icon {
+            width: 32px;
+            height: 32px;
+          }
+
+          .chart-icon svg {
+            width: 16px;
+            height: 16px;
+          }
+
+          .chart-header-modern h3 {
+            font-size: 0.9rem;
+          }
+
+          .chart-container-modern {
+            min-height: 280px;
+            height: 280px;
+          }
+
+          .chart-asignaturas-card .card-body {
+            min-height: 300px;
+          }
+        }
+
+        /* --- Responsive Gráfico Moderno MOBILE --- */
+        @media (max-width: 768px) {
+          .chart-header-modern {
+            padding: 10px 12px !important;
+          }
+
+          .chart-title-wrapper {
+            gap: 8px;
+          }
+
+          .chart-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+          }
+
+          .chart-icon svg {
+            width: 14px;
+            height: 14px;
+          }
+
+          .chart-header-modern h3 {
+            font-size: 0.85rem;
+          }
+
+          .chart-legend-mini {
+            gap: 8px;
+          }
+
+          .legend-item {
+            font-size: 0.6rem;
+            gap: 3px;
+          }
+
+          .legend-item .dot {
+            width: 6px;
+            height: 6px;
+          }
+
+          .chart-container-modern {
+            min-height: 260px;
+            height: 260px;
+            padding: 8px;
+          }
+
+          .chart-asignaturas-card .card-body {
+            min-height: 280px;
+          }
         }
 
       `}</style>
@@ -820,13 +1100,28 @@ function ProgresoTab({ pupilo }) {
           </div>
         </div>
 
-        {/* Columna Derecha: Promedio por Asignatura */}
-        <div className="card">
-          <div className="card-header">
-            <h3>Promedio por Asignatura</h3>
+        {/* Columna Derecha: Promedio por Asignatura - Moderno */}
+        <div className="card chart-asignaturas-card">
+          <div className="card-header chart-header-modern">
+            <div className="chart-title-wrapper">
+              <div className="chart-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+              </div>
+              <h3>Rendimiento por Asignatura</h3>
+            </div>
+            <div className="chart-legend-mini">
+              <span className="legend-item excelente"><span className="dot"></span>6+</span>
+              <span className="legend-item bueno"><span className="dot"></span>5+</span>
+              <span className="legend-item suficiente"><span className="dot"></span>4+</span>
+              <span className="legend-item insuficiente"><span className="dot"></span>&lt;4</span>
+            </div>
           </div>
           <div className="card-body">
-            <div className="chart-container" style={{ position: 'relative', height: '100%', minHeight: '350px', width: '100%' }}>
+            <div className="chart-container-modern">
               <canvas ref={chartAsignaturasRef}></canvas>
             </div>
           </div>

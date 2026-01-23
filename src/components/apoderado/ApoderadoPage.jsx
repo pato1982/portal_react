@@ -69,7 +69,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
     }
 
     try {
-      // Usar apoderado_id si existe (login real), o id si es demo/legacy
+      // Priorizar el ID de apoderado vinculado al perfil
       const idParaConsulta = apoderadoActual.apoderado_id || apoderadoActual.id;
       const url = `${config.apiBaseUrl}/apoderado/mis-pupilos/${idParaConsulta}`;
       console.log('Fetching URL:', url);

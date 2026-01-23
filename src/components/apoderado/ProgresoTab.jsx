@@ -277,251 +277,77 @@ function ProgresoTab({ pupilo }) {
 
     // Función para abreviar asignaturas según dispositivo
     const abreviarAsignatura = (nombre, corto = false) => {
+      // ... (mantener lógica de abreviación)
       if (!nombre) return '';
       const mapCorto = {
-        'Matemáticas': 'Mat',
-        'Lenguaje y Comunicación': 'Len',
-        'Lenguaje': 'Len',
-        'Historia, Geografía y Ciencias Sociales': 'His',
-        'Historia': 'His',
-        'Ciencias Naturales': 'C.N',
-        'Ciencias': 'Cie',
-        'Educación Física y Salud': 'E.F',
-        'Educación Física': 'E.F',
-        'Artes Visuales': 'Art',
-        'Artes': 'Art',
-        'Música': 'Mús',
-        'Tecnología': 'Tec',
-        'Inglés': 'Ing',
-        'Orientación': 'Ori',
-        'Religión': 'Rel',
-        'Química': 'Quí',
-        'Física': 'Fís',
-        'Biología': 'Bio'
+        'Matemáticas': 'Mat', 'Lenguaje y Comunicación': 'Len', 'Lenguaje': 'Len',
+        'Historia, Geografía y Ciencias Sociales': 'His', 'Historia': 'His',
+        'Ciencias Naturales': 'C.N', 'Ciencias': 'Cie', 'Educación Física y Salud': 'E.F',
+        'Educación Física': 'E.F', 'Artes Visuales': 'Art', 'Artes': 'Art',
+        'Música': 'Mús', 'Tecnología': 'Tec', 'Inglés': 'Ing', 'Orientación': 'Ori',
+        'Religión': 'Rel', 'Química': 'Quí', 'Física': 'Fís', 'Biología': 'Bio'
       };
       const mapLargo = {
-        'Matemáticas': 'Matemát.',
-        'Lenguaje y Comunicación': 'Lenguaje',
-        'Lenguaje': 'Lenguaje',
-        'Historia, Geografía y Ciencias Sociales': 'Historia',
-        'Historia': 'Historia',
-        'Ciencias Naturales': 'Cs. Nat.',
-        'Ciencias': 'Ciencias',
-        'Educación Física y Salud': 'Ed. Física',
-        'Educación Física': 'Ed. Física',
-        'Artes Visuales': 'Artes V.',
-        'Artes': 'Artes',
-        'Música': 'Música',
-        'Tecnología': 'Tecnol.',
-        'Inglés': 'Inglés',
-        'Orientación': 'Orient.',
-        'Religión': 'Religión',
-        'Química': 'Química',
-        'Física': 'Física',
-        'Biología': 'Biología'
+        'Matemáticas': 'Matemát.', 'Lenguaje y Comunicación': 'Lenguaje', 'Lenguaje': 'Lenguaje',
+        'Historia, Geografía y Ciencias Sociales': 'Historia', 'Historia': 'Historia',
+        'Ciencias Naturales': 'Cs. Nat.', 'Ciencias': 'Ciencias', 'Educación Física y Salud': 'Ed. Física',
+        'Educación Física': 'Ed. Física', 'Artes Visuales': 'Artes V.', 'Artes': 'Artes',
+        'Música': 'Música', 'Tecnología': 'Tecnol.', 'Inglés': 'Inglés', 'Orientación': 'Orient.',
+        'Religión': 'Religión', 'Química': 'Química', 'Física': 'Física', 'Biología': 'Biología'
       };
 
       const map = corto ? mapCorto : mapLargo;
       if (map[nombre]) return map[nombre];
-
       return corto ? nombre.substring(0, 3) : (nombre.length > 8 ? nombre.substring(0, 7) + '.' : nombre);
     };
 
-    const timer = setTimeout(() => {
-      if (!chartAsignaturasRef.current) return;
+    const ctx = chartAsignaturasRef.current.getContext('2d');
+    if (!ctx) return;
 
-      const ctx = chartAsignaturasRef.current.getContext('2d');
-      if (!ctx) return;
+    const labels = asignaturas.map(a => abreviarAsignatura(a, isMobile));
+    const data = asignaturas.map(asig => promediosPorAsignatura[asig] || 0);
 
-      // Labels según dispositivo
-      const labels = asignaturas.map(a => abreviarAsignatura(a, isMobile));
-      const data = asignaturas.map(asig => promediosPorAsignatura[asig] || 0);
+    const createGradient = (ctx, nota) => {
+      const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+      if (nota >= 6.0) { gradient.addColorStop(0, '#34d399'); gradient.addColorStop(1, '#059669'); }
+      else if (nota >= 5.0) { gradient.addColorStop(0, '#60a5fa'); gradient.addColorStop(1, '#2563eb'); }
+      else if (nota >= 4.0) { gradient.addColorStop(0, '#fbbf24'); gradient.addColorStop(1, '#d97706'); }
+      else { gradient.addColorStop(0, '#f87171'); gradient.addColorStop(1, '#dc2626'); }
+      return gradient;
+    };
 
-      // Crear gradientes para cada barra
-      const createGradient = (ctx, nota) => {
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        if (nota >= 6.0) {
-          gradient.addColorStop(0, '#34d399');
-          gradient.addColorStop(1, '#059669');
-        } else if (nota >= 5.0) {
-          gradient.addColorStop(0, '#60a5fa');
-          gradient.addColorStop(1, '#2563eb');
-        } else if (nota >= 4.0) {
-          gradient.addColorStop(0, '#fbbf24');
-          gradient.addColorStop(1, '#d97706');
-        } else {
-          gradient.addColorStop(0, '#f87171');
-          gradient.addColorStop(1, '#dc2626');
-        }
-        return gradient;
-      };
+    const backgroundColors = data.map(nota => createGradient(ctx, nota));
 
-      const backgroundColors = data.map(nota => createGradient(ctx, nota));
-
-      // Plugin para mostrar notas encima de las barras
-      const notasEncimaPlugin = {
-        id: 'notasEncima',
-        afterDatasetsDraw: (chart) => {
-          const ctx = chart.ctx;
-          const meta = chart.getDatasetMeta(0);
-
-          let fontSize = isMobile ? 9 : (isTablet ? 10 : 12);
-
-          ctx.save();
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-
-          meta.data.forEach((bar, index) => {
-            const nota = data[index];
-            if (nota && nota > 0) {
-              const x = bar.x;
-              const y = bar.y - 8;
-
-              // Fondo redondeado para la nota
-              const text = nota.toFixed(1);
-              ctx.font = `bold ${fontSize}px 'Segoe UI', system-ui, sans-serif`;
-              const textWidth = ctx.measureText(text).width;
-
-              // Pill background
-              const pillPadding = isMobile ? 4 : 6;
-              const pillHeight = fontSize + 6;
-              const pillWidth = textWidth + (pillPadding * 2);
-              const pillX = x - pillWidth / 2;
-              const pillY = y - pillHeight + 2;
-
-              // Color del pill según nota
-              let pillColor = nota >= 6.0 ? '#059669' : (nota >= 5.0 ? '#2563eb' : (nota >= 4.0 ? '#d97706' : '#dc2626'));
-
-              ctx.fillStyle = pillColor;
-              ctx.beginPath();
-              ctx.roundRect(pillX, pillY, pillWidth, pillHeight, 4);
-              ctx.fill();
-
-              // Texto blanco
-              ctx.fillStyle = '#ffffff';
-              ctx.fillText(text, x, y);
-            }
-          });
-
-          ctx.restore();
-        }
-      };
-
-      chartAsignaturasInstance.current = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Promedio',
-            data: data,
-            backgroundColor: backgroundColors,
-            borderRadius: {
-              topLeft: 8,
-              topRight: 8,
-              bottomLeft: 0,
-              bottomRight: 0
-            },
-            borderSkipped: false,
-            barPercentage: isMobile ? 0.7 : 0.65,
-            categoryPercentage: isMobile ? 0.85 : 0.8
-          }]
+    chartAsignaturasInstance.current = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Promedio',
+          data: data,
+          backgroundColor: backgroundColors,
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: 0.7,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true }
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: {
-            duration: 800,
-            easing: 'easeOutQuart'
-          },
-          layout: {
-            padding: {
-              top: 30
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              enabled: true,
-              backgroundColor: 'rgba(15, 23, 42, 0.95)',
-              titleFont: {
-                size: 13,
-                weight: '600',
-                family: "'Segoe UI', system-ui, sans-serif"
-              },
-              bodyFont: {
-                size: 12,
-                family: "'Segoe UI', system-ui, sans-serif"
-              },
-              padding: 12,
-              cornerRadius: 8,
-              displayColors: false,
-              callbacks: {
-                title: (tooltipItems) => {
-                  const index = tooltipItems[0].dataIndex;
-                  return asignaturas[index];
-                },
-                label: (context) => {
-                  const nota = context.parsed.y;
-                  let estado = nota >= 6.0 ? 'Excelente' : (nota >= 5.0 ? 'Bueno' : (nota >= 4.0 ? 'Suficiente' : 'Insuficiente'));
-                  return [`Promedio: ${nota.toFixed(1)}`, `Estado: ${estado}`];
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              min: 1,
-              max: 7.5,
-              ticks: {
-                stepSize: 1,
-                font: {
-                  size: isMobile ? 10 : 11,
-                  family: "'Segoe UI', system-ui, sans-serif"
-                },
-                color: '#64748b',
-                callback: (value) => value <= 7 ? value : ''
-              },
-              grid: {
-                color: 'rgba(148, 163, 184, 0.1)',
-                drawBorder: false
-              },
-              border: {
-                display: false
-              }
-            },
-            x: {
-              ticks: {
-                font: {
-                  size: isMobile ? 9 : (isTablet ? 10 : 11),
-                  weight: '500',
-                  family: "'Segoe UI', system-ui, sans-serif"
-                },
-                color: '#475569',
-                maxRotation: isMobile ? 45 : 0,
-                minRotation: isMobile ? 45 : 0
-              },
-              grid: {
-                display: false
-              },
-              border: {
-                display: false
-              }
-            }
-          }
-        },
-        plugins: [notasEncimaPlugin]
-      });
-
-      chartAsignaturasInstance.current.resize();
-    }, 150);
+        scales: {
+          y: { min: 1, max: 7, ticks: { stepSize: 1 } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
 
     return () => {
-      clearTimeout(timer);
       if (chartAsignaturasInstance.current) {
         chartAsignaturasInstance.current.destroy();
-        chartAsignaturasInstance.current = null;
       }
     };
   }, [datosProgreso, isMobile, isTablet]);
@@ -891,6 +717,8 @@ function ProgresoTab({ pupilo }) {
 
         .chart-container-modern canvas {
           display: block;
+          width: 100%;
+          height: 100%;
           max-width: 100%;
         }
 

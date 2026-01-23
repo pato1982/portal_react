@@ -975,8 +975,24 @@ app.get('/api/apoderado/pupilo/:alumnoId/progreso', async (req, res) => {
     try {
         const anioActual = new Date().getFullYear();
 
-        // 1. Obtener todas las notas del alumno (excluyendo pendientes)
-        const [notas] = await pool.query(`
+        // 0. Obtener el establecimiento_id y curso_id actual del alumno
+        const [alumnoInfo] = await pool.query(`
+            SELECT establecimiento_id, curso_id 
+            FROM tb_matriculas 
+            WHERE alumno_id = ? AND anio_academico = ? AND activo = 1
+            LIMIT 1
+        `, [alumnoId, anioActual]);
+
+        if (alumnoInfo.length === 0) {
+            // Si no tiene matricula activa, buscamos las ultimas notas sin filtro de curso
+            // pero mantenemos el anio para evitar errores.
+        }
+
+        const estId = alumnoInfo[0]?.establecimiento_id;
+        const cursoId = alumnoInfo[0]?.curso_id;
+
+        // 1. Obtener todas las notas del alumno (filtrando por contexto actual)
+        let queryNotas = `
             SELECT
                 n.nota,
                 n.trimestre,
@@ -989,8 +1005,22 @@ app.get('/api/apoderado/pupilo/:alumnoId/progreso', async (req, res) => {
             AND n.anio_academico = ?
             AND n.es_pendiente = 0
             AND n.nota IS NOT NULL
-            ORDER BY n.fecha_evaluacion ASC
-        `, [alumnoId, anioActual]);
+        `;
+
+        const queryParams = [alumnoId, anioActual];
+
+        if (estId) {
+            queryNotas += ` AND n.establecimiento_id = ?`;
+            queryParams.push(estId);
+        }
+        if (cursoId) {
+            queryNotas += ` AND n.curso_id = ?`;
+            queryParams.push(cursoId);
+        }
+
+        queryNotas += ` ORDER BY n.fecha_evaluacion ASC`;
+
+        const [notas] = await pool.query(queryNotas, queryParams);
 
         // 2. Calcular estadisticas de notas
         let estadisticas = {

@@ -208,14 +208,30 @@ function ProgresoTab({ pupilo }) {
   return (
     <div className="tab-panel active" style={{ padding: '20px' }}>
       <style>{`
-        .progreso-grid { display: grid; grid-template-columns: 1fr 280px 1fr; gap: 20px; min-height: 450px; }
-        @media (max-width: 1024px) { .progreso-grid { grid-template-columns: 1fr; } }
-        .kpi-col { display: flex; flex-direction: column; gap: 15px; justify-content: center; }
-        .kpi-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; }
-        .kpi-val { font-size: 24px; font-weight: bold; }
+        .progreso-grid { display: grid; grid-template-columns: 1fr 340px 1fr; gap: 20px; min-height: 450px; }
+        @media (max-width: 1200px) { .progreso-grid { grid-template-columns: 1fr 1fr; } .kpi-col { grid-column: 1 / -1; order: -1; } }
+        @media (max-width: 768px) { .progreso-grid { grid-template-columns: 1fr; } }
+        
+        .kpi-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: center; }
+        .kpi-card { 
+          background: white; 
+          padding: 12px; 
+          border-radius: 12px; 
+          border: 1px solid #e2e8f0; 
+          display: flex; 
+          flex-direction: column;
+          align-items: center; 
+          justify-content: center;
+          text-align: center;
+          gap: 4px; 
+          box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .kpi-val { font-size: 20px; font-weight: bold; line-height: 1; }
+        .kpi-label { font-size: 11px; color: #64748b; font-weight: 500; }
+        
         .chart-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; }
         .chart-header { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
-        .chart-body { flex: 1; min-height: 300px; padding: 20px; position: relative; }
+        .chart-body { flex: 1; min-height: 320px; padding: 20px; position: relative; }
         .nota-excelente { color: #059669; } .nota-buena { color: #2563eb; } .nota-suficiente { color: #d97706; } .nota-insuficiente { color: #dc2626; }
       `}</style>
 
@@ -223,11 +239,11 @@ function ProgresoTab({ pupilo }) {
         {/* Gráfico Mensual */}
         <div className="chart-card">
           <div className="chart-header">
-            <h3 style={{ margin: 0, fontSize: '1rem' }}>Rendimiento Mensual</h3>
+            <h3 style={{ margin: 0, fontSize: '0.9rem' }}>Rendimiento Mensual</h3>
             <select
               value={asignaturaSeleccionada}
               onChange={e => setAsignaturaSeleccionada(e.target.value)}
-              style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+              style={{ padding: '2px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px' }}
             >
               <option value="todas">Todas</option>
               {datosProgreso.asignaturas.map(a => <option key={a} value={a}>{a}</option>)}
@@ -238,30 +254,38 @@ function ProgresoTab({ pupilo }) {
           </div>
         </div>
 
-        {/* KPIs Centrales */}
+        {/* KPIs Centrales - 6 Indicadores en 2 columnas */}
         <div className="kpi-col">
           <div className="kpi-card">
             <div className={`kpi-val ${getNotaClass(estadisticasFiltradas.promedio)}`}>{parseFloat(estadisticasFiltradas.promedio).toFixed(1)}</div>
-            <div style={{ color: '#64748b' }}>Promedio General</div>
+            <div className="kpi-label">Promedio Gral.</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-val" style={{ color: '#10b981' }}>{estadisticasFiltradas.porcentajeAprobacion.toFixed(0)}%</div>
-            <div style={{ color: '#64748b' }}>Aprobación</div>
+            <div className="kpi-label">Aprobación</div>
           </div>
           <div className="kpi-card">
             <div className={`kpi-val ${getNotaClass(estadisticasFiltradas.notaMaxima)}`}>{estadisticasFiltradas.notaMaxima.toFixed(1)}</div>
-            <div style={{ color: '#64748b' }}>Mejor Promedio</div>
+            <div className="kpi-label">Promedio Máx.</div>
+          </div>
+          <div className="kpi-card">
+            <div className={`kpi-val ${getNotaClass(estadisticasFiltradas.notaMinima)}`}>{estadisticasFiltradas.notaMinima.toFixed(1)}</div>
+            <div className="kpi-label">Promedio Mín.</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-val" style={{ color: '#3b82f6' }}>{datosProgreso.asistencia.porcentaje.toFixed(0)}%</div>
-            <div style={{ color: '#64748b' }}>Asistencia</div>
+            <div className="kpi-label">Asistencia</div>
+          </div>
+          <div className="kpi-card">
+            <div className="kpi-val" style={{ color: '#6366f1' }}>{estadisticasFiltradas.totalNotas}</div>
+            <div className="kpi-label">Total Notas</div>
           </div>
         </div>
 
         {/* Gráfico de Barras */}
         <div className="chart-card">
           <div className="chart-header">
-            <h3 style={{ margin: 0, fontSize: '1rem' }}>Rendimiento por Asignatura</h3>
+            <h3 style={{ margin: 0, fontSize: '0.9rem' }}>Rendimiento por Asignatura</h3>
           </div>
           <div className="chart-body">
             {barChartData && <Bar data={barChartData} options={chartOptions} />}

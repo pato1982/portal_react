@@ -7,7 +7,7 @@
 
 const config = {
   // Modo de la aplicación: 'demo' | 'production'
-  appMode: import.meta.env.VITE_APP_MODE || 'demo',
+  appMode: 'production',
 
   // URL base de la API (para modo producción)
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://170.239.87.97:3001/api',

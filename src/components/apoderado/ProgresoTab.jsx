@@ -208,14 +208,14 @@ function ProgresoTab({ pupilo }) {
   return (
     <div className="tab-panel active" style={{ padding: '20px' }}>
       <style>{`
-        .progreso-grid { display: grid; grid-template-columns: 1fr 340px 1fr; gap: 20px; min-height: 450px; }
+        .progreso-grid { display: grid; grid-template-columns: 1fr 340px 1fr; gap: 20px; min-height: 300px; align-items: stretch; }
         @media (max-width: 1200px) { .progreso-grid { grid-template-columns: 1fr 1fr; } .kpi-col { grid-column: 1 / -1; order: -1; } }
         @media (max-width: 768px) { .progreso-grid { grid-template-columns: 1fr; } }
         
-        .kpi-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: center; }
+        .kpi-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: center; height: 100%; }
         .kpi-card { 
           background: white; 
-          padding: 12px; 
+          padding: 12px 8px; 
           border-radius: 12px; 
           border: 1px solid #e2e8f0; 
           display: flex; 
@@ -230,8 +230,8 @@ function ProgresoTab({ pupilo }) {
         .kpi-label { font-size: 11px; color: #64748b; font-weight: 500; }
         
         .chart-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; }
-        .chart-header { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
-        .chart-body { flex: 1; min-height: 320px; padding: 20px; position: relative; }
+        .chart-header { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .chart-body { flex: 1; min-height: 220px; padding: 15px; position: relative; }
         .nota-excelente { color: #059669; } .nota-buena { color: #2563eb; } .nota-suficiente { color: #d97706; } .nota-insuficiente { color: #dc2626; }
       `}</style>
 

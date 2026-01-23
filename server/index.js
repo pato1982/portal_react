@@ -977,7 +977,7 @@ app.get('/api/apoderado/pupilo/:alumnoId/progreso', async (req, res) => {
 
         // 0. Obtener el establecimiento_id y curso_id actual del alumno
         const [alumnoInfo] = await pool.query(`
-            SELECT establecimiento_id, curso_id 
+            SELECT establecimiento_id, curso_asignado_id as curso_id 
             FROM tb_matriculas 
             WHERE alumno_id = ? AND anio_academico = ? AND activo = 1
             LIMIT 1

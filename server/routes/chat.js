@@ -953,11 +953,13 @@ router.post('/mensaje-masivo', async (req, res) => {
             }
 
             // 2. Insertar mensaje
-            await pool.query(`
+            const [msgResult] = await pool.query(`
                 INSERT INTO tb_chat_mensajes
                 (conversacion_id, remitente_id, mensaje, tipo_mensaje)
                 VALUES (?, ?, ?, 'texto')
             `, [conversacionId, remitente_id, mensaje]);
+
+            const mensajeId = msgResult.insertId;
 
             // 3. Actualizar contadores
             await pool.query(`
@@ -965,6 +967,35 @@ router.post('/mensaje-masivo', async (req, res) => {
                 SET mensajes_count = mensajes_count + 1, ultimo_mensaje_fecha = NOW()
                 WHERE id = ?
             `, [conversacionId]);
+
+            // --- SOCKET.IO EMIT ---
+            if (req.io) {
+                try {
+                    // Notificar al DESTINATARIO
+                    req.io.to(`user_${destId}`).emit('nuevo_mensaje', {
+                        id: mensajeId,
+                        conversacion_id: conversacionId,
+                        remitente_id: remitente_id,
+                        mensaje: mensaje,
+                        tipo_mensaje: 'texto',
+                        fecha_envio: new Date().toISOString(),
+                        direccion: 'recibido'
+                    });
+
+                    // Notificar al REMITENTE (opcional para sync)
+                    req.io.to(`user_${remitente_id}`).emit('nuevo_mensaje', {
+                        id: mensajeId,
+                        conversacion_id: conversacionId,
+                        remitente_id: remitente_id,
+                        mensaje: mensaje,
+                        tipo_mensaje: 'texto',
+                        fecha_envio: new Date().toISOString(),
+                        direccion: 'enviado'
+                    });
+                } catch (e) {
+                    console.error("Error emitiendo socket en mensaje masivo:", e);
+                }
+            }
 
             enviados++;
         }

@@ -12,6 +12,7 @@ import {
   habilitarRespuesta,
   enviarMensajeMasivo
 } from '../services/chatService';
+import socketService from '../services/socketService';
 
 
 function ChatFlotante({ usuario, establecimientoId }) {
@@ -171,19 +172,53 @@ function ChatFlotante({ usuario, establecimientoId }) {
     }
   }, [chatAbierto, puedeUsarChat, activeTab, cargarContactos, cargarCursos, actualizarNoLeidos]);
 
-  // Efecto para polling cada 5 segundos
+  // ==================== SOCKET.IO ====================
   useEffect(() => {
-    if (chatAbierto && puedeUsarChat && activeTab === 'chat' & conversacionActual !== null) {
-      // Solo hacer polling si estamos en una conversacion o en la lista de chats activos (si existiera lista de chats)
-      // Como el diseño actual es "contactos" o "conversacion", el polling de mensajes nuevos en la conversacion activa es critico.
-      pollingRef.current = setInterval(verificarNuevosMensajes, 5000);
+    if (usuario?.id) {
+      const socket = socketService.connect(usuario.id);
+
+      const handleNuevoMensaje = (msg) => {
+        // 1. Si el mensaje es para la conversación actual abierta
+        if (chatAbierto && conversacionActual && String(msg.conversacion_id) === String(conversacionActual)) {
+          setMensajes(prev => {
+            // Evitar duplicados
+            if (prev.some(m => String(m.id) === String(msg.id))) return prev;
+            return [...prev, msg];
+          });
+
+          // Si lo recibimos nosotros, marcarlo leído
+          if (msg.direccion === 'recibido') {
+            marcarConversacionLeida(conversacionActual, usuario.id);
+          }
+        } else {
+          // 2. Es de otra conversación o el chat está cerrado
+          if (msg.direccion === 'recibido') {
+            setTotalNoLeidos(prev => prev + 1);
+            // Actualizar contactos para reflejar nuevos mensajes
+            cargarContactos();
+          }
+        }
+      };
+
+      socket.on('nuevo_mensaje', handleNuevoMensaje);
+
+      return () => {
+        socket.off('nuevo_mensaje', handleNuevoMensaje);
+      };
+    }
+  }, [usuario?.id, conversacionActual, chatAbierto, cargarContactos]);
+
+  // Efecto para polling de respaldo (cada 30s)
+  useEffect(() => {
+    if (chatAbierto && puedeUsarChat) {
+      pollingRef.current = setInterval(actualizarNoLeidos, 30000);
     }
     return () => {
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
       }
     };
-  }, [chatAbierto, puedeUsarChat, verificarNuevosMensajes, activeTab, conversacionActual]);
+  }, [chatAbierto, puedeUsarChat, actualizarNoLeidos]);
 
   // Efecto para actualizar no leidos periodicamente (cuando el chat esta cerrado)
   useEffect(() => {

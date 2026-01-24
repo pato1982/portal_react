@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import config from '../../config/env';
+import socketService from '../../services/socketService';
+import chatService from '../../services/chatService';
 
 function ChatApoderado({ usuario, pupiloSeleccionado }) {
   // Estados principales
@@ -12,7 +14,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
   // Estados de chat activo
   const [contactoActual, setContactoActual] = useState(null);
-  const [conversacionActiva, setConversacionActiva] = useState(null); // ID y datos de la conversacion
+  const [conversacionActiva, setConversacionActiva] = useState(null); // ID de la conversacion
   const [mensajes, setMensajes] = useState([]);
   const [mensajeInput, setMensajeInput] = useState('');
   const [respuestaHabilitada, setRespuestaHabilitada] = useState(true);
@@ -30,17 +32,9 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   const inputRef = useRef(null);
   const pollingRef = useRef(null);
 
-  // ==================== API CALLS ====================
+  // ==================== CARGA DE DATOS ====================
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('auth_token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
-  const cargarContactos = async () => {
+  const cargarContactos = useCallback(async () => {
     if (!usuario?.id) return;
 
     try {
@@ -52,28 +46,17 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
         return;
       }
 
-      let url = `${config.apiBaseUrl}/chat/contactos?usuario_id=${usuario.id}&establecimiento_id=${establecimientoId}`;
-      // Si hay un pupilo seleccionado, enviamos su ID para que el backend filtre asignaturas
-      if (pupiloSeleccionado?.id) {
-        url += `&alumno_id=${pupiloSeleccionado.id}`;
-      }
+      const res = await chatService.obtenerContactos(usuario.id, establecimientoId);
 
-      const response = await fetch(url, {
-        headers: getAuthHeaders()
-      });
-
-      if (!response.ok) throw new Error('Error al cargar contactos');
-
-      const data = await response.json();
-      if (data.success) {
-        setContactos(data.data);
-        const noLeidos = data.data.reduce((acc, c) => acc + (c.mensajes_no_leidos || 0), 0);
+      if (res.success) {
+        setContactos(res.data);
+        const noLeidos = res.data.reduce((acc, c) => acc + (c.mensajes_no_leidos || 0), 0);
         setTotalNoLeidos(noLeidos);
       }
     } catch (error) {
       console.error('Error cargando contactos:', error);
     }
-  };
+  }, [usuario?.id, pupiloSeleccionado?.establecimiento_id, usuario?.establecimiento_id]);
 
   const iniciarConversacion = async (contacto) => {
     if (!usuario?.id || !contacto?.usuario_id) return;
@@ -82,32 +65,32 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
       setCargandoMensajes(true);
 
       // 1. Obtener o crear conversacion
-      const response = await fetch(`${config.apiBaseUrl}/chat/conversacion`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          usuario_id: usuario.id,
-          otro_usuario_id: contacto.usuario_id,
-          establecimiento_id: usuario.establecimiento_id,
-          asunto: `Chat con ${usuario.nombres}`,
-          contexto_tipo: 'general'
-        })
-      });
+      const establecimientoId = pupiloSeleccionado?.establecimiento_id || usuario.establecimiento_id;
+      const res = await chatService.crearConversacion(
+        usuario.id,
+        contacto.usuario_id,
+        establecimientoId,
+        `Chat con ${usuario.nombres}`
+      );
 
-      if (!response.ok) throw new Error('Error al iniciar conversacion');
-
-      const data = await response.json();
-      if (data.success && data.data.id) {
-        const conversacionId = data.data.id;
-        setConversacionActiva({ id: conversacionId }); // Guardamos ID basico temporalmente
+      if (res.success && res.data.id) {
+        const conversacionId = res.data.id;
+        setConversacionActiva(conversacionId);
 
         // 2. Cargar mensajes
         await cargarMensajes(conversacionId);
+
+        // 3. Verificar estado de respuesta
+        if (res.data.respuesta_habilitada !== undefined) {
+          setRespuestaHabilitada(res.data.respuesta_habilitada === 1);
+        } else {
+          // Si no viene en crearConversacion, lo buscamos en el detalle
+          verificarEstadoBloqueo(conversacionId);
+        }
       }
 
     } catch (error) {
       console.error('Error iniciando conversacion:', error);
-      alert('No se pudo abrir el chat. Intente nuevamente.');
     } finally {
       setCargandoMensajes(false);
     }
@@ -115,16 +98,11 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
   const cargarMensajes = async (conversacionId) => {
     try {
-      const response = await fetch(`${config.apiBaseUrl}/chat/conversacion/${conversacionId}/mensajes?usuario_id=${usuario.id}&limite=50`, {
-        headers: getAuthHeaders()
-      });
-
-      if (!response.ok) throw new Error('Error cargando mensajes');
-
-      const data = await response.json();
-      if (data.success) {
-        setMensajes(data.data);
-        verificarEstadoBloqueo(conversacionId);
+      const res = await chatService.obtenerMensajes(conversacionId, usuario.id);
+      if (res.success) {
+        setMensajes(res.data);
+        await chatService.marcarConversacionLeida(conversacionId, usuario.id);
+        actualizarBadgesLocales(conversacionId);
       }
     } catch (error) {
       console.error('Error cargando mensajes:', error);
@@ -133,20 +111,72 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
   const verificarEstadoBloqueo = async (conversacionId) => {
     try {
-      const response = await fetch(`${config.apiBaseUrl}/chat/conversaciones?usuario_id=${usuario.id}&establecimiento_id=${usuario.establecimiento_id}`, {
-        headers: getAuthHeaders()
-      });
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          const conv = data.data.find(c => c.id === conversacionId);
-          if (conv) {
-            setRespuestaHabilitada(conv.respuesta_habilitada === 1);
-          }
+      const establecimientoId = pupiloSeleccionado?.establecimiento_id || usuario.establecimiento_id;
+      const res = await chatService.obtenerConversaciones(usuario.id, establecimientoId);
+      if (res.success) {
+        const conv = res.data.find(c => c.id === conversacionId);
+        if (conv) {
+          setRespuestaHabilitada(conv.respuesta_habilitada === 1);
         }
       }
     } catch (e) { console.error(e); }
   };
+
+  const actualizarBadgesLocales = (conversacionId) => {
+    setContactos(prev => prev.map(c => {
+      // Nota: en ChatApoderado, el contacto tiene usuario_id
+      // Necesitamos asociar el usuario_id con la conversacion.
+      // Por simplicidad, si estamos cargando los mensajes de esta conv, 
+      // y ese contacto es el activo, ponemos su badge en 0.
+      if (contactoActual && c.usuario_id === contactoActual.usuario_id) {
+        return { ...c, mensajes_no_leidos: 0 };
+      }
+      return c;
+    }));
+    // Recalcular total no leidos basándonos en la lista actualizada
+    setTotalNoLeidos(prev => {
+      const count = contactos.reduce((acc, c) => acc + (c.usuario_id === contactoActual?.usuario_id ? 0 : (c.mensajes_no_leidos || 0)), 0);
+      return count;
+    });
+  };
+
+  // ==================== SOCKET.IO ====================
+  useEffect(() => {
+    if (usuario?.id) {
+      const socket = socketService.connect(usuario.id);
+
+      const handleNuevoMensaje = (msg) => {
+        // 1. Si el mensaje es para la conversación actual abierta
+        if (chatAbierto && conversacionActiva && String(msg.conversacion_id) === String(conversacionActiva)) {
+          setMensajes(prev => {
+            if (prev.some(m => String(m.id) === String(msg.id))) return prev;
+            return [...prev, msg];
+          });
+
+          // Si lo recibimos nosotros, marcarlo leído
+          if (msg.direccion === 'recibido') {
+            chatService.marcarConversacionLeida(conversacionActiva, usuario.id);
+          }
+        } else {
+          // 2. Es de otra conversación o el chat está cerrado
+          if (msg.direccion === 'recibido') {
+            setTotalNoLeidos(prev => prev + 1);
+
+            // Recargar la lista de contactos para asegurar que aparezcan badges y el contacto sea visible
+            cargarContactos();
+
+            // Si el chat está abierto, notificamos visualmente (opcional, ya se hace al recargar la lista)
+          }
+        }
+      };
+
+      socket.on('nuevo_mensaje', handleNuevoMensaje);
+
+      return () => {
+        socket.off('nuevo_mensaje', handleNuevoMensaje);
+      };
+    }
+  }, [usuario?.id, conversacionActiva, chatAbierto, contactoActual]);
 
   // ==================== EFFECTS ====================
 
@@ -154,22 +184,16 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   useEffect(() => {
     if (chatAbierto) {
       cargarContactos();
-      // Polling para actualizar lista de contactos (no leidos)
-      const interval = setInterval(cargarContactos, 10000); // Cada 10s
-      return () => clearInterval(interval);
     }
-  }, [chatAbierto, usuario, pupiloSeleccionado]); // <--- Dependencia CRUCIAL
+  }, [chatAbierto, usuario, pupiloSeleccionado, cargarContactos]);
 
-  // Polling de mensajes activos
+  // Polling de respaldo (cada 30s) para asegurar sincronía de lista
   useEffect(() => {
-    if (chatAbierto && conversacionActiva?.id) {
-      const interval = setInterval(() => {
-        cargarMensajes(conversacionActiva.id);
-      }, 3000); // Cada 3s actualiza chat activo
-      pollingRef.current = interval;
+    if (chatAbierto) {
+      const interval = setInterval(cargarContactos, 30000);
       return () => clearInterval(interval);
     }
-  }, [chatAbierto, conversacionActiva]);
+  }, [chatAbierto, cargarContactos]);
 
   // Scroll al final
   useEffect(() => {
@@ -206,13 +230,13 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
     await iniciarConversacion(contacto);
 
-    // Marcar leidos visualmente
+    // Marcar leidos visualmente de inmediato
     setContactos(prev => prev.map(c =>
       c.usuario_id === contacto.usuario_id
         ? { ...c, mensajes_no_leidos: 0 }
         : c
     ));
-    setTotalNoLeidos(prev => Math.max(0, prev - (contacto.mensajes_no_leidos || 0)));
+    // El total se actualizará con el socket o el polling de respaldo
   };
 
   const handleEnviarMensaje = async () => {
@@ -238,31 +262,20 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     setMensajes(prev => [...prev, nuevoMensaje]);
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/chat/mensaje`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          conversacion_id: conversacionActiva.id,
-          remitente_id: usuario.id,
-          mensaje: textoMensaje,
-          tipo_mensaje: 'texto'
-        })
-      });
+      const res = await chatService.enviarMensaje(conversacionActiva, usuario.id, textoMensaje);
 
-      if (!response.ok) {
-        if (response.status === 403) {
+      if (!res.success) {
+        if (res.error?.includes('permiso') || res.error?.includes('bloqueado')) {
           setRespuestaHabilitada(false);
-          throw new Error('El docente ha bloqueado las respuestas.');
         }
-        throw new Error('Error enviando mensaje');
+        throw new Error(res.error || 'Error enviando mensaje');
       }
 
-      const data = await response.json();
-      if (data.success) {
-        setMensajes(prev => prev.map(m =>
-          m.id === tempId ? { ...data.data, direccion: 'enviado' } : m
-        ));
-      }
+      // El mensaje se actualizará vía Socket.io si todo va bien, 
+      // pero actualizamos localmente por si acaso o para quitar el 'enviando'
+      setMensajes(prev => prev.map(m =>
+        m.id === tempId ? { ...res.data, direccion: 'enviado' } : m
+      ));
 
     } catch (error) {
       console.error(error);
@@ -280,7 +293,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     setConversacionActiva(null);
     setMensajes([]);
     setMostrarListaMobile(true);
-    if (pollingRef.current) clearInterval(pollingRef.current);
   };
 
   // ==================== HELPERS ====================
@@ -296,6 +308,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     const date = new Date(fecha);
     const hoy = new Date();
     const ayer = new Date(hoy);
+    ayer.setDate(ayer.getDate() - 1);
 
     if (date.toDateString() === hoy.toDateString()) {
       return 'Hoy';
@@ -317,13 +330,11 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
   const getContactosFiltrados = () => {
     let lista = contactos;
-    // Si queremos filtrar por tipo cuando existan más tipos, aquí es donde.
-    // Actualmente el backend ya devuelve lo correcto para apoderado.
-
     if (busqueda) {
+      const b = busqueda.toLowerCase();
       lista = lista.filter(c =>
-        c.nombre_completo.toLowerCase().includes(busqueda.toLowerCase()) ||
-        (c.especialidad && c.especialidad.toLowerCase().includes(busqueda.toLowerCase()))
+        (c.nombre_completo || '').toLowerCase().includes(b) ||
+        (c.asignaturas || '').toLowerCase().includes(b)
       );
     }
     return lista;
@@ -356,7 +367,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
             <span className="chatv2-header-title">
-              Mensanería {pupiloSeleccionado ? `- ${pupiloSeleccionado.nombres}` : ''}
+              Mensajería {pupiloSeleccionado ? `- ${pupiloSeleccionado.nombres}` : ''}
             </span>
             {totalNoLeidos > 0 && (
               <span className="chatv2-header-badge">{totalNoLeidos}</span>
@@ -443,7 +454,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                           {contacto.es_admin === 1 && <span className="chatv2-tag admin">Admin</span>}
                         </span>
                       </div>
-                      {/* Aquí mostramos las asignaturas en lugar de la especialidad genérica */}
                       <div className="chatv2-list-item-preview">
                         <span className="chatv2-list-item-role" style={{ fontSize: '11px', color: '#64748b' }}>
                           {contacto.tipo === 'administrador' ? 'Administración' : (contacto.asignaturas || 'Docente General')}
@@ -503,7 +513,7 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                     </div>
                   ) : mensajes.length === 0 ? (
                     <div className="chatv2-empty-chat">
-                      <p>Inicia la conversación con {contactoActual.nombre_completo} para tu pupilo {pupiloSeleccionado.nombres}.</p>
+                      <p>Inicia la conversación con {contactoActual.nombre_completo} para tu pupilo {pupiloSeleccionado?.nombres}.</p>
                     </div>
                   ) : (
                     mensajes.map((msg, index) => {

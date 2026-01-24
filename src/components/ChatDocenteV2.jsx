@@ -284,10 +284,18 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
         }
       };
 
+      const handleEstadoActualizado = (data) => {
+        if (conversacionActual && String(data.conversacion_id) === String(conversacionActual)) {
+          setRespuestaHabilitada(!!data.habilitado);
+        }
+      };
+
       socket.on('nuevo_mensaje', handleNuevoMensaje);
+      socket.on('chat_estado_actualizado', handleEstadoActualizado);
 
       return () => {
         socket.off('nuevo_mensaje', handleNuevoMensaje);
+        socket.off('chat_estado_actualizado', handleEstadoActualizado);
       };
     }
   }, [usuario?.id, conversacionActual, chatAbierto]);

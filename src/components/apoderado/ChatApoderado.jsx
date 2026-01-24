@@ -170,10 +170,18 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
         }
       };
 
+      const handleEstadoActualizado = (data) => {
+        if (conversacionActiva && String(data.conversacion_id) === String(conversacionActiva)) {
+          setRespuestaHabilitada(!!data.habilitado);
+        }
+      };
+
       socket.on('nuevo_mensaje', handleNuevoMensaje);
+      socket.on('chat_estado_actualizado', handleEstadoActualizado);
 
       return () => {
         socket.off('nuevo_mensaje', handleNuevoMensaje);
+        socket.off('chat_estado_actualizado', handleEstadoActualizado);
       };
     }
   }, [usuario?.id, conversacionActiva, chatAbierto, contactoActual]);

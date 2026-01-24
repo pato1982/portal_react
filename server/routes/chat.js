@@ -901,6 +901,23 @@ router.put('/conversacion/:id/habilitar-respuesta', async (req, res) => {
 
     try {
         await pool.query('UPDATE tb_chat_conversaciones SET respuesta_habilitada = ? WHERE id = ?', [habilitado ? 1 : 0, id]);
+
+        // --- SOCKET.IO EMIT ---
+        // Notificar a los participantes de la conversación
+        if (req.io) {
+            const [conv] = await pool.query('SELECT usuario1_id, usuario2_id FROM tb_chat_conversaciones WHERE id = ?', [id]);
+            if (conv.length > 0) {
+                const { usuario1_id, usuario2_id } = conv[0];
+                const payload = {
+                    conversacion_id: parseInt(id),
+                    habilitado: !!habilitado
+                };
+
+                req.io.to(`user_${usuario1_id}`).emit('chat_estado_actualizado', payload);
+                req.io.to(`user_${usuario2_id}`).emit('chat_estado_actualizado', payload);
+            }
+        }
+
         res.json({ success: true, message: 'Permiso de respuesta actualizado' });
     } catch (error) {
         console.error('Error al actualizar permiso:', error);

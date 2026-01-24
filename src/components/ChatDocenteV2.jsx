@@ -62,15 +62,27 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
 
   // ==================== CARGA DE DATOS ====================
 
-  const cargarContactos = useCallback(async () => {
+  const actualizarNoLeidos = useCallback(async () => {
     if (!usuario?.id || !establecimientoId) return;
     try {
-      const resultado = await obtenerContactos(usuario.id, establecimientoId);
+      const resultado = await obtenerNoLeidos(usuario.id, establecimientoId);
       if (resultado.success) {
-        setContactos(resultado.data || []);
+        setTotalNoLeidos(resultado.data?.total_no_leidos || 0);
       }
     } catch (error) {
-      console.error('Error al cargar contactos:', error);
+      console.error('Error al obtener no leidos:', error);
+    }
+  }, [usuario?.id, establecimientoId]);
+
+  const cargarCursos = useCallback(async () => {
+    if (!usuario?.id || !establecimientoId) return;
+    try {
+      const resultado = await obtenerCursosDocente(usuario.id, establecimientoId);
+      if (resultado.success) {
+        setCursos(resultado.data || []);
+      }
+    } catch (error) {
+      console.error('Error al cargar cursos:', error);
     }
   }, [usuario?.id, establecimientoId]);
 
@@ -86,15 +98,15 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     }
   }, [usuario?.id, establecimientoId]);
 
-  const cargarCursos = useCallback(async () => {
+  const cargarContactos = useCallback(async () => {
     if (!usuario?.id || !establecimientoId) return;
     try {
-      const resultado = await obtenerCursosDocente(usuario.id, establecimientoId);
+      const resultado = await obtenerContactos(usuario.id, establecimientoId);
       if (resultado.success) {
-        setCursos(resultado.data || []);
+        setContactos(resultado.data || []);
       }
     } catch (error) {
-      console.error('Error al cargar cursos:', error);
+      console.error('Error al cargar contactos:', error);
     }
   }, [usuario?.id, establecimientoId]);
 
@@ -140,18 +152,6 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
       setCargando(false);
     }
   }, [usuario?.id, actualizarNoLeidos, cargarCursos]);
-
-  const actualizarNoLeidos = useCallback(async () => {
-    if (!usuario?.id || !establecimientoId) return;
-    try {
-      const resultado = await obtenerNoLeidos(usuario.id, establecimientoId);
-      if (resultado.success) {
-        setTotalNoLeidos(resultado.data?.total_no_leidos || 0);
-      }
-    } catch (error) {
-      console.error('Error al obtener no leidos:', error);
-    }
-  }, [usuario?.id, establecimientoId]);
 
   // ==================== POLLING ====================
 

@@ -34,6 +34,37 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
 
   // ==================== CARGA DE DATOS ====================
 
+  const actualizarBadgesLocales = useCallback((conversacionId) => {
+    setContactos(prev => prev.map(c => {
+      // Nota: en ChatApoderado, el contacto tiene usuario_id
+      // Necesitamos asociar el usuario_id con la conversacion.
+      // Por simplicidad, si estamos cargando los mensajes de esta conv, 
+      // y ese contacto es el activo, ponemos su badge en 0.
+      if (contactoActual && c.usuario_id === contactoActual.usuario_id) {
+        return { ...c, mensajes_no_leidos: 0 };
+      }
+      return c;
+    }));
+    // Recalcular total no leidos basándonos en la lista actualizada
+    setTotalNoLeidos(() => {
+      const count = contactos.reduce((acc, c) => acc + (c.usuario_id === contactoActual?.usuario_id ? 0 : (c.mensajes_no_leidos || 0)), 0);
+      return count;
+    });
+  }, [contactos, contactoActual]);
+
+  const verificarEstadoBloqueo = async (conversacionId) => {
+    try {
+      const establecimientoId = pupiloSeleccionado?.establecimiento_id || usuario.establecimiento_id;
+      const res = await chatService.obtenerConversaciones(usuario.id, establecimientoId);
+      if (res.success) {
+        const conv = res.data.find(c => c.id === conversacionId);
+        if (conv) {
+          setRespuestaHabilitada(conv.respuesta_habilitada === 1);
+        }
+      }
+    } catch (e) { console.error(e); }
+  };
+
   const cargarContactos = useCallback(async () => {
     if (!usuario?.id) return;
 
@@ -57,6 +88,19 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
       console.error('Error cargando contactos:', error);
     }
   }, [usuario?.id, pupiloSeleccionado?.establecimiento_id, usuario?.establecimiento_id]);
+
+  const cargarMensajes = async (conversacionId) => {
+    try {
+      const res = await chatService.obtenerMensajes(conversacionId, usuario.id);
+      if (res.success) {
+        setMensajes(res.data);
+        await chatService.marcarConversacionLeida(conversacionId, usuario.id);
+        actualizarBadgesLocales(conversacionId);
+      }
+    } catch (error) {
+      console.error('Error cargando mensajes:', error);
+    }
+  };
 
   const iniciarConversacion = async (contacto) => {
     if (!usuario?.id || !contacto?.usuario_id) return;
@@ -94,50 +138,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
     } finally {
       setCargandoMensajes(false);
     }
-  };
-
-  const cargarMensajes = async (conversacionId) => {
-    try {
-      const res = await chatService.obtenerMensajes(conversacionId, usuario.id);
-      if (res.success) {
-        setMensajes(res.data);
-        await chatService.marcarConversacionLeida(conversacionId, usuario.id);
-        actualizarBadgesLocales(conversacionId);
-      }
-    } catch (error) {
-      console.error('Error cargando mensajes:', error);
-    }
-  };
-
-  const verificarEstadoBloqueo = async (conversacionId) => {
-    try {
-      const establecimientoId = pupiloSeleccionado?.establecimiento_id || usuario.establecimiento_id;
-      const res = await chatService.obtenerConversaciones(usuario.id, establecimientoId);
-      if (res.success) {
-        const conv = res.data.find(c => c.id === conversacionId);
-        if (conv) {
-          setRespuestaHabilitada(conv.respuesta_habilitada === 1);
-        }
-      }
-    } catch (e) { console.error(e); }
-  };
-
-  const actualizarBadgesLocales = (conversacionId) => {
-    setContactos(prev => prev.map(c => {
-      // Nota: en ChatApoderado, el contacto tiene usuario_id
-      // Necesitamos asociar el usuario_id con la conversacion.
-      // Por simplicidad, si estamos cargando los mensajes de esta conv, 
-      // y ese contacto es el activo, ponemos su badge en 0.
-      if (contactoActual && c.usuario_id === contactoActual.usuario_id) {
-        return { ...c, mensajes_no_leidos: 0 };
-      }
-      return c;
-    }));
-    // Recalcular total no leidos basándonos en la lista actualizada
-    setTotalNoLeidos(prev => {
-      const count = contactos.reduce((acc, c) => acc + (c.usuario_id === contactoActual?.usuario_id ? 0 : (c.mensajes_no_leidos || 0)), 0);
-      return count;
-    });
   };
 
   // ==================== SOCKET.IO ====================

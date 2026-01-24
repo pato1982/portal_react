@@ -126,6 +126,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
 
         // Actualizar contadores inmediatamente
         actualizarNoLeidos();
+        cargarCursos();
 
         setConversaciones(prev => prev.map(c =>
           String(c.id) === String(conversacionId) ? { ...c, mensajes_no_leidos: 0 } : c
@@ -138,7 +139,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     } finally {
       setCargando(false);
     }
-  }, [usuario?.id]);
+  }, [usuario?.id, actualizarNoLeidos, cargarCursos]);
 
   const actualizarNoLeidos = useCallback(async () => {
     if (!usuario?.id || !establecimientoId) return;
@@ -269,17 +270,34 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
             }
           });
 
-          // 3. Actualizar lista de Contactos (badges individuales)
+          // 3. Actualizar lista de Contactos (badges individuales) y Cursos
           if (msg.direccion === 'recibido') {
+            const remitenteId = String(msg.remitente_id);
+
             setContactos(prevContactos =>
               prevContactos.map(c => {
-                const idUser = c.usuario_id || c.apoderado_usuario_id;
-                if (idUser && String(idUser) === String(msg.remitente_id)) {
+                const idUser = String(c.usuario_id || c.apoderado_usuario_id);
+                if (idUser === remitenteId) {
                   return { ...c, mensajes_no_leidos: (c.mensajes_no_leidos || 0) + 1 };
                 }
                 return c;
               })
             );
+
+            // Actualizar lista de alumnos si estamos viendo un curso
+            setAlumnos(prevAlumnos =>
+              prevAlumnos.map(a => {
+                if (String(a.apoderado_usuario_id) === remitenteId) {
+                  return { ...a, mensajes_no_leidos: (a.mensajes_no_leidos || 0) + 1 };
+                }
+                return a;
+              })
+            );
+
+            // Recargar cursos para actualizar los badges de curso
+            if (vistaActiva === 'cursos') {
+              cargarCursos();
+            }
           }
         }
       };
@@ -298,7 +316,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
         socket.off('chat_estado_actualizado', handleEstadoActualizado);
       };
     }
-  }, [usuario?.id, conversacionActual, chatAbierto]);
+  }, [usuario?.id, conversacionActual, chatAbierto, vistaActiva, cargarCursos, setAlumnos]);
 
   // ==================== EFECTOS ====================
 
@@ -983,6 +1001,9 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                         >
                           <div className="chatv2-avatar curso">
                             {curso.grado}°{curso.letra}
+                            {curso.mensajes_no_leidos > 0 && (
+                              <span className="chatv2-avatar-badge" style={{ backgroundColor: '#ef4444' }}></span>
+                            )}
                           </div>
                           <div className="chatv2-list-item-info">
                             <div className="chatv2-list-item-header">
@@ -992,6 +1013,9 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                               <span>{curso.nivel} - {curso.nombre}</span>
                             </div>
                           </div>
+                          {curso.mensajes_no_leidos > 0 && (
+                            <span className="chatv2-unread-badge">{curso.mensajes_no_leidos}</span>
+                          )}
                           <svg className="chatv2-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="9 18 15 12 9 6"></polyline>
                           </svg>

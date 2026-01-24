@@ -324,18 +324,46 @@ router.get('/docente/:id/cursos', async (req, res) => {
         if (tipoUsuario === 'administrador') {
             // Administradores ven TODOS los cursos activos del establecimiento
             const [todosCursos] = await pool.query(`
-                SELECT id, nombre, grado, letra, nivel
-                FROM tb_cursos
-                WHERE establecimiento_id = ? AND activo = 1
-                ORDER BY nivel, grado, letra
-            `, [establecimiento_id]);
+                SELECT 
+                    c.id, c.nombre, c.grado, c.letra, c.nivel,
+                    (
+                        SELECT COUNT(m.id)
+                        FROM tb_chat_mensajes m
+                        JOIN tb_chat_conversaciones conv ON m.conversacion_id = conv.id
+                        JOIN tb_apoderados ap ON (conv.usuario1_id = ap.usuario_id OR conv.usuario2_id = ap.usuario_id)
+                        JOIN tb_apoderado_alumno aa ON ap.id = aa.apoderado_id
+                        JOIN tb_alumno_establecimiento ae ON aa.alumno_id = ae.alumno_id
+                        WHERE ae.curso_id = c.id
+                        AND (conv.usuario1_id = ? OR conv.usuario2_id = ?)
+                        AND m.remitente_id = ap.usuario_id
+                        AND m.leido = 0
+                        AND conv.activo = 1
+                    ) as mensajes_no_leidos
+                FROM tb_cursos c
+                WHERE c.establecimiento_id = ? AND c.activo = 1
+                ORDER BY c.nivel, c.grado, c.letra
+            `, [id, id, establecimiento_id]);
             cursos = todosCursos;
-            console.log(`Chat/Cursos: Admin encontrÃ³ ${cursos.length} cursos`);
+            console.log(`Chat/Cursos: Admin encontró ${cursos.length} cursos`);
 
         } else {
             // Docentes ven solo sus cursos asignados
             const [cursosAsignados] = await pool.query(`
-                SELECT DISTINCT c.id, c.nombre, c.grado, c.letra, c.nivel
+                SELECT DISTINCT 
+                    c.id, c.nombre, c.grado, c.letra, c.nivel,
+                    (
+                        SELECT COUNT(m.id)
+                        FROM tb_chat_mensajes m
+                        JOIN tb_chat_conversaciones conv ON m.conversacion_id = conv.id
+                        JOIN tb_apoderados ap ON (conv.usuario1_id = ap.usuario_id OR conv.usuario2_id = ap.usuario_id)
+                        JOIN tb_apoderado_alumno aa ON ap.id = aa.apoderado_id
+                        JOIN tb_alumno_establecimiento ae ON aa.alumno_id = ae.alumno_id
+                        WHERE ae.curso_id = c.id
+                        AND (conv.usuario1_id = ? OR conv.usuario2_id = ?)
+                        AND m.remitente_id = ap.usuario_id
+                        AND m.leido = 0
+                        AND conv.activo = 1
+                    ) as mensajes_no_leidos
                 FROM tb_cursos c
                 INNER JOIN tb_asignaciones a ON c.id = a.curso_id
                 WHERE a.docente_id = (SELECT id FROM tb_docentes WHERE usuario_id = ?)
@@ -343,9 +371,9 @@ router.get('/docente/:id/cursos', async (req, res) => {
                 AND c.activo = 1
                 AND a.activo = 1
                 ORDER BY c.nivel, c.grado, c.letra
-            `, [id, establecimiento_id]);
+            `, [id, id, id, establecimiento_id]);
             cursos = cursosAsignados;
-            console.log(`Chat/Cursos: Docente encontrÃ³ ${cursos.length} cursos`);
+            console.log(`Chat/Cursos: Docente encontró ${cursos.length} cursos`);
         }
 
         res.json({ success: true, data: cursos });

@@ -1,0 +1,1280 @@
+==========================================================
+ESTRUCTURA DE LAS 54 TABLAS - PORTAL ESTUDIANTIL
+Generado el: 23-01-2026, 6:48:43 p. m.
+==========================================================
+
+----------------------------------------------------------
+TABLA #1: tb_administrador_establecimiento
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+administrador_id         int                 NO        MUL       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+es_principal             tinyint(1)          YES                 0              
+cargo                    varchar(100)        YES                 Administrador  
+fecha_asignacion         date                NO                  NULL           
+fecha_termino            date                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #2: tb_administradores
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+usuario_id               int                 NO        UNI       NULL           
+rut                      varchar(12)         NO        UNI       NULL           
+nombres                  varchar(100)        NO                  NULL           
+apellidos                varchar(100)        NO                  NULL           
+telefono                 varchar(20)         YES                 NULL           
+fecha_nacimiento         date                YES                 NULL           
+sexo                     enum('Masculino','Femenino','Otro')YES                 NULL           
+direccion                varchar(255)        YES                 NULL           
+foto_url                 varchar(500)        YES                 NULL           
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #3: tb_alumno_establecimiento
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+alumno_id                int                 NO        MUL       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+curso_id                 int                 YES       MUL       NULL           
+anio_academico           int                 NO        MUL       NULL           
+numero_matricula         varchar(20)         YES                 NULL           
+numero_lista             int                 YES                 NULL           
+fecha_ingreso            date                NO                  NULL           
+fecha_retiro             date                YES                 NULL           
+motivo_retiro            enum('transferencia','egreso','retiro_voluntario','expulsion','otro')YES                 NULL           
+observacion_retiro       text                YES                 NULL           
+establecimiento_destino  varchar(255)        YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #4: tb_alumnos
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+rut                      varchar(12)         NO        UNI       NULL           
+nombres                  varchar(100)        NO                  NULL           
+apellidos                varchar(100)        NO        MUL       NULL           
+fecha_nacimiento         date                YES                 NULL           
+sexo                     enum('Masculino','Femenino','Otro')YES                 NULL           
+nacionalidad             varchar(50)         YES                 Chilena        
+direccion                varchar(255)        YES                 NULL           
+comuna                   varchar(100)        YES                 NULL           
+ciudad                   varchar(100)        YES                 NULL           
+email                    varchar(255)        YES                 NULL           
+telefono                 varchar(20)         YES                 NULL           
+alergias                 text                YES                 NULL           
+enfermedades_cronicas    text                YES                 NULL           
+medicamentos             text                YES                 NULL           
+grupo_sanguineo          varchar(10)         YES                 NULL           
+contacto_emergencia_nombrevarchar(200)        YES                 NULL           
+contacto_emergencia_telefonovarchar(20)         YES                 NULL           
+foto_url                 varchar(500)        YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+usuario_id               int                 YES       MUL       NULL           
+
+
+----------------------------------------------------------
+TABLA #5: tb_apoderado_alumno
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+apoderado_id             int                 NO        MUL       NULL           
+alumno_id                int                 NO        MUL       NULL           
+parentesco               enum('padre','madre','abuelo','abuela','tio','tia','hermano','hermana','tutor_legal','otro')NO                  NULL           
+parentesco_otro          varchar(50)         YES                 NULL           
+es_apoderado_titular     tinyint(1)          YES       MUL       1              
+es_apoderado_suplente    tinyint(1)          YES                 0              
+es_contacto_emergencia   tinyint(1)          YES                 0              
+puede_retirar            tinyint(1)          YES                 1              
+recibe_comunicados       tinyint(1)          YES                 1              
+recibe_notas             tinyint(1)          YES                 1              
+vive_con_alumno          tinyint(1)          YES                 1              
+orden_prioridad          int                 YES                 1              
+observaciones            text                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #6: tb_apoderado_establecimiento
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+apoderado_id             int                 NO        MUL       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+es_apoderado_activo      tinyint(1)          YES                 1              
+fecha_registro           date                NO                  NULL           
+fecha_retiro             date                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #7: tb_apoderados
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+usuario_id               int                 NO        UNI       NULL           
+rut                      varchar(12)         NO        UNI       NULL           
+nombres                  varchar(100)        NO                  NULL           
+apellidos                varchar(100)        NO                  NULL           
+email                    varchar(255)        YES                 NULL           
+telefono                 varchar(20)         YES                 NULL           
+telefono_emergencia      varchar(20)         YES                 NULL           
+fecha_nacimiento         date                YES                 NULL           
+sexo                     enum('Masculino','Femenino','Otro')YES                 NULL           
+direccion                varchar(255)        YES                 NULL           
+comuna                   varchar(100)        YES                 NULL           
+ciudad                   varchar(100)        YES                 NULL           
+ocupacion                varchar(100)        YES                 NULL           
+lugar_trabajo            varchar(200)        YES                 NULL           
+foto_url                 varchar(500)        YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #8: tb_asignaciones
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+docente_id               int                 NO        MUL       NULL           
+curso_id                 int                 NO        MUL       NULL           
+asignatura_id            int                 NO        MUL       NULL           
+anio_academico           int                 NO        MUL       NULL           
+horas_asignadas          int                 YES                 NULL           
+es_titular               tinyint(1)          YES                 1              
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #9: tb_asignaturas
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+nombre                   varchar(100)        NO        MUL       NULL           
+codigo                   varchar(20)         YES                 NULL           
+descripcion              text                YES                 NULL           
+nivel                    set('parvularia','basica','media')YES                 basica,media   
+horas_semanales          int                 YES                 2              
+es_electivo              tinyint(1)          YES                 0              
+es_taller                tinyint(1)          YES                 0              
+color                    varchar(7)          YES                 #2196F3        
+orden                    int                 YES                 0              
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #10: tb_asistencia
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+alumno_id                int                 NO        MUL       NULL           
+curso_id                 int                 NO        MUL       NULL           
+fecha                    date                NO        MUL       NULL           
+anio_academico           int                 NO        MUL       NULL           
+trimestre                int                 NO        MUL       NULL           
+estado                   enum('presente','ausente','justificado','atrasado','retirado','suspendido')NO        MUL       presente       
+hora_llegada             time                YES                 NULL           
+minutos_atraso           int                 YES                 0              
+motivo_ausencia          varchar(255)        YES                 NULL           
+justificativo_id         int                 YES                 NULL           
+registrado_por           int                 YES       MUL       NULL           
+observacion              text                YES                 NULL           
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #11: tb_chat_conversaciones
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+usuario1_id              int                 NO        MUL       NULL           
+usuario2_id              int                 NO        MUL       NULL           
+asunto                   varchar(255)        YES                 NULL           
+contexto_tipo            enum('general','alumno','curso','asignatura')YES                 general        
+contexto_id              int                 YES                 NULL           
+iniciada_por             int                 NO        MUL       NULL           
+mensajes_count           int                 YES                 0              
+ultimo_mensaje_id        int                 YES                 NULL           
+ultimo_mensaje_fecha     datetime            YES       MUL       NULL           
+usuario1_archivado       tinyint(1)          YES                 0              
+usuario2_archivado       tinyint(1)          YES                 0              
+usuario1_eliminado       tinyint(1)          YES                 0              
+usuario2_eliminado       tinyint(1)          YES                 0              
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+respuesta_habilitada     tinyint(1)          YES                 0              
+
+
+----------------------------------------------------------
+TABLA #12: tb_chat_mensajes
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+conversacion_id          int                 NO        MUL       NULL           
+remitente_id             int                 NO        MUL       NULL           
+mensaje                  text                NO                  NULL           
+tipo_mensaje             enum('texto','imagen','archivo','sistema')YES                 texto          
+archivo_url              varchar(500)        YES                 NULL           
+archivo_nombre           varchar(255)        YES                 NULL           
+archivo_tamano           int                 YES                 NULL           
+leido                    tinyint(1)          YES       MUL       0              
+fecha_lectura            datetime            YES                 NULL           
+editado                  tinyint(1)          YES                 0              
+fecha_edicion            datetime            YES                 NULL           
+eliminado_remitente      tinyint(1)          YES                 0              
+eliminado_destinatario   tinyint(1)          YES                 0              
+fecha_envio              datetime            YES       MUL       CURRENT_TIMESTAMP
+
+
+----------------------------------------------------------
+TABLA #13: tb_claves_provisorias
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+usuario_id               int                 NO        MUL       NULL           
+email                    varchar(255)        NO        MUL       NULL           
+token                    varchar(255)        NO                  NULL           
+token_hash               varchar(255)        NO        MUL       NULL           
+tipo                     enum('recuperacion','verificacion_email','cambio_email')YES                 recuperacion   
+fecha_solicitud          datetime            YES                 CURRENT_TIMESTAMP
+fecha_expiracion         datetime            NO        MUL       NULL           
+usado                    tinyint(1)          YES       MUL       0              
+fecha_uso                datetime            YES                 NULL           
+ip_solicitud             varchar(45)         YES                 NULL           
+ip_uso                   varchar(45)         YES                 NULL           
+intentos_validacion      int                 YES                 0              
+activo                   tinyint(1)          YES                 1              
+
+
+----------------------------------------------------------
+TABLA #14: tb_codigos_validacion
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+codigo                   varchar(50)         NO        UNI       NULL           
+tipo                     enum('administrador','docente','especial')YES       MUL       administrador  
+descripcion              varchar(255)        YES                 NULL           
+usos_maximos             int                 YES                 1              
+usos_actuales            int                 YES                 0              
+fecha_expiracion         date                YES                 NULL           
+usado                    tinyint(1)          YES       MUL       0              
+usado_por_id             int                 YES                 NULL           
+fecha_uso                datetime            YES                 NULL           
+creado_por               int                 YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #15: tb_comunicado_curso
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+comunicado_id            int                 NO        MUL       NULL           
+curso_id                 int                 NO        MUL       NULL           
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+
+
+----------------------------------------------------------
+TABLA #16: tb_comunicado_leido
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+comunicado_id            int                 NO        MUL       NULL           
+usuario_id               int                 NO        MUL       NULL           
+fecha_lectura            datetime            YES       MUL       CURRENT_TIMESTAMP
+confirmado               tinyint(1)          YES                 0              
+fecha_confirmacion       datetime            YES                 NULL           
+respuesta                text                YES                 NULL           
+fecha_respuesta          datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #17: tb_comunicados
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+remitente_id             int                 NO        MUL       NULL           
+titulo                   varchar(255)        NO                  NULL           
+mensaje                  text                NO                  NULL           
+tipo                     enum('informativo','urgente','reunion','evento','academico','administrativo')NO        MUL       informativo    
+prioridad                enum('baja','normal','alta','critica')YES                 normal         
+para_todos_cursos        tinyint(1)          YES                 0              
+para_docentes            tinyint(1)          YES                 0              
+para_apoderados          tinyint(1)          YES                 1              
+requiere_confirmacion    tinyint(1)          YES                 0              
+permite_respuesta        tinyint(1)          YES                 0              
+fecha_evento             date                YES                 NULL           
+hora_evento              time                YES                 NULL           
+lugar_evento             varchar(255)        YES                 NULL           
+archivo_adjunto_url      varchar(500)        YES                 NULL           
+fecha_envio              datetime            YES       MUL       CURRENT_TIMESTAMP
+fecha_expiracion         date                YES                 NULL           
+programado               tinyint(1)          YES                 0              
+fecha_programada         datetime            YES                 NULL           
+enviado                  tinyint(1)          YES                 1              
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #18: tb_configuracion_establecimiento
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        UNI       NULL           
+color_primario           varchar(7)          YES                 #1976d2        
+color_secundario         varchar(7)          YES                 #424242        
+mostrar_logo_reportes    tinyint(1)          YES                 1              
+nota_minima              decimal(2,1)        YES                 1.0            
+nota_maxima              decimal(2,1)        YES                 7.0            
+nota_aprobacion          decimal(2,1)        YES                 4.0            
+decimales_notas          int                 YES                 1              
+permite_nota_pendiente   tinyint(1)          YES                 1              
+hora_limite_atraso       time                YES                 08:15:00       
+porcentaje_asistencia_minimoint                 YES                 85             
+permite_respuesta_comunicadostinyint(1)          YES                 0              
+dias_vigencia_comunicado int                 YES                 30             
+chat_habilitado          tinyint(1)          YES                 1              
+chat_horario_inicio      time                YES                 08:00:00       
+chat_horario_fin         time                YES                 20:00:00       
+zona_horaria             varchar(50)         YES                 America/Santiago
+idioma                   varchar(5)          YES                 es-CL          
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #19: tb_consultas_contacto
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+nombre_solicitante       varchar(200)        NO                  NULL           
+establecimiento          varchar(255)        NO                  NULL           
+telefono                 varchar(20)         NO                  NULL           
+correo                   varchar(255)        NO        MUL       NULL           
+consulta                 text                NO                  NULL           
+estado                   enum('pendiente','en_proceso','respondida','cerrada')YES       MUL       pendiente      
+respondido_por           int                 YES                 NULL           
+respuesta                text                YES                 NULL           
+fecha_respuesta          datetime            YES                 NULL           
+ip_address               varchar(45)         YES                 NULL           
+user_agent               text                YES                 NULL           
+fecha_envio              datetime            YES       MUL       CURRENT_TIMESTAMP
+activo                   tinyint(1)          YES                 1              
+
+
+----------------------------------------------------------
+TABLA #20: tb_cursos
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+nombre                   varchar(50)         NO                  NULL           
+codigo                   varchar(20)         NO        MUL       NULL           
+nivel                    enum('parvularia','basica','media')NO        MUL       NULL           
+grado                    int                 YES                 NULL           
+letra                    varchar(5)          YES                 NULL           
+jornada                  enum('manana','tarde','completa')YES                 completa       
+capacidad_maxima         int                 YES                 45             
+sala                     varchar(50)         YES                 NULL           
+anio_academico           int                 NO        MUL       NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #21: tb_docente_asignatura
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+docente_id               int                 NO        MUL       NULL           
+asignatura_id            int                 NO        MUL       NULL           
+es_especialidad_principaltinyint(1)          YES                 0              
+certificado              tinyint(1)          YES                 0              
+anios_experiencia        int                 YES                 0              
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+
+
+----------------------------------------------------------
+TABLA #22: tb_docente_establecimiento
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+docente_id               int                 NO        MUL       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+cargo                    enum('titular','reemplazo','part-time','honorarios')YES                 titular        
+horas_contrato           int                 YES                 NULL           
+es_profesor_jefe         tinyint(1)          YES       MUL       0              
+curso_jefatura_id        int                 YES       MUL       NULL           
+fecha_ingreso            date                NO                  NULL           
+fecha_termino            date                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #23: tb_docentes
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+usuario_id               int                 YES       UNI       NULL           
+rut                      varchar(12)         NO        UNI       NULL           
+nombres                  varchar(100)        NO                  NULL           
+apellidos                varchar(100)        NO                  NULL           
+email                    varchar(255)        YES                 NULL           
+telefono                 varchar(20)         YES                 NULL           
+fecha_nacimiento         date                YES                 NULL           
+sexo                     enum('Masculino','Femenino','Otro')YES                 NULL           
+direccion                varchar(255)        YES                 NULL           
+titulo_profesional       varchar(200)        YES                 NULL           
+especialidad             varchar(200)        YES                 NULL           
+foto_url                 varchar(500)        YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #24: tb_documentos_matricula
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+matricula_id             int                 NO        MUL       NULL           
+documento_requerido_id   int                 NO        MUL       NULL           
+nombre_archivo           varchar(255)        NO                  NULL           
+nombre_original          varchar(255)        NO                  NULL           
+tipo_archivo             varchar(50)         NO                  NULL           
+tamano_bytes             int                 NO                  NULL           
+ruta_archivo             varchar(500)        NO                  NULL           
+url_archivo              varchar(500)        YES                 NULL           
+estado                   enum('pendiente','aprobado','rechazado','vencido')YES       MUL       pendiente      
+motivo_rechazo           varchar(255)        YES                 NULL           
+fecha_revision           datetime            YES                 NULL           
+revisado_por             int                 YES                 NULL           
+observaciones            text                YES                 NULL           
+version                  int                 YES                 1              
+es_ultima_version        tinyint(1)          YES                 1              
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #25: tb_documentos_requeridos
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+nombre                   varchar(100)        NO                  NULL           
+descripcion              text                YES                 NULL           
+tipo_archivo             varchar(100)        YES                 pdf,jpg,jpeg,png
+tamano_maximo_mb         int                 YES                 5              
+obligatorio              tinyint(1)          YES       MUL       1              
+aplica_tipo_matricula    set('nuevo','antiguo','traslado','reingreso')YES                 nuevo,antiguo,traslado,reingreso
+aplica_nivel             set('parvularia','basica','media')YES                 parvularia,basica,media
+orden                    int                 YES                 0              
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #26: tb_establecimientos
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+nombre                   varchar(255)        NO                  NULL           
+rbd                      varchar(20)         YES       UNI       NULL           
+direccion                varchar(255)        YES                 NULL           
+comuna                   varchar(100)        YES                 NULL           
+ciudad                   varchar(100)        YES                 NULL           
+region                   varchar(100)        YES       MUL       NULL           
+telefono                 varchar(20)         YES                 NULL           
+email                    varchar(255)        YES                 NULL           
+sitio_web                varchar(255)        YES                 NULL           
+logo_url                 varchar(500)        YES                 NULL           
+tipo_establecimiento     enum('municipal','particular_subvencionado','particular_pagado','otro')YES                 particular_subvencionado
+nivel_educativo          set('parvularia','basica','media')YES                 basica,media   
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #27: tb_facturas
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+suscripcion_id           int                 NO        MUL       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+numero_factura           varchar(50)         NO        UNI       NULL           
+tipo_documento           enum('factura','boleta','nota_credito','nota_debito')YES                 factura        
+estado                   enum('borrador','emitida','pagada','vencida','anulada')YES       MUL       borrador       
+subtotal                 decimal(12,2)       NO                  NULL           
+descuento                decimal(12,2)       YES                 0.00           
+porcentaje_descuento     decimal(5,2)        YES                 0.00           
+impuesto                 decimal(12,2)       YES                 0.00           
+porcentaje_impuesto      decimal(5,2)        YES                 19.00          
+total                    decimal(12,2)       NO                  NULL           
+moneda                   varchar(3)          YES                 CLP            
+cantidad_alumnos         int                 NO                  NULL           
+precio_unitario          decimal(10,2)       NO                  NULL           
+periodo_inicio           date                NO                  NULL           
+periodo_fin              date                NO                  NULL           
+fecha_emision            date                NO        MUL       NULL           
+fecha_vencimiento        date                NO        MUL       NULL           
+fecha_pago               date                YES                 NULL           
+razon_social             varchar(255)        YES                 NULL           
+rut_facturacion          varchar(12)         YES                 NULL           
+direccion_facturacion    varchar(255)        YES                 NULL           
+observaciones            text                YES                 NULL           
+pdf_url                  varchar(500)        YES                 NULL           
+enviada_email            tinyint(1)          YES                 0              
+fecha_envio_email        datetime            YES                 NULL           
+factura_relacionada_id   int                 YES       MUL       NULL           
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #28: tb_historial_suscripciones
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+suscripcion_id           int                 NO        MUL       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+plan_anterior_id         int                 YES       MUL       NULL           
+plan_nuevo_id            int                 NO        MUL       NULL           
+tipo_cambio              enum('alta','upgrade','downgrade','renovacion','cancelacion','reactivacion')NO        MUL       NULL           
+cantidad_alumnos_anteriorint                 YES                 NULL           
+cantidad_alumnos_nuevo   int                 YES                 NULL           
+precio_anterior          decimal(12,2)       YES                 NULL           
+precio_nuevo             decimal(12,2)       YES                 NULL           
+motivo                   text                YES                 NULL           
+realizado_por            int                 YES                 NULL           
+fecha_efectiva           date                NO                  NULL           
+fecha_registro           datetime            YES       MUL       CURRENT_TIMESTAMP
+
+
+----------------------------------------------------------
+TABLA #29: tb_horarios
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+curso_id                 int                 NO        MUL       NULL           
+asignatura_id            int                 NO        MUL       NULL           
+docente_id               int                 YES       MUL       NULL           
+dia_semana               enum('lunes','martes','miercoles','jueves','viernes','sabado')NO        MUL       NULL           
+bloque                   int                 NO                  NULL           
+hora_inicio              time                NO                  NULL           
+hora_fin                 time                NO                  NULL           
+sala                     varchar(50)         YES                 NULL           
+anio_academico           int                 NO        MUL       NULL           
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #30: tb_intentos_login_fallidos
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+email_ingresado          varchar(255)        NO        MUL       NULL           
+tipo_usuario_intentado   enum('administrador','docente','apoderado')YES                 NULL           
+establecimiento_id       int                 YES                 NULL           
+motivo_fallo             enum('email_no_existe','password_incorrecta','cuenta_inactiva','cuenta_bloqueada','establecimiento_incorrecto','otro')NO        MUL       NULL           
+password_ingresada_hash  varchar(255)        YES                 NULL           
+ip_address               varchar(45)         YES       MUL       NULL           
+user_agent               text                YES                 NULL           
+dispositivo              varchar(100)        YES                 NULL           
+navegador                varchar(100)        YES                 NULL           
+fecha_intento            datetime            YES       MUL       CURRENT_TIMESTAMP
+es_sospechoso            tinyint(1)          YES       MUL       0              
+revisado                 tinyint(1)          YES       MUL       0              
+revisado_por             int                 YES                 NULL           
+fecha_revision           datetime            YES                 NULL           
+notas                    text                YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #31: tb_intentos_registro_fallidos
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+rut_apoderado            varchar(12)         NO        MUL       NULL           
+nombres_apoderado        varchar(100)        NO                  NULL           
+apellidos_apoderado      varchar(100)        NO                  NULL           
+email_apoderado          varchar(255)        YES                 NULL           
+telefono_apoderado       varchar(20)         YES                 NULL           
+rut_alumno               varchar(12)         YES       MUL       NULL           
+nombres_alumno           varchar(100)        YES                 NULL           
+apellidos_alumno         varchar(100)        YES                 NULL           
+curso_indicado           varchar(50)         YES                 NULL           
+parentesco               varchar(50)         YES                 NULL           
+motivo_fallo             enum('rut_no_preregistrado','email_no_coincide','alumno_no_encontrado','datos_incorrectos','ya_registrado','otro')NO                  NULL           
+ip_address               varchar(45)         YES                 NULL           
+user_agent               text                YES                 NULL           
+fecha_intento            datetime            YES       MUL       CURRENT_TIMESTAMP
+revisado                 tinyint(1)          YES       MUL       0              
+revisado_por             int                 YES                 NULL           
+fecha_revision           datetime            YES                 NULL           
+accion_tomada            enum('agregado_preregistro','contactado','rechazado','pendiente')YES                 pendiente      
+notas                    text                YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #32: tb_intentos_registro_fallidos_admin
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+rut_admin                varchar(12)         NO        MUL       NULL           
+nombres_admin            varchar(100)        NO                  NULL           
+apellidos_admin          varchar(100)        NO                  NULL           
+email_admin              varchar(255)        YES                 NULL           
+telefono_admin           varchar(20)         YES                 NULL           
+codigo_ingresado         varchar(50)         YES       MUL       NULL           
+motivo_fallo             enum('rut_no_preregistrado','email_no_coincide','codigo_invalido','codigo_expirado','codigo_usado','datos_incorrectos','ya_registrado','otro')NO                  NULL           
+ip_address               varchar(45)         YES                 NULL           
+user_agent               text                YES                 NULL           
+fecha_intento            datetime            YES       MUL       CURRENT_TIMESTAMP
+es_sospechoso            tinyint(1)          YES       MUL       0              
+revisado                 tinyint(1)          YES       MUL       0              
+revisado_por             int                 YES                 NULL           
+fecha_revision           datetime            YES                 NULL           
+accion_tomada            enum('agregado_preregistro','contactado','rechazado','pendiente')YES                 pendiente      
+notas                    text                YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #33: tb_intentos_registro_fallidos_docentes
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+rut_docente              varchar(12)         NO        MUL       NULL           
+nombres_docente          varchar(100)        NO                  NULL           
+apellidos_docente        varchar(100)        NO                  NULL           
+email_docente            varchar(255)        YES       MUL       NULL           
+telefono_docente         varchar(20)         YES                 NULL           
+especialidad_indicada    varchar(200)        YES                 NULL           
+motivo_fallo             enum('rut_no_preregistrado','email_no_coincide','datos_incorrectos','ya_registrado','otro')NO                  NULL           
+ip_address               varchar(45)         YES                 NULL           
+user_agent               text                YES                 NULL           
+fecha_intento            datetime            YES       MUL       CURRENT_TIMESTAMP
+revisado                 tinyint(1)          YES       MUL       0              
+revisado_por             int                 YES                 NULL           
+fecha_revision           datetime            YES                 NULL           
+accion_tomada            enum('agregado_preregistro','contactado','rechazado','pendiente')YES                 pendiente      
+notas                    text                YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #34: tb_log_actividades
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+usuario_id               int                 YES       MUL       NULL           
+tipo_usuario             enum('administrador','docente','apoderado','sistema')NO        MUL       NULL           
+nombre_usuario           varchar(200)        NO                  NULL           
+accion                   enum('crear','editar','eliminar','activar','desactivar','login','logout','login_fallido','enviar','leer','aprobar','rechazar','asignar','desasignar','transferir','exportar','importar','restaurar','cambiar_password')NO        MUL       NULL           
+modulo                   enum('auth','usuarios','administradores','docentes','apoderados','alumnos','cursos','asignaturas','asignaciones','notas','asistencia','comunicados','chat','matriculas','suscripciones','configuracion','reportes','preregistro','observaciones')NO        MUL       NULL           
+descripcion              text                NO                  NULL           
+entidad_tipo             varchar(50)         YES       MUL       NULL           
+entidad_id               int                 YES                 NULL           
+datos_anteriores         json                YES                 NULL           
+datos_nuevos             json                YES                 NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+ip_address               varchar(45)         YES                 NULL           
+user_agent               varchar(500)        YES                 NULL           
+fecha_hora               datetime            YES       MUL       CURRENT_TIMESTAMP
+
+
+----------------------------------------------------------
+TABLA #35: tb_matriculas
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+periodo_matricula_id     int                 NO        MUL       NULL           
+alumno_id                int                 YES       MUL       NULL           
+apoderado_id             int                 NO        MUL       NULL           
+anio_academico           int                 NO        MUL       NULL           
+numero_matricula         varchar(20)         YES                 NULL           
+tipo_matricula           enum('nuevo','antiguo','traslado','reingreso')NO                  NULL           
+estado                   enum('borrador','pendiente','documentos_pendientes','pago_pendiente','en_revision','aprobada','rechazada','cancelada')YES       MUL       borrador       
+curso_solicitado_id      int                 YES       MUL       NULL           
+curso_asignado_id        int                 YES       MUL       NULL           
+nivel_solicitado         enum('parvularia','basica','media')YES                 NULL           
+grado_solicitado         int                 YES                 NULL           
+nombres_alumno           varchar(100)        NO                  NULL           
+apellidos_alumno         varchar(100)        NO                  NULL           
+rut_alumno               varchar(12)         NO        MUL       NULL           
+fecha_nacimiento_alumno  date                YES                 NULL           
+sexo_alumno              enum('Masculino','Femenino','Otro')YES                 NULL           
+nacionalidad_alumno      varchar(50)         YES                 Chilena        
+direccion_alumno         varchar(255)        YES                 NULL           
+comuna_alumno            varchar(100)        YES                 NULL           
+ciudad_alumno            varchar(100)        YES                 NULL           
+email_alumno             varchar(255)        YES                 NULL           
+telefono_alumno          varchar(20)         YES                 NULL           
+colegio_procedencia      varchar(255)        YES                 NULL           
+ultimo_curso_aprobado    varchar(50)         YES                 NULL           
+promedio_notas_anterior  decimal(3,1)        YES                 NULL           
+tiene_nee                tinyint(1)          YES                 0              
+detalle_nee              text                YES                 NULL           
+alergias                 text                YES                 NULL           
+enfermedades_cronicas    text                YES                 NULL           
+contacto_emergencia_nombrevarchar(200)        YES                 NULL           
+contacto_emergencia_telefonovarchar(20)         YES                 NULL           
+observaciones_apoderado  text                YES                 NULL           
+observaciones_admin      text                YES                 NULL           
+motivo_rechazo           text                YES                 NULL           
+fecha_envio              datetime            YES                 NULL           
+fecha_revision           datetime            YES                 NULL           
+revisado_por             int                 YES                 NULL           
+fecha_aprobacion         datetime            YES                 NULL           
+aprobado_por             int                 YES                 NULL           
+fecha_rechazo            datetime            YES                 NULL           
+rechazado_por            int                 YES                 NULL           
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+parentezco               varchar(50)         YES                 Apoderado      
+
+
+----------------------------------------------------------
+TABLA #36: tb_notas
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+alumno_id                int                 NO        MUL       NULL           
+asignatura_id            int                 NO        MUL       NULL           
+curso_id                 int                 NO        MUL       NULL           
+docente_id               int                 YES       MUL       NULL           
+tipo_evaluacion_id       int                 YES       MUL       NULL           
+anio_academico           int                 NO        MUL       NULL           
+trimestre                int                 NO        MUL       NULL           
+numero_evaluacion        int                 YES                 1              
+nota                     decimal(3,1)        YES                 NULL           
+nota_maxima              decimal(3,1)        YES                 7.0            
+ponderacion              decimal(5,2)        YES                 100.00         
+es_pendiente             tinyint(1)          YES                 0              
+es_recuperacion          tinyint(1)          YES                 0              
+nota_original_id         int                 YES       MUL       NULL           
+fecha_evaluacion         date                YES                 NULL           
+descripcion              varchar(255)        YES                 NULL           
+comentario               text                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #37: tb_notificaciones
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+usuario_id               int                 NO        MUL       NULL           
+tipo                     enum('nota_nueva','nota_modificada','comunicado','mensaje','observacion','asistencia','matricula','sistema','recordatorio')NO        MUL       NULL           
+titulo                   varchar(255)        NO                  NULL           
+mensaje                  text                NO                  NULL           
+icono                    varchar(50)         YES                 notifications  
+color                    varchar(7)          YES                 #2196F3        
+url_destino              varchar(500)        YES                 NULL           
+entidad_tipo             varchar(50)         YES                 NULL           
+entidad_id               int                 YES                 NULL           
+leida                    tinyint(1)          YES       MUL       0              
+fecha_lectura            datetime            YES                 NULL           
+enviada_email            tinyint(1)          YES                 0              
+fecha_email              datetime            YES                 NULL           
+enviada_push             tinyint(1)          YES                 0              
+fecha_push               datetime            YES                 NULL           
+expira                   date                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES       MUL       CURRENT_TIMESTAMP
+
+
+----------------------------------------------------------
+TABLA #38: tb_observaciones_alumno
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+alumno_id                int                 NO        MUL       NULL           
+curso_id                 int                 NO        MUL       NULL           
+docente_id               int                 YES       MUL       NULL           
+anio_academico           int                 NO        MUL       NULL           
+trimestre                int                 NO                  NULL           
+fecha                    date                NO        MUL       NULL           
+tipo                     enum('positiva','negativa','neutra','felicitacion','amonestacion','suspension')NO        MUL       NULL           
+categoria                enum('academica','conductual','asistencia','uniforme','responsabilidad','convivencia','destacado','otro')YES                 conductual     
+gravedad                 enum('leve','moderada','grave','muy_grave')YES                 leve           
+titulo                   varchar(200)        NO                  NULL           
+descripcion              text                NO                  NULL           
+accion_tomada            text                YES                 NULL           
+requiere_citacion        tinyint(1)          YES                 0              
+citacion_realizada       tinyint(1)          YES                 0              
+fecha_citacion           date                YES                 NULL           
+notificado_apoderado     tinyint(1)          YES                 0              
+fecha_notificacion       datetime            YES                 NULL           
+firma_apoderado          tinyint(1)          YES                 0              
+visible_apoderado        tinyint(1)          YES                 1              
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #39: tb_pagos
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+factura_id               int                 NO        MUL       NULL           
+suscripcion_id           int                 NO        MUL       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+monto                    decimal(12,2)       NO                  NULL           
+moneda                   varchar(3)          YES                 CLP            
+metodo_pago              enum('transferencia','tarjeta_credito','tarjeta_debito','efectivo','cheque','webpay','otro')NO                  NULL           
+estado                   enum('pendiente','procesando','completado','fallido','reembolsado')YES       MUL       pendiente      
+referencia_externa       varchar(100)        YES                 NULL           
+numero_comprobante       varchar(100)        YES                 NULL           
+banco_origen             varchar(100)        YES                 NULL           
+ultimos_4_digitos        varchar(4)          YES                 NULL           
+fecha_pago               datetime            NO        MUL       NULL           
+fecha_confirmacion       datetime            YES                 NULL           
+comprobante_url          varchar(500)        YES                 NULL           
+notas                    text                YES                 NULL           
+procesado_por            int                 YES                 NULL           
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #40: tb_pagos_matricula
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+matricula_id             int                 NO        MUL       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+tipo_pago                enum('matricula','reserva','mensualidad','otro')YES       MUL       matricula      
+concepto                 varchar(200)        NO                  NULL           
+monto                    decimal(10,2)       NO                  NULL           
+descuento                decimal(10,2)       YES                 0.00           
+monto_final              decimal(10,2)       NO                  NULL           
+moneda                   varchar(3)          YES                 CLP            
+estado                   enum('pendiente','procesando','pagado','fallido','reembolsado','anulado')YES       MUL       pendiente      
+metodo_pago              enum('transferencia','tarjeta_credito','tarjeta_debito','efectivo','cheque','webpay','otro')YES                 NULL           
+referencia_pago          varchar(100)        YES                 NULL           
+numero_comprobante       varchar(100)        YES                 NULL           
+banco_origen             varchar(100)        YES                 NULL           
+fecha_vencimiento        date                YES                 NULL           
+fecha_pago               datetime            YES       MUL       NULL           
+comprobante_url          varchar(500)        YES                 NULL           
+notas                    text                YES                 NULL           
+registrado_por           int                 YES                 NULL           
+confirmado_por           int                 YES                 NULL           
+fecha_confirmacion       datetime            YES                 NULL           
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #41: tb_periodos_academicos
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+anio                     int                 NO        MUL       NULL           
+nombre                   varchar(50)         YES                 NULL           
+fecha_inicio             date                NO                  NULL           
+fecha_fin                date                NO                  NULL           
+trimestre_1_inicio       date                YES                 NULL           
+trimestre_1_fin          date                YES                 NULL           
+trimestre_2_inicio       date                YES                 NULL           
+trimestre_2_fin          date                YES                 NULL           
+trimestre_3_inicio       date                YES                 NULL           
+trimestre_3_fin          date                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+cerrado                  tinyint(1)          YES                 0              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #42: tb_periodos_matricula
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+anio_academico           int                 NO        MUL       NULL           
+nombre                   varchar(100)        NO                  NULL           
+tipo                     enum('regular','anticipada','rezagada','traslado')YES                 regular        
+fecha_inicio             date                NO        MUL       NULL           
+fecha_fin                date                NO                  NULL           
+fecha_inicio_pago        date                YES                 NULL           
+fecha_limite_pago        date                YES                 NULL           
+cupos_disponibles        int                 YES                 NULL           
+cupos_ocupados           int                 YES                 0              
+niveles_habilitados      set('parvularia','basica','media')YES                 parvularia,basica,media
+cursos_habilitados       text                YES                 NULL           
+requiere_documentos      tinyint(1)          YES                 1              
+requiere_pago            tinyint(1)          YES                 1              
+monto_matricula          decimal(10,2)       YES                 0.00           
+permite_reserva          tinyint(1)          YES                 0              
+monto_reserva            decimal(10,2)       YES                 0.00           
+instrucciones            text                YES                 NULL           
+mensaje_confirmacion     text                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #43: tb_plan_funcionalidades
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+plan_id                  int                 NO        MUL       NULL           
+codigo_funcionalidad     varchar(50)         NO        MUL       NULL           
+nombre_funcionalidad     varchar(100)        NO                  NULL           
+descripcion              varchar(255)        YES                 NULL           
+modulo                   enum('apoderado','docente','administrador','general')NO        MUL       NULL           
+es_destacado             tinyint(1)          YES                 0              
+es_premium               tinyint(1)          YES                 0              
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+
+
+----------------------------------------------------------
+TABLA #44: tb_planes
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+nombre                   varchar(50)         NO                  NULL           
+codigo                   varchar(20)         NO        UNI       NULL           
+descripcion              text                YES                 NULL           
+precio_alumno_anual      decimal(10,2)       NO                  NULL           
+precio_alumno_mensual    decimal(10,2)       YES                 NULL           
+moneda                   varchar(3)          YES                 CLP            
+minimo_alumnos           int                 YES                 1              
+maximo_alumnos           int                 YES                 NULL           
+es_destacado             tinyint(1)          YES                 0              
+badge                    varchar(50)         YES                 NULL           
+color_primario           varchar(7)          YES                 #2196F3        
+color_secundario         varchar(7)          YES                 #1976D2        
+orden                    int                 YES       MUL       0              
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #45: tb_preregistro_administradores
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+rut                      varchar(12)         NO        MUL       NULL           
+nombres                  varchar(100)        NO                  NULL           
+apellidos                varchar(100)        NO                  NULL           
+email                    varchar(255)        YES       MUL       NULL           
+telefono                 varchar(20)         YES                 NULL           
+cargo                    varchar(100)        YES                 Administrador  
+codigo_validacion_id     int                 YES                 NULL           
+usado                    tinyint(1)          YES       MUL       0              
+usuario_creado_id        int                 YES                 NULL           
+fecha_uso                datetime            YES                 NULL           
+creado_por               int                 YES                 NULL           
+notas                    text                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #46: tb_preregistro_docente_asignatura
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+preregistro_docente_id   int                 NO        MUL       NULL           
+asignatura_id            int                 NO        MUL       NULL           
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+
+
+----------------------------------------------------------
+TABLA #47: tb_preregistro_docentes
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+rut                      varchar(12)         NO        MUL       NULL           
+nombres                  varchar(100)        NO                  NULL           
+apellidos                varchar(100)        NO                  NULL           
+email                    varchar(255)        YES       MUL       NULL           
+telefono                 varchar(20)         YES                 NULL           
+especialidad             varchar(200)        YES                 NULL           
+cargo                    enum('titular','reemplazo','part-time','honorarios')YES                 titular        
+usado                    tinyint(1)          YES       MUL       0              
+usuario_creado_id        int                 YES                 NULL           
+fecha_uso                datetime            YES                 NULL           
+creado_por               int                 YES                 NULL           
+notas                    text                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #48: tb_preregistro_relaciones
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+rut_apoderado            varchar(12)         NO        MUL       NULL           
+nombres_apoderado        varchar(100)        NO                  NULL           
+apellidos_apoderado      varchar(100)        NO                  NULL           
+email_apoderado          varchar(255)        YES       MUL       NULL           
+telefono_apoderado       varchar(20)         YES                 NULL           
+rut_alumno               varchar(12)         NO        MUL       NULL           
+nombres_alumno           varchar(100)        NO                  NULL           
+apellidos_alumno         varchar(100)        NO                  NULL           
+curso_nombre             varchar(50)         YES                 NULL           
+parentesco               enum('padre','madre','abuelo','abuela','tio','tia','tutor_legal','otro')YES                 padre          
+es_apoderado_titular     tinyint(1)          YES                 1              
+usado                    tinyint(1)          YES       MUL       0              
+usuario_creado_id        int                 YES                 NULL           
+fecha_uso                datetime            YES                 NULL           
+creado_por               int                 YES                 NULL           
+notas                    text                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #49: tb_promociones
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+nombre                   varchar(100)        NO                  NULL           
+codigo                   varchar(50)         YES       UNI       NULL           
+descripcion              text                YES                 NULL           
+tipo                     enum('meses_gratis','porcentaje_descuento','monto_fijo','precio_especial')NO        MUL       NULL           
+valor                    decimal(10,2)       NO                  NULL           
+aplica_a_planes          set('basico','intermedio','premium','todos')YES                 todos          
+solo_nuevos              tinyint(1)          YES                 1              
+usos_maximos             int                 YES                 NULL           
+usos_actuales            int                 YES                 0              
+fecha_inicio             date                NO        MUL       NULL           
+fecha_fin                date                YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #50: tb_sesiones
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+usuario_id               int                 NO        MUL       NULL           
+establecimiento_id       int                 YES       MUL       NULL           
+tipo_usuario             enum('administrador','docente','apoderado')NO                  NULL           
+token_sesion             varchar(1000)       YES       MUL       NULL           
+ip_address               varchar(45)         YES                 NULL           
+user_agent               text                YES                 NULL           
+fecha_expiracion         datetime            YES                 NULL           
+dispositivo              varchar(100)        YES                 NULL           
+navegador                varchar(100)        YES                 NULL           
+sistema_operativo        varchar(100)        YES                 NULL           
+ubicacion                varchar(255)        YES                 NULL           
+fecha_login              datetime            YES       MUL       CURRENT_TIMESTAMP
+fecha_ultima_actividad   datetime            YES                 CURRENT_TIMESTAMP
+fecha_logout             datetime            YES                 NULL           
+tipo_logout              enum('manual','expiracion','forzado','otra_sesion')YES                 NULL           
+activa                   tinyint(1)          YES       MUL       1              
+recordar_sesion          tinyint(1)          YES                 0              
+
+
+----------------------------------------------------------
+TABLA #51: tb_suscripcion_promocion
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+suscripcion_id           int                 NO        MUL       NULL           
+promocion_id             int                 NO        MUL       NULL           
+valor_aplicado           decimal(10,2)       NO                  NULL           
+meses_gratis_otorgados   int                 YES                 0              
+descuento_aplicado       decimal(12,2)       YES                 0.00           
+fecha_inicio_beneficio   date                NO                  NULL           
+fecha_fin_beneficio      date                YES                 NULL           
+aplicado_por             int                 YES                 NULL           
+activo                   tinyint(1)          YES                 1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+
+
+----------------------------------------------------------
+TABLA #52: tb_suscripciones
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+plan_id                  int                 NO        MUL       NULL           
+estado                   enum('activa','suspendida','cancelada','prueba','vencida')YES       MUL       activa         
+cantidad_alumnos         int                 NO                  0              
+precio_total_anual       decimal(12,2)       YES                 NULL           
+fecha_inicio             date                NO                  NULL           
+fecha_fin                date                NO        MUL       NULL           
+fecha_proximo_cobro      date                YES                 NULL           
+ciclo_facturacion        enum('mensual','trimestral','semestral','anual')YES                 anual          
+dias_gracia              int                 YES                 15             
+renovacion_automatica    tinyint(1)          YES                 1              
+en_periodo_prueba        tinyint(1)          YES                 0              
+fecha_fin_prueba         date                YES                 NULL           
+motivo_cancelacion       text                YES                 NULL           
+fecha_cancelacion        datetime            YES                 NULL           
+cancelado_por            int                 YES                 NULL           
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #53: tb_tipos_evaluacion
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+establecimiento_id       int                 NO        MUL       NULL           
+nombre                   varchar(100)        NO        MUL       NULL           
+abreviatura              varchar(10)         YES                 NULL           
+descripcion              text                YES                 NULL           
+ponderacion_default      decimal(5,2)        YES                 100.00         
+es_sumativa              tinyint(1)          YES                 1              
+es_formativa             tinyint(1)          YES                 0              
+permite_recuperacion     tinyint(1)          YES                 0              
+orden                    int                 YES                 0              
+activo                   tinyint(1)          YES       MUL       1              
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+
+----------------------------------------------------------
+TABLA #54: tb_usuarios
+----------------------------------------------------------
+CAMPO                    TIPO                NULL      KEY       DEFAULT        
+--------------------------------------------------------------------------------
+id                       int                 NO        PRI       NULL           
+email                    varchar(255)        NO        UNI       NULL           
+password_hash            varchar(255)        NO                  NULL           
+tipo_usuario             enum('administrador','docente','apoderado')NO        MUL       NULL           
+activo                   tinyint(1)          YES       MUL       1              
+email_verificado         tinyint(1)          YES                 0              
+debe_cambiar_password    tinyint(1)          YES                 0              
+intentos_fallidos        int                 YES                 0              
+bloqueado_hasta          datetime            YES                 NULL           
+ultimo_acceso            datetime            YES                 NULL           
+fecha_creacion           datetime            YES                 CURRENT_TIMESTAMP
+fecha_modificacion       datetime            YES                 NULL           
+
+

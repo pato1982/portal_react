@@ -977,16 +977,11 @@ app.get('/api/apoderado/pupilo/:alumnoId/progreso', async (req, res) => {
 
         // 0. Obtener el establecimiento_id y curso_id actual del alumno
         const [alumnoInfo] = await pool.query(`
-            SELECT establecimiento_id, curso_asignado_id as curso_id 
-            FROM tb_matriculas 
+            SELECT establecimiento_id, curso_id 
+            FROM tb_alumno_establecimiento 
             WHERE alumno_id = ? AND anio_academico = ? AND activo = 1
             LIMIT 1
         `, [alumnoId, anioActual]);
-
-        if (alumnoInfo.length === 0) {
-            // Si no tiene matricula activa, buscamos las ultimas notas sin filtro de curso
-            // pero mantenemos el anio para evitar errores.
-        }
 
         const estId = alumnoInfo[0]?.establecimiento_id;
         const cursoId = alumnoInfo[0]?.curso_id;

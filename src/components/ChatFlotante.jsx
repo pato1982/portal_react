@@ -36,6 +36,7 @@ function ChatFlotante({ usuario, establecimientoId }) {
   const [nombreDestinatarioMasivo, setNombreDestinatarioMasivo] = useState('');
 
   const mensajesRef = useRef(null);
+  const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
 
   // Verificar si el usuario puede usar el chat (solo docentes y admins)
@@ -229,11 +230,14 @@ function ChatFlotante({ usuario, establecimientoId }) {
     }
   }, [puedeUsarChat, actualizarNoLeidos]);
 
-  // useLayoutEffect para scroll inmediato al final (antes del paint)
-  useLayoutEffect(() => {
-    if (mensajesRef.current) {
-      mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
-    }
+  // Scroll behavior
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    // Fallback
+    const timer = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+    return () => clearTimeout(timer);
   }, [mensajes, conversacionActual, chatAbierto]);
 
   const toggleChat = () => {
@@ -626,7 +630,8 @@ function ChatFlotante({ usuario, establecimientoId }) {
                       );
                     })
                   )}
-              </div>
+                  <div ref={messagesEndRef} />
+                </div>
 
               {/* Input Area */}
               <div className="chat-input-area">

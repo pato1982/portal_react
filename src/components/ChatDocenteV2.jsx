@@ -53,6 +53,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   const [mostrarListaMobile, setMostrarListaMobile] = useState(true);
 
   const mensajesRef = useRef(null);
+  const messagesEndRef = useRef(null); // Nuevo ref para scroll
   const pollingRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -250,7 +251,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
 
           // Scroll
           setTimeout(() => {
-            if (mensajesRef.current) mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
           }, 100);
 
         } else {
@@ -348,11 +349,14 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     }
   }, [puedeUsarChat, actualizarNoLeidos]);
 
-  // useLayoutEffect para scroll inmediato al final (antes del paint)
-  useLayoutEffect(() => {
-    if (mensajesRef.current) {
-      mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
-    }
+  // useEffect para scroll al final
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    // Fallback
+    const timer = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+    return () => clearTimeout(timer);
   }, [mensajes, conversacionActual, chatAbierto]);
 
   useEffect(() => {
@@ -740,7 +744,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
         <div className="chatv2-content">
 
           {/* Columna 1: Navegación */}
-          <div className={`chatv2-nav ${!mostrarListaMobile ? 'hidden-mobile' : ''}`}>
+          <div className={`chatv2-nav ${!mostrarListaMobile ? 'hidden-mobile' : ''}`} style={{ display: 'flex', flexDirection: 'column' }}>
             <button
               className={`chatv2-nav-item ${vistaActiva === 'institucional' ? 'active' : ''}`}
               onClick={() => { setVistaActiva('institucional'); setCursoSeleccionado(null); setModoSeleccion(false); }}
@@ -1198,6 +1202,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                       );
                     })
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input de Mensaje */}

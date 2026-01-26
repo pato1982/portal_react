@@ -28,15 +28,14 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   // Estados de panel movil
   const [mostrarListaMobile, setMostrarListaMobile] = useState(true);
 
+  const messagesEndRef = useRef(null);
   const mensajesRef = useRef(null);
   const inputRef = useRef(null);
   const pollingRef = useRef(null);
 
   // Función helper para desplazar el chat al final
   const scrollChatToBottom = () => {
-    if (mensajesRef.current) {
-      mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   };
 
   // ==================== CARGA DE DATOS ====================
@@ -213,11 +212,11 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   }, [chatAbierto, cargarContactos]);
 
   // Scroll al final
-  // Se usa useLayoutEffect para asegurar que el scroll ocurra síncronamente después de que el DOM se actualice pero antes de pintar
-  useLayoutEffect(() => {
-    if (mensajesRef.current) {
-      mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
-    }
+  useEffect(() => {
+    scrollChatToBottom();
+    // Fallback para asegurar scroll después de renderizado completo
+    const timer = setTimeout(scrollChatToBottom, 100);
+    return () => clearTimeout(timer);
   }, [mensajes, conversacionActiva, chatAbierto]);
 
   // Focus input
@@ -573,48 +572,49 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                       🚫 El docente ha cerrado las respuestas en esta conversación.
                     </div>
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input de Mensaje */}
-                <div className="chatv2-input-area">
-                  <div className="chatv2-input-wrapper">
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      placeholder={respuestaHabilitada ? "Escribe un mensaje..." : "Respuestas deshabilitadas"}
-                      value={mensajeInput}
-                      onChange={(e) => setMensajeInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleEnviarMensaje()}
-                      disabled={enviando || !respuestaHabilitada}
-                      style={!respuestaHabilitada ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
-                    />
-                  </div>
-                  <button
-                    className="chatv2-send-btn"
-                    onClick={handleEnviarMensaje}
-                    disabled={enviando || !mensajeInput.trim() || !respuestaHabilitada}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="22" y1="2" x2="11" y2="13"></line>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="chatv2-placeholder">
-                <div className="chatv2-placeholder-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                  </svg>
-                </div>
-                <h3>Selecciona un contacto</h3>
-                <p>Elige un docente de la lista para conversar.</p>
+            <div className="chatv2-input-area">
+              <div className="chatv2-input-wrapper">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder={respuestaHabilitada ? "Escribe un mensaje..." : "Respuestas deshabilitadas"}
+                  value={mensajeInput}
+                  onChange={(e) => setMensajeInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleEnviarMensaje()}
+                  disabled={enviando || !respuestaHabilitada}
+                  style={!respuestaHabilitada ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
+                />
               </div>
-            )}
+              <button
+                className="chatv2-send-btn"
+                onClick={handleEnviarMensaje}
+                disabled={enviando || !mensajeInput.trim() || !respuestaHabilitada}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </>
+          ) : (
+          <div className="chatv2-placeholder">
+            <div className="chatv2-placeholder-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+            </div>
+            <h3>Selecciona un contacto</h3>
+            <p>Elige un docente de la lista para conversar.</p>
           </div>
+            )}
         </div>
       </div>
+    </div >
 
       <style>{`
         .chatv2-pupilo-info {

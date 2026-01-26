@@ -415,24 +415,24 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
         {/* Contenido Principal */}
         <div className="chatv2-content">
 
-          {/* Columna 1: Navegacion Estática Lateral */}
-          <div className={`chatv2-nav ${!mostrarListaMobile ? 'hidden-mobile' : ''}`} style={{ width: '40px', padding: '10px 0', alignItems: 'center' }}>
-            <div className="chatv2-nav-static" style={{
-              writingMode: 'vertical-rl',
-              textOrientation: 'mixed',
-              transform: 'rotate(180deg)',
-              color: '#64748b',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              letterSpacing: '1px',
-              height: '100%',
-              textAlign: 'center',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              CONTACTOS
-            </div>
+          {/* Columna 1: Navegación */}
+          <div className={`chatv2-nav ${!mostrarListaMobile ? 'hidden-mobile' : ''}`} style={{ display: 'flex', flexDirection: 'column' }}>
+            <button
+              className={`chatv2-nav-item ${vistaActiva === 'docentes' ? 'active' : ''}`}
+              onClick={() => setVistaActiva('docentes')}
+              title="Docentes"
+            >
+              <div className="chatv2-nav-icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                {totalNoLeidos > 0 && <span className="chatv2-nav-badge">{totalNoLeidos}</span>}
+              </div>
+              <span>Docentes</span>
+            </button>
           </div>
 
           {/* Columna 2: Lista de Contactos */}

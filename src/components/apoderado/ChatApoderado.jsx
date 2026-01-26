@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import config from '../../config/env';
 import socketService from '../../services/socketService';
 import chatService from '../../services/chatService';
@@ -31,6 +31,13 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   const mensajesRef = useRef(null);
   const inputRef = useRef(null);
   const pollingRef = useRef(null);
+
+  // Función helper para desplazar el chat al final
+  const scrollChatToBottom = () => {
+    if (mensajesRef.current) {
+      mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
+    }
+  };
 
   // ==================== CARGA DE DATOS ====================
 
@@ -94,6 +101,8 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
       const res = await chatService.obtenerMensajes(conversacionId, usuario.id);
       if (res.success) {
         setMensajes(res.data);
+        // Después de actualizar los mensajes, desplazar al final
+        scrollChatToBottom();
         await chatService.marcarConversacionLeida(conversacionId, usuario.id);
         actualizarBadgesLocales(conversacionId);
       }
@@ -204,7 +213,8 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   }, [chatAbierto, cargarContactos]);
 
   // Scroll al final
-  useEffect(() => {
+  // Se reemplaza useEffect por useLayoutEffect para asegurar que el scroll ocurra después de que el DOM se haya actualizado
+  useLayoutEffect(() => {
     if (mensajesRef.current) {
       mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
     }

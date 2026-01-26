@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useMensaje } from '../contexts';
 import {
   obtenerContactos,
@@ -59,6 +59,19 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   // Verificar permisos
   const puedeUsarChat = usuario &&
     (usuario.tipo === 'docente' || usuario.tipo === 'administrador' || usuario.tipo === 'admin');
+
+  // Conteos para los botones de navegación (Equipo vs Cursos)
+  const totalNoLeidosEquipo = React.useMemo(() => {
+    return conversaciones
+      .filter(c => c.otro_usuario?.tipo_usuario !== 'apoderado')
+      .reduce((acc, c) => acc + (c.mensajes_no_leidos || 0), 0);
+  }, [conversaciones]);
+
+  const totalNoLeidosCursos = React.useMemo(() => {
+    return conversaciones
+      .filter(c => c.otro_usuario?.tipo_usuario === 'apoderado')
+      .reduce((acc, c) => acc + (c.mensajes_no_leidos || 0), 0);
+  }, [conversaciones]);
 
   // ==================== CARGA DE DATOS ====================
 
@@ -270,7 +283,7 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
             }
           });
 
-          // 3. Actualizar lista de Contactos (badges individuales)
+          // 3. Actualizar lista de Contactos (badges individuales) y conteos
           if (msg.direccion === 'recibido') {
             setContactos(prevContactos =>
               prevContactos.map(c => {
@@ -281,6 +294,10 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
                 return c;
               })
             );
+
+            // Refrescar conversaciones y cursos para actualizar los badges de las pestañas
+            cargarConversaciones();
+            cargarCursos();
           }
         }
       };
@@ -331,15 +348,10 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
     }
   }, [puedeUsarChat, actualizarNoLeidos]);
 
-  useEffect(() => {
+  // useLayoutEffect para scroll inmediato al final (antes del paint)
+  useLayoutEffect(() => {
     if (mensajesRef.current) {
       mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
-      // Refuerzo para asegurar que baje después de renderizar
-      setTimeout(() => {
-        if (mensajesRef.current) {
-          mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
-        }
-      }, 100);
     }
   }, [mensajes, conversacionActual, chatAbierto]);
 
@@ -734,12 +746,15 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
               onClick={() => { setVistaActiva('institucional'); setCursoSeleccionado(null); setModoSeleccion(false); }}
               title="Equipo"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
+              <div className="chatv2-nav-icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                {totalNoLeidosEquipo > 0 && <span className="chatv2-nav-badge">{totalNoLeidosEquipo}</span>}
+              </div>
               <span>Equipo</span>
             </button>
             <button
@@ -747,10 +762,13 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
               onClick={() => { setVistaActiva('cursos'); setModoSeleccion(false); }}
               title="Cursos"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-              </svg>
+              <div className="chatv2-nav-icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                {totalNoLeidosCursos > 0 && <span className="chatv2-nav-badge">{totalNoLeidosCursos}</span>}
+              </div>
               <span>Cursos</span>
             </button>
           </div>

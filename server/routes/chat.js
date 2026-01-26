@@ -264,10 +264,12 @@ router.get('/conversaciones', async (req, res) => {
                     CASE
                         WHEN u.tipo_usuario = 'administrador' THEN (SELECT CONCAT(nombres, ' ', apellidos) FROM tb_administradores WHERE usuario_id = u.id)
                         WHEN u.tipo_usuario = 'docente' THEN (SELECT CONCAT(nombres, ' ', apellidos) FROM tb_docentes WHERE usuario_id = u.id)
+                        WHEN u.tipo_usuario = 'apoderado' THEN (SELECT CONCAT(nombres, ' ', apellidos) FROM tb_apoderados WHERE usuario_id = u.id)
                     END AS nombre_completo,
                     CASE
                         WHEN u.tipo_usuario = 'administrador' THEN (SELECT foto_url FROM tb_administradores WHERE usuario_id = u.id)
                         WHEN u.tipo_usuario = 'docente' THEN (SELECT foto_url FROM tb_docentes WHERE usuario_id = u.id)
+                        WHEN u.tipo_usuario = 'apoderado' THEN (SELECT foto_url FROM tb_apoderados WHERE usuario_id = u.id)
                     END AS foto_url
                 FROM tb_usuarios u
                 WHERE u.id = ?
@@ -324,26 +326,58 @@ router.get('/docente/:id/cursos', async (req, res) => {
         if (tipoUsuario === 'administrador') {
             // Administradores ven TODOS los cursos activos del establecimiento
             const [todosCursos] = await pool.query(`
-                SELECT id, nombre, grado, letra, nivel
-                FROM tb_cursos
-                WHERE establecimiento_id = ? AND activo = 1
-                ORDER BY nivel, grado, letra
-            `, [establecimiento_id]);
+                SELECT 
+                    c.id, c.nombre, c.grado, c.letra, c.nivel,
+                    IFNULL(unread.total, 0) as mensajes_no_leidos
+                FROM tb_cursos c
+                LEFT JOIN (
+                    SELECT ae.curso_id, COUNT(DISTINCT m.id) as total
+                    FROM tb_chat_mensajes m
+                    JOIN tb_chat_conversaciones conv ON m.conversacion_id = conv.id
+                    JOIN tb_apoderados ap ON (conv.usuario1_id = ap.usuario_id OR conv.usuario2_id = ap.usuario_id)
+                    JOIN tb_apoderado_alumno aa ON ap.id = aa.apoderado_id
+                    JOIN tb_alumno_establecimiento ae ON aa.alumno_id = ae.alumno_id
+                    WHERE (conv.usuario1_id = ? OR conv.usuario2_id = ?)
+                    AND m.remitente_id = ap.usuario_id
+                    AND m.leido = 0
+                    AND conv.activo = 1
+                    AND ae.activo = 1
+                    GROUP BY ae.curso_id
+                ) unread ON c.id = unread.curso_id
+                WHERE c.establecimiento_id = ? AND c.activo = 1
+                ORDER BY c.nivel, c.grado, c.letra
+            `, [id, id, establecimiento_id]);
             cursos = todosCursos;
             console.log(`Chat/Cursos: Admin encontró ${cursos.length} cursos`);
 
         } else {
             // Docentes ven solo sus cursos asignados
             const [cursosAsignados] = await pool.query(`
-                SELECT DISTINCT c.id, c.nombre, c.grado, c.letra, c.nivel
+                SELECT DISTINCT 
+                    c.id, c.nombre, c.grado, c.letra, c.nivel,
+                    IFNULL(unread.total, 0) as mensajes_no_leidos
                 FROM tb_cursos c
-                INNER JOIN tb_asignaciones a ON c.id = a.curso_id
-                WHERE a.docente_id = (SELECT id FROM tb_docentes WHERE usuario_id = ?)
+                INNER JOIN tb_asignaciones asig ON c.id = asig.curso_id
+                LEFT JOIN (
+                    SELECT ae.curso_id, COUNT(DISTINCT m.id) as total
+                    FROM tb_chat_mensajes m
+                    JOIN tb_chat_conversaciones conv ON m.conversacion_id = conv.id
+                    JOIN tb_apoderados ap ON (conv.usuario1_id = ap.usuario_id OR conv.usuario2_id = ap.usuario_id)
+                    JOIN tb_apoderado_alumno aa ON ap.id = aa.apoderado_id
+                    JOIN tb_alumno_establecimiento ae ON aa.alumno_id = ae.alumno_id
+                    WHERE (conv.usuario1_id = ? OR conv.usuario2_id = ?)
+                    AND m.remitente_id = ap.usuario_id
+                    AND m.leido = 0
+                    AND conv.activo = 1
+                    AND ae.activo = 1
+                    GROUP BY ae.curso_id
+                ) unread ON c.id = unread.curso_id
+                WHERE asig.docente_id = (SELECT id FROM tb_docentes WHERE usuario_id = ?)
                 AND c.establecimiento_id = ?
                 AND c.activo = 1
-                AND a.activo = 1
+                AND asig.activo = 1
                 ORDER BY c.nivel, c.grado, c.letra
-            `, [id, establecimiento_id]);
+            `, [id, id, id, establecimiento_id]);
             cursos = cursosAsignados;
             console.log(`Chat/Cursos: Docente encontró ${cursos.length} cursos`);
         }

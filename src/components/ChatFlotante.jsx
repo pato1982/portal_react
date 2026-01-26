@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import {
   obtenerContactos,
   obtenerMensajes,
@@ -229,12 +229,12 @@ function ChatFlotante({ usuario, establecimientoId }) {
     }
   }, [puedeUsarChat, actualizarNoLeidos]);
 
-  // Scroll al ultimo mensaje
-  useEffect(() => {
+  // useLayoutEffect para scroll inmediato al final (antes del paint)
+  useLayoutEffect(() => {
     if (mensajesRef.current) {
       mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
     }
-  }, [mensajes]);
+  }, [mensajes, conversacionActual, chatAbierto]);
 
   const toggleChat = () => {
     setChatAbierto(!chatAbierto);

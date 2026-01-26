@@ -213,12 +213,12 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
   }, [chatAbierto, cargarContactos]);
 
   // Scroll al final
-  // Se reemplaza useEffect por useLayoutEffect para asegurar que el scroll ocurra después de que el DOM se haya actualizado
+  // Se usa useLayoutEffect para asegurar que el scroll ocurra síncronamente después de que el DOM se actualice pero antes de pintar
   useLayoutEffect(() => {
     if (mensajesRef.current) {
       mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
     }
-  }, [mensajes]);
+  }, [mensajes, conversacionActiva, chatAbierto]);
 
   // Focus input
   useEffect(() => {

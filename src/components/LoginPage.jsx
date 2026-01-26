@@ -11,6 +11,7 @@ function LoginPage({ onVolver, onLoginExitoso }) {
   const [error, setError] = useState('');
   const [tipoSeleccionado, setTipoSeleccionado] = useState(null);
   const [cargando, setCargando] = useState(false);
+  const [recordarSesion, setRecordarSesion] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,7 +49,7 @@ function LoginPage({ onVolver, onLoginExitoso }) {
       const resultado = await login(formData.email, formData.password, tipoSeleccionado);
 
       if (resultado.success) {
-        onLoginExitoso(tipoSeleccionado, resultado.usuario);
+        onLoginExitoso(tipoSeleccionado, resultado.usuario, recordarSesion);
       } else {
         setError(resultado.error || 'Error al iniciar sesión');
       }
@@ -93,9 +94,9 @@ function LoginPage({ onVolver, onLoginExitoso }) {
                 onClick={() => seleccionarTipo('administrador')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="M2 17l10 5 10-5"/>
-                  <path d="M2 12l10 5 10-5"/>
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                  <path d="M2 17l10 5 10-5" />
+                  <path d="M2 12l10 5 10-5" />
                 </svg>
                 <span>Admin</span>
               </button>
@@ -105,10 +106,10 @@ function LoginPage({ onVolver, onLoginExitoso }) {
                 onClick={() => seleccionarTipo('docente')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
                 <span>Docente</span>
               </button>
@@ -118,8 +119,8 @@ function LoginPage({ onVolver, onLoginExitoso }) {
                 onClick={() => seleccionarTipo('apoderado')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
                 </svg>
                 <span>Apoderado</span>
               </button>
@@ -176,6 +177,19 @@ function LoginPage({ onVolver, onLoginExitoso }) {
                   )}
                 </button>
               </div>
+            </div>
+
+            <div className="form-group-checkbox" style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+              <input
+                type="checkbox"
+                id="recordar"
+                checked={recordarSesion}
+                onChange={(e) => setRecordarSesion(e.target.checked)}
+                style={{ width: 'auto', marginRight: '8px', cursor: 'pointer' }}
+              />
+              <label htmlFor="recordar" style={{ marginBottom: 0, fontSize: '14px', cursor: 'pointer', userSelect: 'none' }}>
+                Recordar mi sesión
+              </label>
             </div>
 
             <button type="submit" className="btn-login" disabled={cargando}>

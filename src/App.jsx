@@ -30,7 +30,27 @@ function App() {
   const [vistaActual, setVistaActual] = useState('landing'); // 'landing', 'loginPage', 'seleccion-rol', 'registro', 'administrador', 'docente' o 'apoderado'
   const [tipoUsuarioRegistro, setTipoUsuarioRegistro] = useState(null); // 'administrador', 'docente', 'apoderado'
   const [usuarioLogueado, setUsuarioLogueado] = useState(null); // Datos del usuario autenticado
-  const { login: loginContext, logout: logoutContext } = useAuth();
+  const { login: loginContext, logout: logoutContext, isAuthenticated, usuario: usuarioAuth, tipoUsuario: tipoUsuarioAuth, cargandoSesion } = useAuth();
+
+  // Efecto para redirigir si ya hay sesión iniciada (RESTORE SESSION)
+  React.useEffect(() => {
+    if (!cargandoSesion && isAuthenticated && usuarioAuth && vistaActual === 'landing') {
+      const usuarioConEstablecimiento = {
+        ...usuarioAuth,
+        tipo_usuario: tipoUsuarioAuth === 'administrador' ? 'Administrador' : tipoUsuarioAuth === 'docente' ? 'Docente' : 'Apoderado',
+        nombre_establecimiento: usuarioAuth?.establecimiento || usuarioAuth?.nombre_establecimiento || 'Establecimiento Educacional'
+      };
+      setUsuarioLogueado(usuarioConEstablecimiento);
+
+      if (tipoUsuarioAuth === 'administrador') {
+        setVistaActual('administrador');
+      } else if (tipoUsuarioAuth === 'docente') {
+        setVistaActual('docente');
+      } else if (tipoUsuarioAuth === 'apoderado') {
+        setVistaActual('apoderado');
+      }
+    }
+  }, [cargandoSesion, isAuthenticated, usuarioAuth, tipoUsuarioAuth, vistaActual]);
 
   const renderTabContent = () => {
     // Cada tab se envuelve con ErrorBoundary para que un error en uno
@@ -77,6 +97,30 @@ function App() {
     setVistaActual('seleccion-rol');
   };
 
+  // Mostrar loading mientras se restaura sesión
+  if (cargandoSesion) {
+    return (
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px' }}>
+        <div className="spinner"></div>
+        <p style={{ color: '#64748b' }}>Restaurando sesión...</p>
+        <style>{`
+          .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   // Landing page
   if (vistaActual === 'landing') {
     return (
@@ -92,7 +136,7 @@ function App() {
       <ErrorBoundary FallbackComponent={PageErrorFallback}>
         <LoginPage
           onVolver={() => setVistaActual('landing')}
-          onLoginExitoso={(tipo, usuario) => {
+          onLoginExitoso={(tipo, usuario, recordar) => {
             // Mapear establecimiento a nombre_establecimiento para el Header
             const usuarioConEstablecimiento = {
               ...usuario,
@@ -100,7 +144,7 @@ function App() {
               nombre_establecimiento: usuario?.establecimiento || 'Establecimiento Educacional'
             };
             setUsuarioLogueado(usuarioConEstablecimiento);
-            loginContext(usuarioConEstablecimiento, tipo);
+            loginContext(usuarioConEstablecimiento, tipo, recordar);
 
             if (tipo === 'administrador') {
               setVistaActual('administrador');

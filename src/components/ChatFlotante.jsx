@@ -231,11 +231,15 @@ function ChatFlotante({ usuario, establecimientoId }) {
   }, [puedeUsarChat, actualizarNoLeidos]);
 
   // Scroll behavior
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  useLayoutEffect(() => {
+    if (mensajesRef.current) {
+      mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
+    }
     // Fallback
     const timer = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      if (mensajesRef.current) {
+        mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
+      }
     }, 100);
     return () => clearTimeout(timer);
   }, [mensajes, conversacionActual, chatAbierto]);
@@ -630,8 +634,8 @@ function ChatFlotante({ usuario, establecimientoId }) {
                       );
                     })
                   )}
-                  <div ref={messagesEndRef} />
-                </div>
+                <div ref={messagesEndRef} />
+              </div>
 
               {/* Input Area */}
               <div className="chat-input-area">

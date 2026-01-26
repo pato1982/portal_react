@@ -350,11 +350,15 @@ function ChatDocenteV2({ usuario, establecimientoId }) {
   }, [puedeUsarChat, actualizarNoLeidos]);
 
   // useEffect para scroll al final
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  useLayoutEffect(() => {
+    if (mensajesRef.current) {
+      mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
+    }
     // Fallback
     const timer = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      if (mensajesRef.current) {
+        mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
+      }
     }, 100);
     return () => clearTimeout(timer);
   }, [mensajes, conversacionActual, chatAbierto]);

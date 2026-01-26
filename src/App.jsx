@@ -16,6 +16,7 @@ import ApoderadoPage from './components/apoderado/ApoderadoPage';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import RegistroPage from './components/RegistroPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { PageErrorFallback, SectionErrorFallback } from './components/common/ErrorFallback';
 import { useAuth } from './contexts';
@@ -27,7 +28,10 @@ import './styles/registro.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState('alumnos');
-  const [vistaActual, setVistaActual] = useState('landing'); // 'landing', 'loginPage', 'seleccion-rol', 'registro', 'administrador', 'docente' o 'apoderado'
+  // Detectar si venimos de un link de recuperación (/?token=...)
+  const [vistaActual, setVistaActual] = useState(window.location.search.includes('token') ? 'reset-password' : 'landing');
+  const [tokenRecuperacion] = useState(new URLSearchParams(window.location.search).get('token'));
+
   const [tipoUsuarioRegistro, setTipoUsuarioRegistro] = useState(null); // 'administrador', 'docente', 'apoderado'
   const [usuarioLogueado, setUsuarioLogueado] = useState(null); // Datos del usuario autenticado
   const { login: loginContext, logout: logoutContext, isAuthenticated, usuario: usuarioAuth, tipoUsuario: tipoUsuarioAuth, cargandoSesion } = useAuth();
@@ -259,6 +263,18 @@ function App() {
     return (
       <ErrorBoundary FallbackComponent={PageErrorFallback}>
         <ApoderadoPage onCambiarVista={cerrarSesion} usuario={usuarioLogueado} />
+      </ErrorBoundary>
+    );
+  }
+
+  // Vista de reset password
+  if (vistaActual === 'reset-password') {
+    return (
+      <ErrorBoundary FallbackComponent={PageErrorFallback}>
+        <ResetPasswordPage
+          token={tokenRecuperacion}
+          onVolver={() => setVistaActual('loginPage')}
+        />
       </ErrorBoundary>
     );
   }

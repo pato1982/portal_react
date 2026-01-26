@@ -21,6 +21,28 @@ export const obtenerCredencialesDemo = (tipo) => {
 };
 
 /**
+ * Restablece la contraseña usuando el token
+ * @param {string} token 
+ * @param {string} password 
+ */
+export const restablecerPassword = async (token, password) => {
+  if (config.isDemoMode()) {
+    await new Promise(r => setTimeout(r, 1000));
+    return { success: true };
+  }
+  try {
+    const response = await fetch(`${config.apiBaseUrl}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    });
+    return await response.json();
+  } catch (error) {
+    return { success: false, error: 'Error de conexión' };
+  }
+};
+
+/**
  * Valida las credenciales de login
  * @param {string} email - Email del usuario
  * @param {string} password - Contraseña del usuario
@@ -133,4 +155,5 @@ export default {
   logout,
   verificarSesion,
   esModoDemo,
+  restablecerPassword,
 };

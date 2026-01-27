@@ -240,7 +240,7 @@ export const esModoDemo = () => config.isDemoMode();
 export default {
   obtenerEstablecimientos,
   obtenerCursos,
-  validarCodigoPortal,
+  validarPreRegistroAdmin,
   validarPreRegistroDocente,
   validarPreRegistroApoderado,
   registrarUsuario,

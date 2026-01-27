@@ -54,26 +54,21 @@ export const obtenerCursos = async () => {
 };
 
 /**
- * Valida el código de Portal Estudiantil (para admin)
- * @param {string} codigo - Código a validar
+ * Valida el pre-registro de un administrador
+ * @param {string} rut - RUT del administrador
+ * @param {string} [email] - Email del administrador
  * @returns {Promise<Object>}
  */
-export const validarCodigoPortal = async (codigo) => {
+export const validarPreRegistroAdmin = async (rut, email) => {
   if (config.isDemoMode()) {
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    const esValido = codigosPortal.includes(codigo.toUpperCase());
-    return {
-      success: esValido,
-      error: esValido ? null : 'El código ingresado no es válido. Por favor verifique el código proporcionado por Portal Estudiantil o comuníquese con soporte.'
-    };
+    return { success: true, error: null }; // Mock simple para demo
   }
 
   try {
-    const response = await fetch(`${config.apiBaseUrl}/registro/validar-codigo`, {
+    const response = await fetch(`${config.apiBaseUrl}/registro/validar-admin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ codigo: codigo.trim() }),
+      body: JSON.stringify({ rut, email }),
     });
 
     const data = await response.json();
@@ -82,7 +77,7 @@ export const validarCodigoPortal = async (codigo) => {
       error: data.message || null
     };
   } catch (error) {
-    console.error('Error validando código:', error);
+    console.error('Error validando admin:', error);
     return { success: false, error: 'Error de conexión' };
   }
 };

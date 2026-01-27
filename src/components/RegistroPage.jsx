@@ -3,7 +3,7 @@ import '../styles/registro.css';
 import {
   obtenerEstablecimientos,
   obtenerCursos,
-  validarCodigoPortal,
+  validarPreRegistroAdmin,
   validarPreRegistroDocente,
   validarPreRegistroApoderado,
   registrarUsuario,
@@ -14,7 +14,6 @@ import {
   FormularioDatos,
   FormularioAlumnos,
   FormularioPassword,
-  FormularioCodigoPassword,
   ModalResultado,
   formatRut,
   getTituloRol,
@@ -41,7 +40,6 @@ function RegistroPage({ tipoUsuario, onVolver, onRegistroExitoso }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [codigoPortal, setCodigoPortal] = useState('');
   const [error, setError] = useState('');
   const [modalResultado, setModalResultado] = useState({ visible: false, exito: false, mensaje: '' });
   const [cargando, setCargando] = useState(false);
@@ -101,7 +99,6 @@ function RegistroPage({ tipoUsuario, onVolver, onRegistroExitoso }) {
   };
   const autoLlenarPaso2Admin = () => {
     if (datosAutoLlenado) {
-      setCodigoPortal(datosAutoLlenado.codigoPortal);
       setPassword(datosAutoLlenado.paso3Password);
       setConfirmPassword(datosAutoLlenado.paso3Password);
     }
@@ -136,12 +133,9 @@ function RegistroPage({ tipoUsuario, onVolver, onRegistroExitoso }) {
     else onVolver();
   };
 
-  const validarCodigoPortalLocal = async () => {
-    if (!codigoPortal) {
-      setError('Por favor ingrese el codigo de Portal Estudiantil');
-      return false;
-    }
-    const resultado = await validarCodigoPortal(codigoPortal);
+  const validarPreRegistroAdminLocal = async () => {
+    // Para admin validamos RUT y Email contra la invitación
+    const resultado = await validarPreRegistroAdmin(formData.rut, formData.correo);
     if (!resultado.success) {
       setModalResultado({ visible: true, exito: false, mensaje: resultado.error });
       return false;
@@ -196,8 +190,7 @@ function RegistroPage({ tipoUsuario, onVolver, onRegistroExitoso }) {
       }
 
       if (tipoUsuario === 'administrador' && paso === 2) {
-        valido = await validarCodigoPortalLocal();
-        datosRegistro.codigo = codigoPortal;
+        valido = await validarPreRegistroAdminLocal();
       } else if (tipoUsuario === 'docente' && paso === 2) {
         valido = await validarPreRegistroDocenteLocal();
       } else if (tipoUsuario === 'apoderado' && paso === 3) {
@@ -273,26 +266,8 @@ function RegistroPage({ tipoUsuario, onVolver, onRegistroExitoso }) {
               />
             )}
 
-            {/* Paso 2: Codigo y Password (admin) */}
-            {tipoUsuario === 'administrador' && paso === 2 && (
-              <FormularioCodigoPassword
-                codigoPortal={codigoPortal}
-                password={password}
-                confirmPassword={confirmPassword}
-                showPassword={showPassword}
-                showConfirmPassword={showConfirmPassword}
-                onCodigoChange={(e) => { setCodigoPortal(e.target.value.toUpperCase()); setError(''); }}
-                onPasswordChange={(e) => { setPassword(e.target.value); setError(''); }}
-                onConfirmPasswordChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
-                onTogglePassword={() => setShowPassword(!showPassword)}
-                onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
-                datosAutoLlenado={datosAutoLlenado}
-                onAutoLlenar={autoLlenarPaso2Admin}
-              />
-            )}
-
-            {/* Paso 2: Password (docente) o Paso 3: Password (apoderado) */}
-            {((tipoUsuario === 'docente' && paso === 2) || (tipoUsuario === 'apoderado' && paso === 3)) && (
+            {/* Paso 2: Password (admin y docente) o Paso 3: Password (apoderado) */}
+            {((tipoUsuario === 'administrador' && paso === 2) || (tipoUsuario === 'docente' && paso === 2) || (tipoUsuario === 'apoderado' && paso === 3)) && (
               <FormularioPassword
                 password={password}
                 confirmPassword={confirmPassword}
@@ -303,7 +278,7 @@ function RegistroPage({ tipoUsuario, onVolver, onRegistroExitoso }) {
                 onTogglePassword={() => setShowPassword(!showPassword)}
                 onToggleConfirmPassword={() => setShowConfirmPassword(!showConfirmPassword)}
                 datosAutoLlenado={datosAutoLlenado}
-                onAutoLlenar={autoLlenarPaso3}
+                onAutoLlenar={(tipoUsuario === 'administrador' && paso === 2) ? autoLlenarPaso2Admin : autoLlenarPaso3}
               />
             )}
 

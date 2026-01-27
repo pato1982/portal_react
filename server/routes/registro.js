@@ -92,46 +92,67 @@ const registrarFalloApoderado = async (establecimientoId, datosApoderado, datosA
 // ============================================
 // POST /api/registro/validar-codigo - Validar código de administrador
 // ============================================
-router.post('/validar-codigo', async (req, res) => {
-    const { codigo } = req.body;
+// ============================================
+// POST /api/registro/validar-admin - Validar RUT de administrador en pre-registro
+// ============================================
+router.post('/validar-admin', async (req, res) => {
+    const { rut, email } = req.body;
 
-    if (!codigo) {
+    if (!rut) {
         return res.status(400).json({
             success: false,
-            message: 'El código es requerido'
+            message: 'El RUT es requerido'
         });
     }
 
     try {
-        // Buscar código en tb_codigos_validacion
-        const [codigos] = await pool.query(`
-            SELECT cv.*, e.nombre as establecimiento_nombre
-            FROM tb_codigos_validacion cv
-            JOIN tb_establecimientos e ON cv.establecimiento_id = e.id
-            WHERE cv.codigo = ?
-              AND cv.activo = 1
-              AND cv.usado = 0
-              AND (cv.fecha_expiracion IS NULL OR cv.fecha_expiracion > NOW())
-        `, [codigo.toUpperCase()]);
+        // Buscar en tb_preregistro_administradores (case-insensitive)
+        const [preregistros] = await pool.query(`
+            SELECT pa.*, e.nombre as establecimiento_nombre
+            FROM tb_preregistro_administradores pa
+            JOIN tb_establecimientos e ON pa.establecimiento_id = e.id
+            WHERE UPPER(pa.rut) = UPPER(?)
+              AND pa.activo = 1
+              AND pa.usado = 0
+        `, [rut]);
 
-        if (codigos.length === 0) {
+        if (preregistros.length === 0) {
+            // Verificar si el email coincide con algún registro (opcional como chequeo extra)
+            // Registrar intento fallido
+            await registrarFalloAdmin(null, { rut, email, nombres: '', apellidos: '' }, null, 'rut_no_preregistrado', req);
             return res.status(400).json({
                 success: false,
-                message: 'El código ingresado no es válido o ya fue utilizado.'
+                message: 'El RUT ingresado no coincide con una invitación de administrador válida. Por favor, contacte al soporte del sistema.'
+            });
+        }
+
+        const preregistro = preregistros[0];
+
+        // Validar Email si se proporciona
+        if (email && preregistro.email && email.toLowerCase() !== preregistro.email.toLowerCase()) {
+            return res.status(400).json({
+                success: false,
+                message: 'El correo electrónico no coincide con el registrado en la invitación.'
             });
         }
 
         res.json({
             success: true,
-            establecimiento: codigos[0].establecimiento_nombre,
-            establecimiento_id: codigos[0].establecimiento_id
+            datos: {
+                nombres: preregistro.nombres,
+                apellidos: preregistro.apellidos,
+                email: preregistro.email,
+                telefono: preregistro.telefono,
+                establecimiento: preregistro.establecimiento_nombre,
+                establecimiento_id: preregistro.establecimiento_id
+            }
         });
 
     } catch (error) {
-        console.error('Error validando código:', error);
+        console.error('Error validando admin:', error);
         res.status(500).json({
             success: false,
-            message: 'Error al validar el código'
+            message: 'Error al validar los datos'
         });
     }
 });
@@ -292,13 +313,13 @@ router.post('/validar-apoderado', async (req, res) => {
 // POST /api/registro/admin - Registrar administrador
 // ============================================
 router.post('/admin', async (req, res) => {
-    const { codigo, rut, nombres, apellidos, email, telefono, password } = req.body;
+    const { rut, nombres, apellidos, email, telefono, password } = req.body;
     const datosAdmin = { rut, nombres, apellidos, email, telefono };
 
-    if (!codigo || !rut || !nombres || !apellidos || !email || !password) {
+    if (!rut || !nombres || !apellidos || !email || !password) {
         return res.status(400).json({
             success: false,
-            message: 'Todos los campos son requeridos'
+            message: 'Todos los campos marcados como obligatorios son requeridos'
         });
     }
 
@@ -307,40 +328,34 @@ router.post('/admin', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // Validar código - primero verificar si existe pero está expirado o usado
-        const [codigoInfo] = await connection.query(`
-            SELECT cv.*, e.id as est_id FROM tb_codigos_validacion cv
-            LEFT JOIN tb_establecimientos e ON cv.establecimiento_id = e.id
-            WHERE cv.codigo = ?
-        `, [codigo.toUpperCase()]);
+        // 1. Validar contra Pre-Registro (Invitación)
+        // Buscar invitación válida por RUT y Email
+        const [preregistros] = await connection.query(`
+            SELECT * FROM tb_preregistro_administradores
+            WHERE UPPER(rut) = UPPER(?) 
+              AND email = ?
+              AND activo = 1 
+              AND usado = 0
+        `, [rut, email]);
 
-        const establecimientoId = codigoInfo.length > 0 ? codigoInfo[0].est_id : null;
-
-        // Validar código activo
-        const [codigos] = await connection.query(`
-            SELECT * FROM tb_codigos_validacion
-            WHERE codigo = ? AND activo = 1 AND usado = 0
-              AND (fecha_expiracion IS NULL OR fecha_expiracion > NOW())
-        `, [codigo.toUpperCase()]);
-
-        if (codigos.length === 0) {
+        if (preregistros.length === 0) {
             await connection.rollback();
-            // Determinar motivo específico
-            let motivoFallo = 'codigo_invalido';
-            if (codigoInfo.length > 0) {
-                if (codigoInfo[0].usado === 1) motivoFallo = 'codigo_usado';
-                else if (codigoInfo[0].fecha_expiracion && new Date(codigoInfo[0].fecha_expiracion) < new Date()) motivoFallo = 'codigo_expirado';
-            }
-            await registrarFalloAdmin(establecimientoId, datosAdmin, codigo, motivoFallo, req);
+            // Buscar si existe pero ya fue usado o datos no coinciden
+            const [infoExtra] = await connection.query('SELECT usado FROM tb_preregistro_administradores WHERE rut = ?', [rut]);
+            let motivo = 'datos_no_coinciden';
+            if (infoExtra.length > 0 && infoExtra[0].usado === 1) motivo = 'invitacion_ya_usada';
+
+            await registrarFalloAdmin(null, datosAdmin, null, motivo, req);
             return res.status(400).json({
                 success: false,
-                message: 'El código no es válido o ya fue utilizado'
+                message: 'No se encontró una invitación válida para estos datos o ya fue utilizada.'
             });
         }
 
-        const codigoValidacion = codigos[0];
+        const preregistro = preregistros[0];
+        const establecimientoId = preregistro.establecimiento_id;
 
-        // Verificar que el email no exista
+        // 2. Verificar que el email no exista ya como usuario
         const [existeEmail] = await connection.query(
             'SELECT id FROM tb_usuarios WHERE email = ?',
             [email]
@@ -348,14 +363,14 @@ router.post('/admin', async (req, res) => {
 
         if (existeEmail.length > 0) {
             await connection.rollback();
-            await registrarFalloAdmin(codigoValidacion.establecimiento_id, datosAdmin, codigo, 'ya_registrado', req);
+            await registrarFalloAdmin(establecimientoId, datosAdmin, null, 'email_ya_registrado', req);
             return res.status(400).json({
                 success: false,
-                message: 'El correo electrónico ya está registrado'
+                message: 'El correo electrónico ya está registrado en el sistema.'
             });
         }
 
-        // Verificar que el RUT no exista
+        // 3. Verificar que el RUT no exista ya como administrador
         const [existeRut] = await connection.query(
             'SELECT id FROM tb_administradores WHERE rut = ?',
             [rut]
@@ -363,17 +378,17 @@ router.post('/admin', async (req, res) => {
 
         if (existeRut.length > 0) {
             await connection.rollback();
-            await registrarFalloAdmin(codigoValidacion.establecimiento_id, datosAdmin, codigo, 'ya_registrado', req);
+            await registrarFalloAdmin(establecimientoId, datosAdmin, null, 'rut_ya_registrado', req);
             return res.status(400).json({
                 success: false,
-                message: 'El RUT ya está registrado'
+                message: 'El RUT ya está registrado como administrador.'
             });
         }
 
-        // Crear hash de contraseña
+        // 4. Crear hash de contraseña
         const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-        // Crear usuario en tb_usuarios
+        // 5. Crear usuario en tb_usuarios
         const [resultUsuario] = await connection.query(`
             INSERT INTO tb_usuarios (email, password_hash, tipo_usuario, activo)
             VALUES (?, ?, 'administrador', 1)
@@ -381,7 +396,8 @@ router.post('/admin', async (req, res) => {
 
         const usuarioId = resultUsuario.insertId;
 
-        // Crear administrador en tb_administradores
+        // 6. Crear administrador en tb_administradores
+        // Usamos los datos del formulario, pero podríamos forzar los del preregistro si quisiéramos ser estrictos
         const [resultAdmin] = await connection.query(`
             INSERT INTO tb_administradores (usuario_id, rut, nombres, apellidos, telefono, activo)
             VALUES (?, ?, ?, ?, ?, 1)
@@ -389,25 +405,25 @@ router.post('/admin', async (req, res) => {
 
         const adminId = resultAdmin.insertId;
 
-        // Asociar al establecimiento
+        // 7. Asociar al establecimiento (Vinculación automática)
         await connection.query(`
             INSERT INTO tb_administrador_establecimiento
             (administrador_id, establecimiento_id, es_principal, cargo, fecha_asignacion, activo)
             VALUES (?, ?, 1, 'Administrador', CURDATE(), 1)
-        `, [adminId, codigoValidacion.establecimiento_id]);
+        `, [adminId, establecimientoId]);
 
-        // Marcar código como usado
+        // 8. Marcar pre-registro como usado
         await connection.query(`
-            UPDATE tb_codigos_validacion
-            SET usado = 1, fecha_uso = NOW(), usado_por_id = ?
+            UPDATE tb_preregistro_administradores
+            SET usado = 1, fecha_uso = NOW(), usuario_creado_id = ?
             WHERE id = ?
-        `, [usuarioId, codigoValidacion.id]);
+        `, [usuarioId, preregistro.id]);
 
         await connection.commit();
 
         res.json({
             success: true,
-            message: 'Cuenta de administrador creada con éxito. Ya puede iniciar sesión con su email y la contraseña que acaba de crear.'
+            message: 'Cuenta de administrador creada y vinculada al establecimiento con éxito.'
         });
 
     } catch (error) {

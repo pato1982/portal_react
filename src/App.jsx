@@ -282,13 +282,43 @@ function App() {
 
   // Vista de administrador
   return (
-    <ErrorBoundary FallbackComponent={PageErrorFallback}>
-      <AdminPage
-        usuario={usuarioLogueado || usuarioDemo}
-        onCerrarSesion={cerrarSesion}
-        mostrarMensaje={(msg) => console.log(msg)}
-      />
-    </ErrorBoundary>
+    <div className="app-container">
+      <Header usuario={usuarioLogueado || usuarioDemo} onCerrarSesion={cerrarSesion} />
+
+      <main className="main-content">
+        <section className="control-panel">
+          <div className="panel-header">
+            <h2>Panel de Control</h2>
+          </div>
+
+          <div className="tabs-container">
+            <TabsNav activeTab={activeTab} setActiveTab={setActiveTab} />
+
+            <div className="tabs-content">
+              {renderTabContent()}
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="main-footer">
+        <p>Sistema de Gestion Academica &copy; 2024 | Todos los derechos reservados</p>
+        <p className="footer-creditos">Sistema escolar desarrollado por <span className="ch-naranja">CH</span>system</p>
+      </footer>
+
+      {/* Chat V2 - Global para Docentes y Administradores */}
+      <ErrorBoundary fallback={null}>
+        <ChatDocenteV2
+          usuario={usuarioLogueado ? {
+            id: usuarioLogueado.id,
+            tipo: usuarioLogueado.tipo || usuarioLogueado.tipo_usuario?.toLowerCase(),
+            nombres: usuarioLogueado.nombres,
+            apellidos: usuarioLogueado.apellidos
+          } : null}
+          establecimientoId={usuarioLogueado?.establecimiento_id}
+        />
+      </ErrorBoundary>
+    </div>
   );
 }
 

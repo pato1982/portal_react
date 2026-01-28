@@ -157,7 +157,7 @@ const HelpTooltip = ({ content, isVisible = true }) => {
                         </div>
 
                         {/* Body del Modal */}
-                        <div style={{ padding: '24px', color: '#334155', lineHeight: '1.6', fontSize: '15px' }}>
+                        <div style={{ padding: '24px', color: '#334155', lineHeight: '1.6', fontSize: '15px', textAlign: 'justify', textTransform: 'none' }}>
                             <p style={{ margin: 0 }}>
                                 {content}
                             </p>

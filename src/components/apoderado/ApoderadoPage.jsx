@@ -185,10 +185,42 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
   }, [mostrarSelectorPupilo]);
 
   const tabs = [
-    { id: 'informacion', label: 'Ficha de Información', color: 'pink', desc: 'Expediente académico, ficha médica y documentos oficiales.', badge: 'Datos Pupilo', icon: 'person_book', img: '/assets/navigation/info.png' },
-    { id: 'notas', label: 'Libro de Notas', color: 'blue', desc: 'Consulta las calificaciones detalladas y el rendimiento del periodo.', badge: 'Calificaciones', icon: 'auto_stories', img: '/assets/navigation/notas.png' },
-    { id: 'comunicados', label: 'Cuaderno de Comunicados', color: 'green', desc: 'Revisa los avisos y noticias del establecimiento.', badge: 'Avisos', icon: 'drafts', img: '/assets/navigation/comunicados.png' },
-    { id: 'progreso', label: 'Libro de Progreso', color: 'yellow', desc: 'Visualiza la evolución y metas académicas.', badge: 'Evolución', icon: 'trending_up', img: '/assets/navigation/progreso.png' }
+    {
+      id: 'informacion',
+      label: 'Ficha de Información',
+      color: 'pink',
+      desc: 'Acceda al expediente digital completo de su pupilo. Aquí puede revisar y validar los datos personales, consultar la ficha médica (alergias, tratamientos), contactos de emergencia y descargar documentos oficiales como certificados de alumno regular.',
+      badge: 'Datos Pupilo',
+      icon: 'person_book',
+      img: '/assets/navigation/info.png'
+    },
+    {
+      id: 'notas',
+      label: 'Libro de Notas',
+      color: 'blue',
+      desc: 'Manténgase al día con el rendimiento académico. Revise en tiempo real las calificaciones parciales, ponderaciones y promedios por asignatura. Permite detectar oportunamente si es necesario reforzar alguna materia.',
+      badge: 'Calificaciones',
+      icon: 'auto_stories',
+      img: '/assets/navigation/notas.png'
+    },
+    {
+      id: 'comunicados',
+      label: 'Cuaderno de Comunicados',
+      color: 'green',
+      desc: 'Canal directo con el colegio. Reciba notificaciones importantes, citaciones a reuniones, avisos de actividades y mensajes personales de los profesores. Es vital revisar esta sección periódicamente.',
+      badge: 'Avisos',
+      icon: 'drafts',
+      img: '/assets/navigation/comunicados.png'
+    },
+    {
+      id: 'progreso',
+      label: 'Libro de Progreso',
+      color: 'yellow',
+      desc: 'Visualización gráfica de la evolución académica. Observe tendencias de rendimiento, comparación con el promedio del curso y cumplimiento de metas educativas a lo largo del año escolar.',
+      badge: 'Evolución',
+      icon: 'trending_up',
+      img: '/assets/navigation/progreso.png'
+    }
   ];
 
   // Filtrar notas por pupilo seleccionado

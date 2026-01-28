@@ -86,11 +86,31 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
   }, []);
 
   const tabs = [
-    { id: 'asistencia', label: 'Asistencia', desc: 'Registre y controle la asistencia diaria de sus cursos asignados.' },
-    { id: 'agregar-nota', label: 'Agregar Nota', desc: 'Ingrese nuevas calificaciones al sistema seleccionado curso y asignatura.' },
-    { id: 'modificar-nota', label: 'Modificar Nota', desc: 'Edite calificaciones erróneas. Toda modificación queda registrada en auditoría.' },
-    { id: 'ver-notas', label: 'Ver Notas', desc: 'Visualice la sábana completa de notas por curso y asignatura.' },
-    { id: 'progreso', label: 'Progreso', desc: 'Analice estadísticas de rendimiento, promedios y alertas académicas.' }
+    {
+      id: 'asistencia',
+      label: 'Asistencia',
+      desc: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados. Recuerde que este registro es oficial y fundamental para la subvención escolar.'
+    },
+    {
+      id: 'agregar-nota',
+      label: 'Agregar Nota',
+      desc: 'Ingrese nuevas calificaciones al libro de clases. Primero seleccione el curso y la asignatura, luego el tipo de evaluación (Prueba, Trabajo, etc.) y finalmente ingrese las notas para cada alumno.'
+    },
+    {
+      id: 'modificar-nota',
+      label: 'Modificar Nota',
+      desc: 'Permite corregir calificaciones ingresadas erróneamente. Busque la evaluación específica y edite la nota del alumno. Tenga en cuenta que todas las modificaciones quedan registradas para auditoría interna.'
+    },
+    {
+      id: 'ver-notas',
+      label: 'Ver Notas',
+      desc: 'Visualice el panorama completo de calificaciones de sus cursos. Consulte la sábana de notas, promedios parciales y avance curricular de todos sus estudiantes en una sola vista.'
+    },
+    {
+      id: 'progreso',
+      label: 'Progreso',
+      desc: 'Analíticas de rendimiento de sus cursos. Revise gráficos de aprobación/reprobación, promedios por asignatura e identifique tempranamente a estudiantes que requieren apoyo pedagógico adicional.'
+    }
   ];
 
   return (

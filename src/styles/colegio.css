@@ -8929,7 +8929,7 @@ select.form-control {
 /* Responsive para pestañas en pantallas grandes */
 @media (min-width: 1101px) {
     .tab-btn {
-        font-size: 8px !important;
+        font-size: 11px !important;
         padding: 14px 20px !important;
     }
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import HelpTooltip from '../common/HelpTooltip';
 import AsistenciaTab from './AsistenciaTab';
 import AgregarNotaTab from './AgregarNotaTab';
 import ModificarNotaTab from './ModificarNotaTab';
@@ -20,6 +21,10 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
   const [establecimientoActual, setEstablecimientoActual] = useState(null);
   const [cargandoEstablecimientos, setCargandoEstablecimientos] = useState(true);
   const dropdownRef = useRef(null);
+
+  // Lógica de visibilidad de ayuda (Solo establecimiento ID 1)
+  // Nota: establecimientoActual.id puede ser 1 numeral o '1' string, importante validar ambos o parsear.
+  const mostrarAyuda = establecimientoActual?.id === 1 || establecimientoActual?.id === '1';
 
   // Datos del docente desde el usuario logueado
   const docenteActual = {
@@ -81,11 +86,11 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
   }, []);
 
   const tabs = [
-    { id: 'asistencia', label: 'Asistencia' },
-    { id: 'agregar-nota', label: 'Agregar Nota' },
-    { id: 'modificar-nota', label: 'Modificar Nota' },
-    { id: 'ver-notas', label: 'Ver Notas' },
-    { id: 'progreso', label: 'Progreso' }
+    { id: 'asistencia', label: 'Asistencia', desc: 'Registre y controle la asistencia diaria de sus cursos asignados.' },
+    { id: 'agregar-nota', label: 'Agregar Nota', desc: 'Ingrese nuevas calificaciones al sistema seleccionado curso y asignatura.' },
+    { id: 'modificar-nota', label: 'Modificar Nota', desc: 'Edite calificaciones erróneas. Toda modificación queda registrada en auditoría.' },
+    { id: 'ver-notas', label: 'Ver Notas', desc: 'Visualice la sábana completa de notas por curso y asignatura.' },
+    { id: 'progreso', label: 'Progreso', desc: 'Analice estadísticas de rendimiento, promedios y alertas académicas.' }
   ];
 
   return (
@@ -177,8 +182,10 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
                   key={tab.id}
                   className={`tab-btn ${tabActual === tab.id ? 'active' : ''}`}
                   onClick={() => setTabActual(tab.id)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 >
                   {tab.label}
+                  <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
                 </button>
               ))}
             </nav>

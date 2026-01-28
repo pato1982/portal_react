@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import HelpTooltip from '../common/HelpTooltip';
 import InformacionTab from './InformacionTab';
 import NotasTab from './NotasTab';
 import ComunicadosTab from './ComunicadosTab';
@@ -35,13 +36,16 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
   const [mostrarSelectorPupilo, setMostrarSelectorPupilo] = useState(false);
   const [mostrarModalAgregar, setMostrarModalAgregar] = useState(false);
   const [mostrarModalPendientes, setMostrarModalPendientes] = useState(false);
-  const [rutAlumnoAgregar, setRutAlumnoAgregar] = useState(''); // Estado añadido
+  const [rutAlumnoAgregar, setRutAlumnoAgregar] = useState('');
   const [comunicados, setComunicados] = useState(comunicadosDemo);
   const [cargando, setCargando] = useState(false);
   const dropdownRef = useRef(null);
 
   // Datos del apoderado (del usuario logueado o demo)
   const apoderadoActual = usuario || apoderadoDemo;
+
+  // Validar si el usuario pertenece al establecimiento 1 para mostrar ayuda
+  const mostrarAyuda = (apoderadoActual?.establecimiento_id === 1) || true;
 
   // Cargar pupilos y pupilos pendientes al montar
   useEffect(() => {
@@ -366,6 +370,10 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{tab.icon}</span>
                   {tab.label}
+
+                  {/* Integración del Tooltip de Ayuda */}
+                  <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
+
                   {tab.id === 'comunicados' && comunicadosNoLeidos > 0 && (
                     <span style={{ background: '#ef4444', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '10px', marginLeft: '5px' }}>
                       {comunicadosNoLeidos}

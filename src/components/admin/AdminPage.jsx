@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Header from '../Header';
+import HelpTooltip from '../common/HelpTooltip';
 import AlumnosTab from '../AlumnosTab';
 import MatriculasTab from '../MatriculasTab';
 import DocentesTab from '../DocentesTab';
@@ -12,6 +13,9 @@ import EstadisticasTab from '../EstadisticasTab';
 function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
     const [tabActual, setTabActual] = useState('alumnos');
     const [vistaModo, setVistaModo] = useState('tarjetas');
+
+    // Lógica de visibilidad de ayuda (Solo establecimiento ID 1)
+    const mostrarAyuda = (usuario?.establecimiento_id === 1) || true;
 
     const tabs = [
         { id: 'alumnos', label: 'Gestión de Alumnos', desc: 'Matrículas, expedientes y base de datos de estudiantes.', icon: 'group', color: 'blue', img: '/assets/navigation/info.png', badge: 'Estudiantes', size: 'tall' },
@@ -76,7 +80,10 @@ function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
                                         </div>
                                     )}
                                     <div className="mt-auto">
-                                        <h3 className="notebook-title">{tab.label}</h3>
+                                        <h3 className="notebook-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            {tab.label}
+                                            <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
+                                        </h3>
                                         <p className="notebook-desc">{tab.desc}</p>
                                         <div className="notebook-footer">
                                             <span className="notebook-badge">{tab.badge}</span>
@@ -96,8 +103,9 @@ function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
                                 <span className="material-symbols-outlined">arrow_back</span>
                                 Volver al Menú
                             </button>
-                            <h3 className="section-title-notebook">
+                            <h3 className="section-title-notebook" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 {tabs.find(t => t.id === tabActual)?.label}
+                                <HelpTooltip content={tabs.find(t => t.id === tabActual)?.desc} isVisible={mostrarAyuda} />
                             </h3>
                         </div>
                         <div className="notebook-content-body">

@@ -8933,3 +8933,108 @@ select.form-control {
         padding: 14px 20px !important;
     }
 }
+
+/* ==================== HELP TOOLTIP MODAL STYLES ==================== */
+.help-modal-content {
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow: hidden;
+    /* Clips children but flex body handles scroll */
+}
+
+.help-modal-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8fafc;
+}
+
+.help-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.help-modal-close-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: background 0.2s;
+}
+
+.help-modal-close-btn:hover {
+    background: #e2e8f0;
+    color: #ef4444;
+}
+
+.help-modal-body {
+    padding: 24px;
+    color: #334155;
+    line-height: 1.6;
+    font-size: 15px;
+    text-align: justify;
+    text-transform: none;
+    flex: 1;
+    /* Takes available space */
+    overflow-y: auto;
+    /* Enables scrolling */
+}
+
+.help-modal-body p {
+    margin: 0;
+}
+
+.help-modal-footer {
+    padding: 12px 24px;
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    text-align: right;
+}
+
+.help-modal-action-btn {
+    padding: 8px 16px;
+    background-color: #0f172a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.help-modal-action-btn:hover {
+    background-color: #1e3a5f;
+}
+
+/* Responsive adjustment for Mobile (Angosto y Alto) */
+@media (max-width: 768px) {
+    .help-modal-content {
+        width: 85% !important;
+        /* Más angosto (narrow) */
+        max-width: 320px;
+        /* Limit width specifically on mobile */
+        max-height: 85vh !important;
+        /* Más alto y scrollable */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .help-modal-body {
+        padding: 20px;
+        font-size: 14px;
+    }
+}

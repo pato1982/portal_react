@@ -83,9 +83,9 @@ const HelpTooltip = ({ content, isVisible = true }) => {
                         left: 0,
                         width: '100vw',
                         height: '100vh',
-                        backgroundColor: 'rgba(0, 0, 0, 0.65)', // Fondo oscuro semitransparente
-                        backdropFilter: 'blur(4px)', // Efecto blur moderno
-                        zIndex: 99999, // Super alto
+                        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+                        backdropFilter: 'blur(4px)',
+                        zIndex: 99999,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -94,60 +94,26 @@ const HelpTooltip = ({ content, isVisible = true }) => {
                 >
                     <div
                         className="help-modal-content"
-                        onClick={(e) => e.stopPropagation()} // Evitar cierre al clickear dentro
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                             backgroundColor: '#ffffff',
-                            width: '90%',
-                            maxWidth: '500px',
                             borderRadius: '12px',
                             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                            overflow: 'hidden',
                             position: 'relative',
-                            animation: 'scaleInModal 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                            animation: 'scaleInModal 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                            display: 'flex',
+                            flexDirection: 'column'
                         }}
                     >
                         {/* Header del Modal */}
-                        <div style={{
-                            padding: '16px 24px',
-                            borderBottom: '1px solid #e2e8f0',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            backgroundColor: '#f8fafc'
-                        }}>
-                            <h3 style={{
-                                margin: 0,
-                                fontSize: '16px',
-                                fontWeight: '600',
-                                color: '#0f172a',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}>
+                        <div className="help-modal-header">
+                            <h3>
                                 <span role="img" aria-label="info">ℹ️</span> Información del Módulo
                             </h3>
                             <button
                                 onClick={closeModal}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    padding: '4px',
-                                    borderRadius: '4px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#64748b',
-                                    transition: 'background 0.2s'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = '#e2e8f0';
-                                    e.currentTarget.style.color = '#ef4444';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = 'transparent';
-                                    e.currentTarget.style.color = '#64748b';
-                                }}
+                                className="help-modal-close-btn"
+                                aria-label="Cerrar"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -157,31 +123,17 @@ const HelpTooltip = ({ content, isVisible = true }) => {
                         </div>
 
                         {/* Body del Modal */}
-                        <div style={{ padding: '24px', color: '#334155', lineHeight: '1.6', fontSize: '15px', textAlign: 'justify', textTransform: 'none' }}>
-                            <p style={{ margin: 0 }}>
+                        <div className="help-modal-body">
+                            <p>
                                 {content}
                             </p>
                         </div>
 
                         {/* Footer Opcional (Brand) */}
-                        <div style={{
-                            padding: '12px 24px',
-                            backgroundColor: '#f8fafc',
-                            borderTop: '1px solid #e2e8f0',
-                            textAlign: 'right'
-                        }}>
+                        <div className="help-modal-footer">
                             <button
                                 onClick={closeModal}
-                                style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: '#0f172a',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    fontSize: '13px',
-                                    fontWeight: '500',
-                                    cursor: 'pointer'
-                                }}
+                                className="help-modal-action-btn"
                             >
                                 Entendido
                             </button>

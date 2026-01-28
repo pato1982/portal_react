@@ -202,24 +202,54 @@
 }
 
 /* Móvil */
+/* Móvil - Flexbox Layout Garantizado */
 @media (max-width: 768px) {
+    .tour-overlay {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        /* Empezar desde arriba */
+        padding-top: 220px;
+        /* Empujar hacia abajo para dejar libre la barra */
+    }
+
     .tour-bubble {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
         width: 90%;
-        left: 5% !important;
-        /* Centrado forzado */
-        /* Eliminamos bottom fijo para que use el top calculado por JS */
-        /* bottom: 20px; */
-        /* top: auto !important; */
+        max-width: 350px;
+        margin-top: 25px;
+        /* Separación robusta */
+        animation: popInBubbleMobile 0.5s ease-out forwards;
+        opacity: 0;
     }
 
     .tour-character {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
         width: 100px;
+        margin-bottom: 0;
+        z-index: 101000;
     }
 
     .tour-character img {
         border-radius: 20px;
-        /* Suavizar borde estilo sticker */
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        /* Sombra suave */
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    @keyframes popInBubbleMobile {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 }

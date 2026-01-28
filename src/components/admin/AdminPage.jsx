@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import Header from '../Header';
-import HelpTooltip from '../common/HelpTooltip';
-import AlumnosTab from '../AlumnosTab';
-import MatriculasTab from '../MatriculasTab';
-import DocentesTab from '../DocentesTab';
-import AsignacionesTab from '../AsignacionesTab';
-import NotasPorCursoTab from '../NotasPorCursoTab';
-import AsistenciaTab from '../AsistenciaTab';
-import ComunicadosTab from '../ComunicadosTab';
-import EstadisticasTab from '../EstadisticasTab';
+import TutorialGuide from '../common/TutorialGuide';
 
 function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
     const [tabActual, setTabActual] = useState('alumnos');
     const [vistaModo, setVistaModo] = useState('tarjetas');
+
+    // Estado para el tutorial (se muestra si no existe la marca en localStorage)
+    const [showTutorial, setShowTutorial] = useState(() => {
+        return !localStorage.getItem('hasSeenAdminTour');
+    });
 
     // Lógica de visibilidad de ayuda (Solo establecimiento ID 1)
     const mostrarAyuda = (usuario?.establecimiento_id === 1) || true;
@@ -37,6 +34,25 @@ function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
         setVistaModo('tarjetas');
     };
 
+    // Reiniciar tutorial para ver cambios (Temporal para debug)
+    React.useEffect(() => {
+        localStorage.removeItem('hasSeenAdminTour');
+        setShowTutorial(true);
+    }, []);
+
+    const cerrarTutorial = () => {
+        setShowTutorial(false);
+        // localStorage.setItem('hasSeenAdminTour', 'true'); // Comentado para obligar a ver
+    };
+
+    const handleTutorialStepChange = (tabId) => {
+        // En el tutorial, queremos ver las TARJETAS
+        if (vistaModo !== 'tarjetas') {
+            setVistaModo('tarjetas');
+        }
+        setTabActual(tabId);
+    };
+
     const renderTabContent = () => {
         switch (tabActual) {
             case 'alumnos': return <AlumnosTab mostrarMensaje={mostrarMensaje} />;
@@ -55,10 +71,60 @@ function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
         <div className="apoderado-container">
             <Header usuario={usuario} onCerrarSesion={onCerrarSesion} />
 
+            {/* Botón flotante para reactivar tutorial */}
+            {!showTutorial && (
+                <button
+                    onClick={() => setShowTutorial(true)}
+                    style={{
+                        position: 'fixed',
+                        bottom: '20px',
+                        left: '20px',
+                        zIndex: 90,
+                        background: '#1e3a5f',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '50px',
+                        height: '50px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        title: 'Ver Tutorial'
+                    }}
+                >
+                    <span className="material-symbols-outlined">help</span>
+                </button>
+            )}
+
+            <TutorialGuide
+                isVisible={showTutorial}
+                onClose={cerrarTutorial}
+                activeTab={tabActual}
+                onStepChange={handleTutorialStepChange}
+            />
+
             <main className="apoderado-main">
-                <div className="notebook-header" style={{ marginBottom: '40px' }}>
-                    <h2 className="section-title-notebook">Panel de Administración</h2>
-                    <p>Módulo central de gestión educativa y operativa del establecimiento.</p>
+                <div className="notebook-header" style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h2 className="section-title-notebook">Panel de Administración</h2>
+                        <p>Módulo central de gestión educativa y operativa del establecimiento.</p>
+                    </div>
+                    <button
+                        onClick={() => setShowTutorial(true)}
+                        className="btn-primary"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            backgroundColor: '#f59e0b',
+                            border: 'none'
+                        }}
+                    >
+                        <span className="material-symbols-outlined">help</span>
+                        Ver Tutorial Interactivo
+                    </button>
                 </div>
 
                 {vistaModo === 'tarjetas' ? (
@@ -66,6 +132,7 @@ function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
                         {tabs.map((tab, index) => (
                             <div
                                 key={tab.id}
+                                data-tab-id={tab.id}
                                 className={`notebook-card card-${tab.id} card-${tab.color} ${tab.size === 'tall' ? 'card-tall' : 'card-small'}`}
                                 onClick={() => seleccionarVista(tab.id)}
                             >
@@ -98,15 +165,34 @@ function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
                     </div>
                 ) : (
                     <div className="notebook-content-view">
-                        <div className="notebook-content-header">
-                            <button className="btn-volver-notebook" onClick={volverAMenu}>
-                                <span className="material-symbols-outlined">arrow_back</span>
-                                Volver al Menú
+                        <div className="notebook-content-header" style={{ justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <button className="btn-volver-notebook" onClick={volverAMenu}>
+                                    <span className="material-symbols-outlined">arrow_back</span>
+                                    Volver al Menú
+                                </button>
+                                <h3 className="section-title-notebook" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+                                    {tabs.find(t => t.id === tabActual)?.label}
+                                    <HelpTooltip content={tabs.find(t => t.id === tabActual)?.desc} isVisible={mostrarAyuda} />
+                                </h3>
+                            </div>
+                            <button
+                                onClick={() => setShowTutorial(true)}
+                                className="btn-primary"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    backgroundColor: '#f59e0b',
+                                    border: '2px solid red', /* TEMPORAL PARA QUE LO VEAS */
+                                    padding: '8px 16px',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <span className="material-symbols-outlined">help</span>
+                                Ver Tutorial
                             </button>
-                            <h3 className="section-title-notebook" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                {tabs.find(t => t.id === tabActual)?.label}
-                                <HelpTooltip content={tabs.find(t => t.id === tabActual)?.desc} isVisible={mostrarAyuda} />
-                            </h3>
                         </div>
                         <div className="notebook-content-body">
                             {renderTabContent()}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import TabsNav from './components/TabsNav';
 import AlumnosTab from './components/AlumnosTab';
@@ -13,7 +13,7 @@ import ChatFlotante from './components/ChatFlotante';
 import ChatDocenteV2 from './components/ChatDocenteV2';
 import DocentePage from './components/docente/DocentePage';
 import ApoderadoPage from './components/apoderado/ApoderadoPage';
-import AdminPage from './components/admin/AdminPage';
+import AdminPage from './components/admin/AdminPage'; // Mantenemos import aunque no se use directo
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import RegistroPage from './components/RegistroPage';
@@ -22,6 +22,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { PageErrorFallback, SectionErrorFallback } from './components/common/ErrorFallback';
 import { useAuth } from './contexts';
 import { usuarioDemo } from './data/demoData';
+import TutorialGuide from './components/common/TutorialGuide';
 import './styles/docente.css';
 import './styles/apoderado.css';
 import './styles/login.css';
@@ -37,8 +38,13 @@ function App() {
   const [usuarioLogueado, setUsuarioLogueado] = useState(null); // Datos del usuario autenticado
   const { login: loginContext, logout: logoutContext, isAuthenticated, usuario: usuarioAuth, tipoUsuario: tipoUsuarioAuth, cargandoSesion } = useAuth();
 
+  // Estado para el tutorial
+  const [showTutorial, setShowTutorial] = useState(() => {
+    return !localStorage.getItem('hasSeenAdminTour');
+  });
+
   // Efecto para redirigir si ya hay sesión iniciada (RESTORE SESSION)
-  React.useEffect(() => {
+  useEffect(() => {
     if (!cargandoSesion && isAuthenticated && usuarioAuth && vistaActual === 'landing') {
       const usuarioConEstablecimiento = {
         ...usuarioAuth,
@@ -56,6 +62,15 @@ function App() {
       }
     }
   }, [cargandoSesion, isAuthenticated, usuarioAuth, tipoUsuarioAuth, vistaActual]);
+
+  // Reiniciar tutorial para ver cambios (Temporal para debug)
+  useEffect(() => {
+    if (vistaActual === 'administrador' || (!vistaActual && tipoUsuarioAuth === 'administrador')) {
+      localStorage.removeItem('hasSeenAdminTour');
+      setShowTutorial(true);
+    }
+  }, [vistaActual, tipoUsuarioAuth]);
+
 
   const renderTabContent = () => {
     // Cada tab se envuelve con ErrorBoundary para que un error en uno
@@ -285,14 +300,68 @@ function App() {
     <div className="app-container">
       <Header usuario={usuarioLogueado || usuarioDemo} onCerrarSesion={cerrarSesion} />
 
+      {/* Botón flotante para reactivar tutorial */}
+      {!showTutorial && (
+        <button
+          onClick={() => setShowTutorial(true)}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '20px',
+            zIndex: 90,
+            background: '#1e3a5f',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            title: 'Ver Tutorial'
+          }}
+        >
+          <span className="material-symbols-outlined">help</span>
+        </button>
+      )}
+
+      <TutorialGuide
+        isVisible={showTutorial}
+        onClose={() => { setShowTutorial(false); localStorage.setItem('hasSeenAdminTour', 'true'); }}
+        activeTab={activeTab}
+        onStepChange={setActiveTab}
+      />
+
       <main className="main-content">
         <section className="control-panel">
-          <div className="panel-header">
+          <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2>Panel de Control</h2>
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="btn-primary"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: '#f59e0b',
+                border: 'none',
+                padding: '6px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                color: 'white',
+                fontWeight: 500,
+                fontSize: '14px'
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>help</span>
+              Ver Tutorial
+            </button>
           </div>
 
           <div className="tabs-container">
-            <TabsNav activeTab={activeTab} setActiveTab={setActiveTab} />
+            <TabsNav activeTab={activeTab} setActiveTab={setActiveTab} tutorialActive={showTutorial} />
 
             <div className="tabs-content">
               {renderTabContent()}
@@ -323,4 +392,3 @@ function App() {
 }
 
 export default App;
-

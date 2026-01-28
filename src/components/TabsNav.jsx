@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import HelpTooltip from './common/HelpTooltip';
 
-function TabsNav({ activeTab, setActiveTab }) {
+function TabsNav({ activeTab, setActiveTab, tutorialActive }) {
+  // Auto-scroll al cambiar de pestaña
+  useEffect(() => {
+    const activeBtn = document.querySelector(`button[data-tab-id="${activeTab}"]`);
+    if (activeBtn) {
+      activeBtn.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  }, [activeTab]);
+
   const tabs = [
     {
       id: 'alumnos',
@@ -46,7 +58,17 @@ function TabsNav({ activeTab, setActiveTab }) {
   ];
 
   return (
-    <nav className="tabs-nav">
+    <nav
+      className="tabs-nav"
+      style={tutorialActive ? {
+        position: 'relative',
+        zIndex: 100001,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderRadius: '12px',
+        padding: '4px', // Un poco de padding extra para que no quede muy pegado
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+      } : {}}
+    >
       {tabs.map(tab => (
         <button
           key={tab.id}
@@ -54,6 +76,7 @@ function TabsNav({ activeTab, setActiveTab }) {
           className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
           onClick={() => setActiveTab(tab.id)}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+          data-tab-id={tab.id}
         >
           {tab.label}
           <HelpTooltip content={tab.desc} isVisible={true} />

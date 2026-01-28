@@ -1,0 +1,219 @@
+/* Estilos para el Tutorial Guiado */
+
+.tour-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 100000;
+    /* Por encima de todo, incluso modales */
+    pointer-events: none;
+    /* Permite clicks pasen... no, queremos bloquear fondo */
+    /* Pero los botones del tour sí deben ser clickeables */
+}
+
+.tour-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    /* Oscuro */
+    pointer-events: auto;
+    /* Bloquea interacción con la app */
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    animation: fadeInBackdrop 0.5s forwards;
+}
+
+@keyframes fadeInBackdrop {
+    to {
+        opacity: 1;
+    }
+}
+
+/* Personaje */
+.tour-character {
+    position: absolute;
+    width: 120px;
+    /* Tamaño del personaje */
+    height: auto;
+    pointer-events: auto;
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 100002;
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.3));
+    animation: floatCharacter 3s ease-in-out infinite;
+}
+
+.tour-character-img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+@keyframes floatCharacter {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-10px) rotate(2deg);
+    }
+
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}
+
+/* Globo de Texto (Nube) */
+.tour-bubble {
+    position: absolute;
+    width: 320px;
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 255, 255, 0.2);
+    pointer-events: auto;
+    z-index: 100002;
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    opacity: 0;
+    transform: translateY(10px);
+    animation: popInBubble 0.4s 0.2s forwards;
+}
+
+.tour-bubble::before {
+    /* Triángulo del globo apuntando al personaje si está al lado */
+    /* Por simplicidad omitimos el triangulo complejo dinamico, o ponemos uno generico arriba */
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 40px;
+    border-width: 0 10px 10px 10px;
+    border-style: solid;
+    border-color: transparent transparent white transparent;
+}
+
+@keyframes popInBubble {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tour-content h3 {
+    margin: 0 0 8px 0;
+    color: #1e3a5f;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.tour-content p {
+    margin: 0 0 16px 0;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Footer del tour */
+.tour-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 12px;
+}
+
+.tour-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.tour-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #cbd5e1;
+    transition: all 0.3s;
+}
+
+.tour-dot.active {
+    background-color: #3b82f6;
+    transform: scale(1.2);
+}
+
+.tour-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.tour-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.tour-btn.primary {
+    background-color: #1e3a5f;
+    color: white;
+}
+
+.tour-btn.primary:hover {
+    background-color: #3b82f6;
+    transform: translateY(-1px);
+}
+
+.tour-btn.secondary {
+    background-color: transparent;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.tour-btn.secondary:hover {
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+.tour-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 18px;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.tour-close-btn:hover {
+    background-color: #f1f5f9;
+    color: #ef4444;
+}
+
+/* Móvil */
+@media (max-width: 768px) {
+    .tour-bubble {
+        width: 90%;
+        left: 5% !important;
+        /* Centrado forzado */
+        bottom: 20px;
+        top: auto !important;
+        /* Ignora top calculado, pone abajo estilo app */
+    }
+
+    .tour-character {
+        width: 100px;
+        /* El cálculo de JS lo pondrá encima de la burbuja */
+    }
+}

@@ -207,13 +207,19 @@
         width: 90%;
         left: 5% !important;
         /* Centrado forzado */
-        bottom: 20px;
-        top: auto !important;
-        /* Ignora top calculado, pone abajo estilo app */
+        /* Eliminamos bottom fijo para que use el top calculado por JS */
+        /* bottom: 20px; */
+        /* top: auto !important; */
     }
 
     .tour-character {
         width: 100px;
-        /* El cálculo de JS lo pondrá encima de la burbuja */
+    }
+
+    .tour-character img {
+        border-radius: 20px;
+        /* Suavizar borde estilo sticker */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        /* Sombra suave */
     }
 }

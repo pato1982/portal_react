@@ -110,7 +110,7 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
                 pjTop = rect.bottom + 10;
                 pjLeft = window.innerWidth / 2 - 60; // Centrado
 
-                top = pjTop + 130; // Globo más abajo
+                top = pjTop + 200; // Globo más abajo
             }
 
             setPersonajePos({ top: pjTop, left: pjLeft });

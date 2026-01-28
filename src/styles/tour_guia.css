@@ -42,7 +42,7 @@
     height: auto;
     pointer-events: auto;
     transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-    z-index: 100002;
+    z-index: 100003;
     filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.3));
     animation: floatCharacter 3s ease-in-out infinite;
 }

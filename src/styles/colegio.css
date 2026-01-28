@@ -8940,6 +8940,9 @@ select.form-control {
     width: 90%;
     max-width: 500px;
     max-height: 90vh;
+    /* Max limit */
+    height: auto;
+    /* Adapts to content height */
     border-radius: 12px;
     background-color: #ffffff;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -8957,7 +8960,6 @@ select.form-control {
     align-items: center;
     background-color: #f8fafc;
     flex-shrink: 0;
-    /* Header stays fixed */
 }
 
 .help-modal-header h3 {
@@ -8999,20 +9001,18 @@ select.form-control {
     font-size: 15px;
     text-align: justify;
     text-transform: none;
-    flex: 1;
-    /* Takes available space */
+    flex: 0 1 auto;
+    /* Don't expand unnecessarily, just fit content. Allow shrinking if max-height hit. */
     overflow-y: auto;
-    /* Enables scrolling vertically */
+    /* Enables scrolling vertically if max-height is reached */
     overflow-x: hidden;
-    /* Prevent horizontal scroll */
     word-wrap: break-word;
-    /* Ensure valid word breaking */
     overflow-wrap: break-word;
-    /* Modern break */
 }
 
 .help-modal-body p {
     margin: 0;
+    white-space: normal;
 }
 
 .help-modal-footer {
@@ -9021,7 +9021,6 @@ select.form-control {
     border-top: 1px solid #e2e8f0;
     text-align: right;
     flex-shrink: 0;
-    /* Footer stays fixed */
 }
 
 .help-modal-action-btn {
@@ -9040,58 +9039,42 @@ select.form-control {
     background-color: #1e3a5f;
 }
 
-/* Responsive adjustment for Mobile (Angosto y Alto) */
+/* Responsive adjustment for Mobile & Tablet (Small Screens) */
 @media (max-width: 768px) {
     .help-modal-content {
-        /* Fuerza un ancho estrecho */
+        /* Ancho angosto */
         width: 85% !important;
-        max-width: 300px !important;
+        max-width: 320px !important;
 
-        /* Fuerza una altura GRANDE para evitar scroll vertical interno */
+        /* Altura automática para ajustar al texto exacto */
         height: auto !important;
-        min-height: 50vh;
-        /* Al menos la mitad de la pantalla */
+        min-height: 0 !important;
+        /* Remove ANY min-height constraint */
         max-height: 90vh !important;
-        /* Casi toda la pantalla si es necesario */
+        /* Cap it at screen edge */
 
         margin: auto;
     }
 
     .help-modal-body {
-        /* Padding reducido para aprovechar el ancho */
-        padding: 16px 12px !important;
+        /* Padding optimizado */
+        padding: 16px 16px !important;
 
-        /* Ajuste de texto para máxima legibilidad sin scroll */
+        /* Ajuste de texto */
         font-size: 13px !important;
         line-height: 1.5 !important;
 
-        /* Asegura que no haya scroll horizontal nunca */
-        overflow-x: hidden !important;
-
-        /* Permite scroll vertical SOLO si es estrictamente necesario (texto kilométrico) */
-        overflow-y: auto !important;
-
-        /* FUERZA bruta para que el texto baje de linea */
-        white-space: normal !important;
-        word-break: break-word !important;
-        overflow-wrap: break-word !important;
-    }
-
-    .help-modal-body p {
+        /* Asegura que el texto baje */
         white-space: normal !important;
     }
 
-    .help-modal-header {
-        padding: 12px 14px !important;
+    .help-modal-header,
+    .help-modal-footer {
+        padding: 12px 16px !important;
     }
 
     .help-modal-header h3 {
         font-size: 14px !important;
         white-space: normal !important;
-        /* Permite que el título baje si es largo */
-    }
-
-    .help-modal-footer {
-        padding: 10px 14px !important;
     }
 }

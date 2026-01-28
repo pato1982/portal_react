@@ -8925,3 +8925,11 @@ select.form-control {
         text-align: center;
     }
 }
+
+/* Responsive para pestañas en pantallas grandes */
+@media (min-width: 1101px) {
+    .tab-btn {
+        font-size: 8px !important;
+        padding: 14px 20px !important;
+    }
+}

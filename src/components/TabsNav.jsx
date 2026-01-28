@@ -6,42 +6,42 @@ function TabsNav({ activeTab, setActiveTab }) {
     {
       id: 'alumnos',
       label: 'Alumnos',
-      desc: 'En esta sección podrá gestionar la base de datos completa de estudiantes. Permite crear nuevos alumnos, editar sus fichas personales, modificar datos de apoderados y revisar el estado actual de cada estudiante en el establecimiento.'
+      desc: 'En esta sección podrá modificar los datos del alumno y del apoderado registrados en la matrícula, así como eliminar a aquellos alumnos que ya no pertenecen al establecimiento.'
     },
     {
       id: 'matriculas',
       label: 'Matrículas',
-      desc: 'Módulo central para el proceso de admisión anual. Aquí puede formalizar la matrícula de alumnos antiguos y nuevos, asignarles su curso correspondiente para el año académico y generar la documentación oficial de ingreso.'
+      desc: 'En esta sección podrá registrar la matrícula del alumno, ingresando y gestionando la información requerida para su incorporación al establecimiento.'
     },
     {
       id: 'docentes',
       label: 'Docentes',
-      desc: 'Administración del cuerpo docente y funcionarios. Permite registrar nuevos profesores, editar su información de contacto, asignar jefaturas de curso y gestionar sus credenciales de acceso al sistema.'
+      desc: 'En esta sección podrá incorporar nuevos docentes y gestionar a los docentes en ejercicio, permitiendo modificar sus datos, actualizar sus funciones académicas o darlos de baja.'
     },
     {
       id: 'asignacion-cursos',
       label: 'Curso/Asignaturas',
-      desc: 'Herramienta de planificación académica. Utilícelo para definir qué asignaturas se imparten en cada curso y asignar al docente responsable de dictarlas. Es fundamental para habilitar el libro de clases digital.'
+      desc: 'En esta sección podrá asignar cursos a los docentes según sus asignaturas, así como modificar o eliminar dichas asignaciones en caso de cambios.'
     },
     {
       id: 'notas-por-curso',
       label: 'Notas por Curso',
-      desc: 'Vista panorámica del rendimiento académico. Le permite visualizar y descargar la sábana de notas completa de un curso, facilitando la detección de casos de riesgo y el cierre de semestres o trimestres.'
+      desc: 'En esta sección podrá visualizar las notas de cada curso del establecimiento, organizadas por asignatura y con opción de filtrar por trimestre.'
     },
     {
       id: 'asistencia',
       label: 'Asistencia',
-      desc: 'Control de asistencia centralizado. Puede revisar los registros diarios de asistencia por curso, justificar inasistencias y obtener estadísticas de ausentismo para reportes oficiales (SIGE/Ministerio).'
+      desc: 'En esta sección podrá visualizar la asistencia mensual de cada curso mediante indicadores, incluyendo el total de registros, el porcentaje de asistencia y la cantidad de alumnos bajo el mínimo exigido para la promoción.'
     },
     {
       id: 'comunicados',
       label: 'Comunicados',
-      desc: 'Canal de comunicación oficial. Redacte y envíe mensajes masivos o específicos a apoderados y docentes. Ideal para citaciones, avisos de reuniones, emergencias o boletines informativos.'
+      desc: 'En esta sección el administrador podrá enviar comunicados a cursos específicos o a todo el establecimiento, con el fin de informar oportunamente sobre urgencias, avisos, reuniones o eventos dirigidos a los apoderados en tiempo real.'
     },
     {
       id: 'estadisticas',
       label: 'Estadisticas',
-      desc: 'Panel de inteligencia de datos. Ofrece gráficos y métricas clave sobre matrícula total, asistencia promedio, rendimiento por nivel y otros indicadores vitales para la toma de decisiones directivas.'
+      desc: 'En esta sección podrá analizar el rendimiento académico, la asistencia y el desempeño docente en los cursos asignados, mediante indicadores clave, gráficos y filtros por curso, docente, asignatura o período, obteniendo una visión integral para la toma de decisiones.'
     }
   ];
 

@@ -8935,12 +8935,18 @@ select.form-control {
 }
 
 /* ==================== HELP TOOLTIP MODAL STYLES ==================== */
+/* ==================== HELP TOOLTIP MODAL STYLES ==================== */
 .help-modal-content {
     width: 90%;
     max-width: 500px;
     max-height: 90vh;
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
-    /* Clips children but flex body handles scroll */
+    /* Clips outer but internal overflow works */
 }
 
 .help-modal-header {
@@ -8950,6 +8956,8 @@ select.form-control {
     justify-content: space-between;
     align-items: center;
     background-color: #f8fafc;
+    flex-shrink: 0;
+    /* Header stays fixed */
 }
 
 .help-modal-header h3 {
@@ -8960,6 +8968,9 @@ select.form-control {
     display: flex;
     align-items: center;
     gap: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .help-modal-close-btn {
@@ -8973,6 +8984,7 @@ select.form-control {
     justify-content: center;
     color: #64748b;
     transition: background 0.2s;
+    flex-shrink: 0;
 }
 
 .help-modal-close-btn:hover {
@@ -8990,7 +9002,13 @@ select.form-control {
     flex: 1;
     /* Takes available space */
     overflow-y: auto;
-    /* Enables scrolling */
+    /* Enables scrolling vertically */
+    overflow-x: hidden;
+    /* Prevent horizontal scroll */
+    word-wrap: break-word;
+    /* Ensure valid word breaking */
+    overflow-wrap: break-word;
+    /* Modern break */
 }
 
 .help-modal-body p {
@@ -9002,6 +9020,8 @@ select.form-control {
     background-color: #f8fafc;
     border-top: 1px solid #e2e8f0;
     text-align: right;
+    flex-shrink: 0;
+    /* Footer stays fixed */
 }
 
 .help-modal-action-btn {
@@ -9023,18 +9043,55 @@ select.form-control {
 /* Responsive adjustment for Mobile (Angosto y Alto) */
 @media (max-width: 768px) {
     .help-modal-content {
+        /* Fuerza un ancho estrecho */
         width: 85% !important;
-        /* Más angosto (narrow) */
-        max-width: 320px;
-        /* Limit width specifically on mobile */
-        max-height: 85vh !important;
-        /* Más alto y scrollable */
-        display: flex;
-        flex-direction: column;
+        max-width: 300px !important;
+
+        /* Fuerza una altura GRANDE para evitar scroll vertical interno */
+        height: auto !important;
+        min-height: 50vh;
+        /* Al menos la mitad de la pantalla */
+        max-height: 90vh !important;
+        /* Casi toda la pantalla si es necesario */
+
+        margin: auto;
     }
 
     .help-modal-body {
-        padding: 20px;
-        font-size: 14px;
+        /* Padding reducido para aprovechar el ancho */
+        padding: 16px 12px !important;
+
+        /* Ajuste de texto para máxima legibilidad sin scroll */
+        font-size: 13px !important;
+        line-height: 1.5 !important;
+
+        /* Asegura que no haya scroll horizontal nunca */
+        overflow-x: hidden !important;
+
+        /* Permite scroll vertical SOLO si es estrictamente necesario (texto kilométrico) */
+        overflow-y: auto !important;
+
+        /* FUERZA bruta para que el texto baje de linea */
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+
+    .help-modal-body p {
+        white-space: normal !important;
+    }
+
+    .help-modal-header {
+        padding: 12px 14px !important;
+    }
+
+    .help-modal-header h3 {
+        font-size: 14px !important;
+        white-space: normal !important;
+        /* Permite que el título baje si es largo */
+    }
+
+    .help-modal-footer {
+        padding: 10px 14px !important;
     }
 }

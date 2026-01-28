@@ -96,13 +96,7 @@ const HelpTooltip = ({ content, isVisible = true }) => {
                         className="help-modal-content"
                         onClick={(e) => e.stopPropagation()}
                         style={{
-                            backgroundColor: '#ffffff',
-                            borderRadius: '12px',
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                            position: 'relative',
-                            animation: 'scaleInModal 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                            display: 'flex',
-                            flexDirection: 'column'
+                            animation: 'scaleInModal 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
                         }}
                     >
                         {/* Header del Modal */}

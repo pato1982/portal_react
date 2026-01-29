@@ -4189,6 +4189,91 @@ app.get('/api/estadisticas/asignaturas', async (req, res) => {
     }
 });
 
+// GET /api/estadisticas/riesgo-detalle - Listado detallado de alumnos en riesgo
+app.get('/api/estadisticas/riesgo-detalle', async (req, res) => {
+    const { tipo, id, anio, establecimiento_id = 1 } = req.query;
+    const anioActual = anio || new Date().getFullYear();
+
+    try {
+        let query = '';
+        let params = [];
+
+        if (tipo === 'docente') {
+            // Riesgo con un docente específico (Promedio de notas con ese docente < 4.0)
+            query = `
+                SELECT 
+                    a.id as alumno_id,
+                    CONCAT(a.apellidos, ', ', a.nombres) as nombre_completo,
+                    c.nombre as curso,
+                    ROUND(AVG(n.nota), 1) as promedio,
+                    GROUP_CONCAT(DISTINCT asig.nombre SEPARATOR ', ') as asignaturas
+                FROM tb_notas n
+                JOIN tb_alumnos a ON n.alumno_id = a.id
+                JOIN tb_cursos c ON n.curso_id = c.id
+                JOIN tb_asignaturas asig ON n.asignatura_id = asig.id
+                WHERE n.docente_id = ? 
+                AND n.anio_academico = ? 
+                AND n.activo = 1
+                AND n.nota IS NOT NULL
+                GROUP BY n.alumno_id, c.nombre
+                HAVING promedio < 4.0
+                ORDER BY promedio ASC
+            `;
+            params = [id, anioActual];
+        } else if (tipo === 'curso') {
+            // Riesgo en un curso específico (Promedio general del alumno en el curso < 4.0)
+            query = `
+                SELECT 
+                    a.id as alumno_id,
+                    CONCAT(a.apellidos, ', ', a.nombres) as nombre_completo,
+                    c.nombre as curso,
+                    ROUND(AVG(n.nota), 1) as promedio,
+                    'Promedio General Curso' as asignaturas
+                FROM tb_notas n
+                JOIN tb_alumnos a ON n.alumno_id = a.id
+                JOIN tb_cursos c ON n.curso_id = c.id
+                WHERE n.curso_id = ? 
+                AND n.anio_academico = ? 
+                AND n.activo = 1
+                AND n.nota IS NOT NULL
+                GROUP BY n.alumno_id, c.nombre
+                HAVING promedio < 4.0
+                ORDER BY promedio ASC
+            `;
+            params = [id, anioActual];
+        } else {
+            // General (Todos los alumnos del colegio con promedio < 4.0)
+            query = `
+                SELECT 
+                    a.id as alumno_id,
+                    CONCAT(a.apellidos, ', ', a.nombres) as nombre_completo,
+                    c.nombre as curso,
+                    ROUND(AVG(n.nota), 1) as promedio,
+                    'Promedio General' as asignaturas
+                FROM tb_notas n
+                JOIN tb_alumnos a ON n.alumno_id = a.id
+                JOIN tb_cursos c ON n.curso_id = c.id
+                WHERE n.establecimiento_id = ? 
+                AND n.anio_academico = ? 
+                AND n.activo = 1
+                AND n.nota IS NOT NULL
+                GROUP BY n.alumno_id, c.nombre
+                HAVING promedio < 4.0
+                ORDER BY promedio ASC LIMIT 50
+            `;
+            params = [establecimiento_id, anioActual];
+        }
+
+        const [alumnos] = await pool.query(query, params);
+
+        res.json({ success: true, data: alumnos });
+
+    } catch (error) {
+        console.error('Error al obtener detalle riesgo:', error);
+        res.status(500).json({ success: false, error: 'Error al obtener detalle' });
+    }
+});
+
 // GET /api/estadisticas/asignatura/:asignaturaId - Stats de una asignatura
 app.get('/api/estadisticas/asignatura/:asignaturaId', async (req, res) => {
     const { asignaturaId } = req.params;

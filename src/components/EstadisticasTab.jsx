@@ -72,6 +72,42 @@ function EstadisticasTab() {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
 
+  // Estado para popup de riesgo detallado
+  const [popupRiesgo, setPopupRiesgo] = useState({
+    visible: false,
+    alumnos: [],
+    cargando: false
+  });
+
+  const abrirPopupRiesgo = async () => {
+    setPopupRiesgo(prev => ({ ...prev, visible: true, cargando: true }));
+
+    try {
+      const tipoFiltro = vistaActual;
+      let idFiltro = null;
+
+      if (tipoFiltro === 'docente') idFiltro = docenteSeleccionado;
+      else if (tipoFiltro === 'curso') idFiltro = cursoSeleccionado;
+      else if (tipoFiltro === 'asignatura') return; // Asignatura por ahora no tiene este detalle específico igual
+
+      const res = await fetch(`${config.apiBaseUrl}/estadisticas/riesgo-detalle?tipo=${tipoFiltro}&id=${idFiltro}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setPopupRiesgo(prev => ({ ...prev, alumnos: data.data, cargando: false }));
+      } else {
+        setPopupRiesgo(prev => ({ ...prev, cargando: false }));
+      }
+    } catch (e) {
+      console.error('Error cargando detalle riesgo:', e);
+      setPopupRiesgo(prev => ({ ...prev, cargando: false }));
+    }
+  };
+
+  const cerrarPopupRiesgo = () => {
+    setPopupRiesgo(prev => ({ ...prev, visible: false, alumnos: [] }));
+  };
+
   const { isMobile } = useResponsive();
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
 
@@ -616,6 +652,7 @@ function EstadisticasTab() {
                   label="En Riesgo"
                   value={datos.riesgo || datos.alumnosRiesgo || 0}
                   sublabel="Bajo 4.0"
+                  onClick={(datos.riesgo || datos.alumnosRiesgo || 0) > 0 ? abrirPopupRiesgo : undefined}
                 />
               </>
             )}
@@ -746,6 +783,79 @@ function EstadisticasTab() {
                 {ordenarCursos(datosDocente.cursos)?.map(curso => (
                   <span key={curso} className="stats-curso-tag">{curso}</span>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Popup Detalle Riesgo */}
+        {popupRiesgo.visible && (
+          <div className="popup-overlay" onClick={cerrarPopupRiesgo} style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000
+          }}>
+            <div className="popup-riesgo" onClick={(e) => e.stopPropagation()} style={{
+              background: 'white', padding: '0', borderRadius: '8px', width: '90%', maxWidth: '600px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', maxHeight: '85vh'
+            }}>
+              <div style={{
+                padding: '16px 20px', borderBottom: '1px solid #fee2e2', backgroundColor: '#fef2f2',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTopLeftRadius: '8px', borderTopRightRadius: '8px'
+              }}>
+                <h4 style={{ margin: 0, color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ⚠️ Alumnos En Riesgo (Promedio &lt; 4.0)
+                </h4>
+                <button onClick={cerrarPopupRiesgo} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#ef4444' }}>&times;</button>
+              </div>
+
+              <div style={{ padding: '20px', overflowY: 'auto' }}>
+                {popupRiesgo.cargando ? (
+                  <div className="spinner" style={{ margin: '20px auto' }}></div>
+                ) : (
+                  <>
+                    <div style={{ marginBottom: '15px', color: '#64748b', fontSize: '14px' }}>
+                      Mostrando alumnos con rendimiento deficiente en el contexto actual ({vistaActual}).
+                    </div>
+                    {popupRiesgo.alumnos.length > 0 ? (
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '2px solid #f1f5f9', textAlign: 'left', color: '#64748b' }}>
+                            <th style={{ padding: '10px' }}>N°</th>
+                            <th style={{ padding: '10px' }}>Alumno</th>
+                            <th style={{ padding: '10px' }}>Curso</th>
+                            <th style={{ padding: '10px' }}>Promedio</th>
+                            <th style={{ padding: '10px' }}>Asignatura(s)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {popupRiesgo.alumnos.map((alumno, idx) => (
+                            <tr key={idx} style={{ borderBottom: '1px solid #f8fafc' }}>
+                              <td style={{ padding: '10px', color: '#94a3b8' }}>{idx + 1}</td>
+                              <td style={{ padding: '10px', fontWeight: '500' }}>{alumno.nombre_completo}</td>
+                              <td style={{ padding: '10px', color: '#64748b' }}>{alumno.curso}</td>
+                              <td style={{ padding: '10px' }}>
+                                <span style={{
+                                  background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold'
+                                }}>
+                                  {alumno.promedio}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px', fontSize: '12px', color: '#64748b' }}>{alumno.asignaturas}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <p style={{ textAlign: 'center', color: '#64748b' }}>No se encontraron detalles.</p>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div style={{ padding: '15px 20px', borderTop: '1px solid #f1f5f9', textAlign: 'right' }}>
+                <button onClick={cerrarPopupRiesgo} style={{
+                  padding: '8px 16px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer'
+                }}>Cerrar</button>
               </div>
             </div>
           </div>

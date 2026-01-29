@@ -937,8 +937,8 @@ function AsistenciaTab() {
       )}
 
     </div>
-  </div >
-</div >
+  </div>
+</div>
   );
 }
 // Fin componente AsistenciaTab

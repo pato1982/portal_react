@@ -4266,6 +4266,26 @@ app.get('/api/estadisticas/riesgo-detalle', async (req, res) => {
 
         const [alumnos] = await pool.query(query, params);
 
+        // Enriquecer con asignaturas rojas si es modo curso o general (o si query tipo null que es general)
+        if (tipo === 'curso' || !tipo || tipo === 'general') {
+            for (let alumno of alumnos) {
+                const [rojas] = await pool.query(`
+                    SELECT asig.nombre
+                    FROM tb_notas n
+                    JOIN tb_asignaturas asig ON n.asignatura_id = asig.id
+                    WHERE n.alumno_id = ? AND n.anio_academico = ? AND n.activo = 1
+                    GROUP BY asig.id
+                    HAVING AVG(n.nota) < 4.0
+                 `, [alumno.alumno_id, anioActual]);
+
+                if (rojas.length > 0) {
+                    alumno.asignaturas = rojas.map(r => r.nombre).join(', ');
+                } else {
+                    alumno.asignaturas = 'Promedio General Bajo';
+                }
+            }
+        }
+
         res.json({ success: true, data: alumnos });
 
     } catch (error) {

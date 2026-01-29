@@ -3050,7 +3050,7 @@ app.get('/api/asistencia/estadisticas', async (req, res) => {
 
 // GET /api/asistencia/alumnos-bajo-umbral - Alumnos con asistencia bajo 85%
 app.get('/api/asistencia/alumnos-bajo-umbral', async (req, res) => {
-    const { curso_id, anio, establecimiento_id = 1, umbral = 85 } = req.query;
+    const { curso_id, anio, mes, establecimiento_id = 1, umbral = 85 } = req.query;
     const anioActual = anio || new Date().getFullYear();
 
     try {
@@ -3075,6 +3075,11 @@ app.get('/api/asistencia/alumnos-bajo-umbral', async (req, res) => {
         if (curso_id) {
             query += ` AND a.curso_id = ?`;
             params.push(curso_id);
+        }
+
+        if (mes !== undefined) {
+            query += ` AND MONTH(a.fecha) = ?`;
+            params.push(parseInt(mes) + 1); // JS 0-11 -> SQL 1-12
         }
 
         query += `

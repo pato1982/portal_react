@@ -44,8 +44,18 @@ function AsistenciaTab() {
     guardando: false
   });
 
-  // Estado para el popup de alumnos bajo 85%
+  // Estado para el popup de alumnos bajo 85% (Global)
   const [popupBajoUmbral, setPopupBajoUmbral] = useState({
+    visible: false,
+    alumnos: []
+  });
+
+  // Estado para Stats Mensuales (Curso + Mes)
+  const [statsMensuales, setStatsMensuales] = useState({
+    total: 0, presente: 0, ausente: 0, justificado: 0, atrasado: 0, porcentaje_asistencia: '0.0'
+  });
+  const [riesgoMensual, setRiesgoMensual] = useState([]);
+  const [popupRiesgoMensual, setPopupRiesgoMensual] = useState({
     visible: false,
     alumnos: []
   });
@@ -116,10 +126,15 @@ function AsistenciaTab() {
     cargarAlumnosBajoUmbral(null);
   }, []);
 
-  // Cargar datos mensuales (Tabla Asistencia)
+  // Cargar datos mensuales (Tabla Asistencia + Stats Mensuales)
   useEffect(() => {
     if (filtros.cursoId) {
       cargarAsistencia(filtros.cursoId, mesSeleccionado);
+      cargarDatosMensuales(filtros.cursoId, mesSeleccionado);
+    } else {
+      // Reset stats mensuales si no hay curso
+      setStatsMensuales({ total: 0, presente: 0, ausente: 0, justificado: 0, atrasado: 0, porcentaje_asistencia: '0.0' });
+      setRiesgoMensual([]);
     }
   }, [filtros.cursoId, mesSeleccionado]);
 
@@ -201,6 +216,23 @@ function AsistenciaTab() {
       }
     } catch (error) {
       console.error('Error cargando alumnos bajo umbral:', error);
+    }
+  };
+
+  const cargarDatosMensuales = async (cursoId, mes) => {
+    try {
+      // 1. Estadisticas
+      const resStats = await fetch(`${config.apiBaseUrl}/asistencia/estadisticas?curso_id=${cursoId}&mes=${mes}&anio=${anioActual}`);
+      const dataStats = await resStats.json();
+      if (dataStats.success) setStatsMensuales(dataStats.data);
+
+      // 2. Riesgo (Bajo Umbral en ese mes)
+      const resRiesgo = await fetch(`${config.apiBaseUrl}/asistencia/alumnos-bajo-umbral?curso_id=${cursoId}&mes=${mes}&anio=${anioActual}`);
+      const dataRiesgo = await resRiesgo.json();
+      if (dataRiesgo.success) setRiesgoMensual(dataRiesgo.data || []);
+
+    } catch (error) {
+      console.error('Error cargando datos mensuales:', error);
     }
   };
 
@@ -410,6 +442,16 @@ function AsistenciaTab() {
     });
   };
 
+  const abrirPopupRiesgoMensual = () => {
+    if (riesgoMensual.length > 0) {
+      setPopupRiesgoMensual({ visible: true, alumnos: riesgoMensual });
+    }
+  };
+
+  const cerrarPopupRiesgoMensual = () => {
+    setPopupRiesgoMensual({ visible: false, alumnos: [] });
+  };
+
   return (
     <div className="tab-panel active">
       <div className="card">
@@ -556,7 +598,52 @@ function AsistenciaTab() {
             </div>
           )}
 
-          {/* Estadisticas Anuales (Ahora Globales y Arriba) - Eliminado de aquí */}
+          {/* KPIs Mensuales (Curso + Mes) */}
+          {filtros.cursoId && (
+            <>
+              <h4 style={{ margin: '10px 0 15px', color: '#64748b', fontSize: '14px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Estadísticas del Periodo ({mesNombre} - {filtros.curso})
+              </h4>
+              <div className="asistencia-stats" style={{ marginBottom: '25px' }}>
+                <div className="stat-item stat-total">
+                  <span className="stat-numero">{statsMensuales.total}</span>
+                  <span className="stat-label">Registros Mes</span>
+                </div>
+                <div className="stat-item stat-presentes">
+                  <span className="stat-numero">{statsMensuales.presente}</span>
+                  <span className="stat-label">Presentes</span>
+                </div>
+                <div className="stat-item stat-porcentaje">
+                  <span className="stat-numero">{statsMensuales.porcentaje_asistencia}%</span>
+                  <span className="stat-label">% Asistencia</span>
+                </div>
+                <div className="stat-item stat-ausentes">
+                  <span className="stat-numero">{statsMensuales.ausente}</span>
+                  <span className="stat-label">Ausentes</span>
+                </div>
+                <div className="stat-item stat-justificados">
+                  <span className="stat-numero">{statsMensuales.justificado}</span>
+                  <span className="stat-label">Justificados</span>
+                </div>
+                <div
+                  className={`stat-item stat-bajo-umbral ${riesgoMensual.length > 0 ? 'clickable' : ''}`}
+                  onClick={abrirPopupRiesgoMensual}
+                  style={{ position: 'relative', cursor: riesgoMensual.length > 0 ? 'pointer' : 'default' }}
+                >
+                  {riesgoMensual.length > 0 && (
+                    <div style={{ position: 'absolute', top: '5px', right: '5px' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
+                      </svg>
+                    </div>
+                  )}
+                  <span className="stat-numero">{riesgoMensual.length}</span>
+                  <span className="stat-label">Riesgo Mes</span>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Tabla de asistencia con scroll */}
           {filtros.cursoId ? (
@@ -810,7 +897,47 @@ function AsistenciaTab() {
           </div>
         </div>
       )}
+
+      {/* Popup Alumnos Riesgo Mensual */}
+      {popupRiesgoMensual.visible && (
+        <div className="popup-overlay" onClick={cerrarPopupRiesgoMensual} style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000
+        }}>
+          <div className="popup-content" onClick={(e) => e.stopPropagation()} style={{
+            background: 'white', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '500px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxHeight: '80vh', overflowY: 'auto'
+          }}>
+            <h4 style={{ marginTop: 0, color: '#ef4444' }}>Alumnos En Riesgo ({mesNombre})</h4>
+            <p style={{ fontSize: '14px', color: '#666' }}>Asistencia inferior al 85% durante este mes.</p>
+
+            <table style={{ width: '100%', marginTop: '15px', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8f9fa', color: '#666' }}>
+                  <th style={{ padding: '8px', textAlign: 'left' }}>Alumno</th>
+                  <th style={{ padding: '8px', textAlign: 'center' }}>% Mes</th>
+                  <th style={{ padding: '8px', textAlign: 'center' }}>Ausencias</th>
+                </tr>
+              </thead>
+              <tbody>
+                {popupRiesgoMensual.alumnos.map((a, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: '8px' }}>{a.nombre_completo}</td>
+                    <td style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold', color: '#ef4444' }}>{a.porcentaje}%</td>
+                    <td style={{ padding: '8px', textAlign: 'center' }}>{a.total_registros - a.asistencias}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ marginTop: '20px', textAlign: 'right' }}>
+              <button onClick={cerrarPopupRiesgoMensual} className="btn-secondary">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
+    </div >
   );
 }
 

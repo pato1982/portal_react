@@ -2976,14 +2976,13 @@ app.get('/api/asistencia/estadisticas', async (req, res) => {
     const { curso_id, mes, anio, establecimiento_id = 1, modo } = req.query;
     const anioActual = anio || new Date().getFullYear();
 
-    if (!curso_id) {
-        return res.status(400).json({
-            success: false,
-            error: 'Debe especificar curso_id'
-        });
+    if (!curso_id && modo !== 'anual') {
+        // Permitimos sin curso_id solo si es modo anual global o si queremos soportar global por mes
+        // El usuario quiere KPIs globales fijos. Así que si no hay curso_id, asumimos global.
     }
 
-    if (modo !== 'anual' && mes === undefined) {
+    // Validacion original relajada
+    if (modo !== 'anual' && mes === undefined && curso_id) {
         return res.status(400).json({
             success: false,
             error: 'Debe especificar mes o usar modo anual'
@@ -2996,18 +2995,23 @@ app.get('/api/asistencia/estadisticas', async (req, res) => {
                 estado,
                 COUNT(*) as cantidad
             FROM tb_asistencia
-            WHERE curso_id = ?
-            AND establecimiento_id = ?
+            WHERE establecimiento_id = ?
             AND YEAR(fecha) = ?
             AND activo = 1
         `;
 
-        const params = [curso_id, establecimiento_id, anioActual];
+        const params = [establecimiento_id, anioActual];
 
-        // Si no es anual, filtrar por mes
-        if (modo !== 'anual') {
+        // Si hay curso, filtramos
+        if (curso_id) {
+            query += ` AND curso_id = ?`;
+            params.push(curso_id);
+        }
+
+        // Si no es anual, filtrar por mes (si viene mes)
+        if (modo !== 'anual' && mes !== undefined) {
             query += ` AND MONTH(fecha) = ?`;
-            params.push(parseInt(mes) + 1); // JS Month 0-11 to SQL 1-12
+            params.push(parseInt(mes) + 1);
         }
 
         query += ` GROUP BY estado`;
@@ -3049,16 +3053,8 @@ app.get('/api/asistencia/alumnos-bajo-umbral', async (req, res) => {
     const { curso_id, anio, establecimiento_id = 1, umbral = 85 } = req.query;
     const anioActual = anio || new Date().getFullYear();
 
-    if (!curso_id) {
-        return res.status(400).json({
-            success: false,
-            error: 'Debe especificar curso_id'
-        });
-    }
-
     try {
-        // Obtener asistencia de todo el año por alumno
-        const [resultados] = await pool.query(`
+        let query = `
             SELECT
                 a.alumno_id,
                 al.nombres,
@@ -3069,14 +3065,26 @@ app.get('/api/asistencia/alumnos-bajo-umbral', async (req, res) => {
                 ROUND((SUM(CASE WHEN a.estado IN ('presente', 'atrasado') THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as porcentaje
             FROM tb_asistencia a
             JOIN tb_alumnos al ON a.alumno_id = al.id
-            WHERE a.curso_id = ?
-            AND a.establecimiento_id = ?
+            WHERE a.establecimiento_id = ?
             AND YEAR(a.fecha) = ?
             AND a.activo = 1
+        `;
+
+        const params = [establecimiento_id, anioActual];
+
+        if (curso_id) {
+            query += ` AND a.curso_id = ?`;
+            params.push(curso_id);
+        }
+
+        query += `
             GROUP BY a.alumno_id, al.nombres, al.apellidos
             HAVING porcentaje < ?
             ORDER BY porcentaje ASC
-        `, [curso_id, establecimiento_id, anioActual, umbral]);
+        `;
+        params.push(umbral);
+
+        const [resultados] = await pool.query(query, params);
 
         res.json({
             success: true,

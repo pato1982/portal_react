@@ -109,9 +109,11 @@ function AsistenciaTab() {
     5: 'V'
   };
 
-  // Cargar cursos al montar
+  // Cargar cursos y estadísticas globales al montar
   useEffect(() => {
     cargarCursos();
+    cargarEstadisticas(null);
+    cargarAlumnosBajoUmbral(null);
   }, []);
 
   // Cargar datos mensuales (Tabla Asistencia)
@@ -121,12 +123,13 @@ function AsistenciaTab() {
     }
   }, [filtros.cursoId, mesSeleccionado]);
 
-  // Cargar datos anuales/fijos (Estadísticas anuales, Alumnos, Bajo Umbral)
+  // Cargar lista de alumnos cuando cambia el curso
   useEffect(() => {
     if (filtros.cursoId) {
       cargarAlumnosDelCurso(filtros.cursoId);
-      cargarEstadisticas(filtros.cursoId); // Ya no depende del mes
-      cargarAlumnosBajoUmbral(filtros.cursoId);
+    } else {
+      setAlumnosDelCurso([]);
+      setAsistenciaData({});
     }
   }, [filtros.cursoId]);
 
@@ -171,11 +174,12 @@ function AsistenciaTab() {
     }
   };
 
-  const cargarEstadisticas = async (cursoId, mes) => {
+  const cargarEstadisticas = async (cursoId) => {
     try {
-      const response = await fetch(
-        `${config.apiBaseUrl}/asistencia/estadisticas?curso_id=${cursoId}&modo=anual&anio=${anioActual}`
-      );
+      let url = `${config.apiBaseUrl}/asistencia/estadisticas?modo=anual&anio=${anioActual}`;
+      if (cursoId) url += `&curso_id=${cursoId}`;
+
+      const response = await fetch(url);
       const data = await response.json();
       if (data.success) {
         setEstadisticas(data.data);
@@ -187,9 +191,10 @@ function AsistenciaTab() {
 
   const cargarAlumnosBajoUmbral = async (cursoId) => {
     try {
-      const response = await fetch(
-        `${config.apiBaseUrl}/asistencia/alumnos-bajo-umbral?curso_id=${cursoId}&anio=${anioActual}`
-      );
+      let url = `${config.apiBaseUrl}/asistencia/alumnos-bajo-umbral?anio=${anioActual}`;
+      if (cursoId) url += `&curso_id=${cursoId}`;
+
+      const response = await fetch(url);
       const data = await response.json();
       if (data.success) {
         setAlumnosBajoUmbral(data.data || []);
@@ -412,6 +417,51 @@ function AsistenciaTab() {
           <h3>Control de Asistencia</h3>
         </div>
         <div className="card-body">
+          {/* Estadisticas Anuales - Movidas Arriba y siempre visibles */}
+          <h4 style={{ margin: '0 0 15px', color: '#64748b', fontSize: '14px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Asistencia Global Acumulada (Establecimiento)
+          </h4>
+          <div className="asistencia-stats" style={{ marginBottom: '25px' }}>
+            <div className="stat-item stat-total">
+              <span className="stat-numero">{estadisticas.total}</span>
+              <span className="stat-label">Total Registros</span>
+            </div>
+            <div className="stat-item stat-presentes">
+              <span className="stat-numero">{estadisticas.presente}</span>
+              <span className="stat-label">Presentes</span>
+            </div>
+            <div className="stat-item stat-porcentaje">
+              <span className="stat-numero">{estadisticas.porcentaje_asistencia}%</span>
+              <span className="stat-label">% Asistencia</span>
+            </div>
+            <div className="stat-item stat-ausentes">
+              <span className="stat-numero">{estadisticas.ausente}</span>
+              <span className="stat-label">Ausentes</span>
+            </div>
+            <div className="stat-item stat-justificados">
+              <span className="stat-numero">{estadisticas.justificado}</span>
+              <span className="stat-label">Justificados</span>
+            </div>
+            <div
+              className={`stat-item stat-bajo-umbral ${alumnosBajoUmbral.length > 0 ? 'clickable' : ''}`}
+              onClick={abrirPopupBajoUmbral}
+              style={{ position: 'relative', cursor: alumnosBajoUmbral.length > 0 ? 'pointer' : 'default' }}
+            >
+              {alumnosBajoUmbral.length > 0 && (
+                <div style={{ position: 'absolute', top: '5px', right: '5px' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </div>
+              )}
+              <span className="stat-numero">{alumnosBajoUmbral.length}</span>
+              <span className="stat-label">Bajo 85%</span>
+            </div>
+          </div>
+
+          <hr style={{ border: '0', borderTop: '1px solid #e2e8f0', margin: '0 0 25px' }} />
+
           {/* Filtros */}
           <div className="filtros-asistencia">
             <div className="form-row form-row-filtros">
@@ -506,52 +556,7 @@ function AsistenciaTab() {
             </div>
           )}
 
-          {/* Estadisticas Anuales */}
-          {filtros.cursoId && (
-            <>
-              <h4 style={{ margin: '20px 0 10px', color: '#64748b', fontSize: '14px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Asistencia Acumulada Anual (Al día de hoy)
-              </h4>
-              <div className="asistencia-stats">
-                <div className="stat-item stat-total">
-                  <span className="stat-numero">{estadisticas.total}</span>
-                  <span className="stat-label">Total Registros</span>
-                </div>
-                <div className="stat-item stat-presentes">
-                  <span className="stat-numero">{estadisticas.presente}</span>
-                  <span className="stat-label">Presentes</span>
-                </div>
-                <div className="stat-item stat-porcentaje">
-                  <span className="stat-numero">{estadisticas.porcentaje_asistencia}%</span>
-                  <span className="stat-label">% Asistencia</span>
-                </div>
-                <div className="stat-item stat-ausentes">
-                  <span className="stat-numero">{estadisticas.ausente}</span>
-                  <span className="stat-label">Ausentes</span>
-                </div>
-                <div className="stat-item stat-justificados">
-                  <span className="stat-numero">{estadisticas.justificado}</span>
-                  <span className="stat-label">Justificados</span>
-                </div>
-                <div
-                  className={`stat-item stat-bajo-umbral ${alumnosBajoUmbral.length > 0 ? 'clickable' : ''}`}
-                  onClick={abrirPopupBajoUmbral}
-                  style={{ position: 'relative', cursor: alumnosBajoUmbral.length > 0 ? 'pointer' : 'default' }}
-                >
-                  {alumnosBajoUmbral.length > 0 && (
-                    <div style={{ position: 'absolute', top: '5px', right: '5px' }}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
-                        <line x1="7" y1="17" x2="17" y2="7"></line>
-                        <polyline points="7 7 17 7 17 17"></polyline>
-                      </svg>
-                    </div>
-                  )}
-                  <span className="stat-numero">{alumnosBajoUmbral.length}</span>
-                  <span className="stat-label">Bajo 85%</span>
-                </div>
-              </div>
-            </>
-          )}
+          {/* Estadisticas Anuales (Ahora Globales y Arriba) - Eliminado de aquí */}
 
           {/* Tabla de asistencia con scroll */}
           {filtros.cursoId ? (

@@ -30,6 +30,19 @@ import './styles/registro.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState('alumnos');
+
+  // Estado para optimización Keep-Alive: solo monta componentes cuando se visitan por primera vez
+  const [visitedTabs, setVisitedTabs] = useState(new Set(['alumnos']));
+
+  useEffect(() => {
+    setVisitedTabs(prev => {
+      if (prev.has(activeTab)) return prev;
+      const newSet = new Set(prev);
+      newSet.add(activeTab);
+      return newSet;
+    });
+  }, [activeTab]);
+
   // Detectar si venimos de un link de recuperación (/?token=...)
   const [vistaActual, setVistaActual] = useState(window.location.search.includes('token') ? 'reset-password' : 'landing');
   const [tokenRecuperacion] = useState(new URLSearchParams(window.location.search).get('token'));
@@ -63,44 +76,42 @@ function App() {
     }
   }, [cargandoSesion, isAuthenticated, usuarioAuth, tipoUsuarioAuth, vistaActual]);
 
-  // Reiniciar tutorial para ver cambios (Temporal para debug)
-  useEffect(() => {
-    if (vistaActual === 'administrador' || (!vistaActual && tipoUsuarioAuth === 'administrador')) {
-      localStorage.removeItem('hasSeenAdminTour');
-      setShowTutorial(true);
-    }
-  }, [vistaActual, tipoUsuarioAuth]);
+
 
 
   const renderTabContent = () => {
-    // Cada tab se envuelve con ErrorBoundary para que un error en uno
-    // no afecte a los demás ni crashee toda la aplicación
-    const TabWrapper = ({ children }) => (
-      <ErrorBoundary FallbackComponent={SectionErrorFallback} key={activeTab}>
-        {children}
-      </ErrorBoundary>
-    );
+    // Configuración de componentes por tab
+    const tabComponents = {
+      'alumnos': AlumnosTab,
+      'matriculas': MatriculasTab,
+      'docentes': DocentesTab,
+      'asignacion-cursos': AsignacionesTab,
+      'notas-por-curso': NotasPorCursoTab,
+      'asistencia': AsistenciaTab,
+      'comunicados': ComunicadosTab,
+      'estadisticas': EstadisticasTab
+    };
 
-    switch (activeTab) {
-      case 'alumnos':
-        return <TabWrapper><AlumnosTab /></TabWrapper>;
-      case 'matriculas':
-        return <TabWrapper><MatriculasTab /></TabWrapper>;
-      case 'docentes':
-        return <TabWrapper><DocentesTab /></TabWrapper>;
-      case 'asignacion-cursos':
-        return <TabWrapper><AsignacionesTab /></TabWrapper>;
-      case 'notas-por-curso':
-        return <TabWrapper><NotasPorCursoTab /></TabWrapper>;
-      case 'asistencia':
-        return <TabWrapper><AsistenciaTab /></TabWrapper>;
-      case 'comunicados':
-        return <TabWrapper><ComunicadosTab /></TabWrapper>;
-      case 'estadisticas':
-        return <TabWrapper><EstadisticasTab /></TabWrapper>;
-      default:
-        return <TabWrapper><AlumnosTab /></TabWrapper>;
-    }
+    // Renderizado optimizado: Keep Alive
+    return Object.entries(tabComponents).map(([tabId, Component]) => {
+      // Si la pestaña nunca ha sido visitada y no es la actual, no renderizamos nada (Lazy Load)
+      if (!visitedTabs.has(tabId) && activeTab !== tabId) return null;
+
+      const isActive = activeTab === tabId;
+
+      return (
+        <div
+          key={tabId}
+          style={{ display: isActive ? 'block' : 'none' }}
+          role="tabpanel"
+          hidden={!isActive}
+        >
+          <ErrorBoundary FallbackComponent={SectionErrorFallback}>
+            <Component />
+          </ErrorBoundary>
+        </div>
+      );
+    });
   };
 
   const cerrarSesion = () => {

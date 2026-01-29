@@ -15,6 +15,18 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
   useEffect(() => {
     localStorage.setItem('docenteActiveTab', tabActual);
   }, [tabActual]);
+
+  // Estado para Keep Alive Tabs (Optimización de carga)
+  const [visitedTabs, setVisitedTabs] = useState(new Set([tabActual]));
+
+  useEffect(() => {
+    setVisitedTabs(prev => {
+      if (prev.has(tabActual)) return prev;
+      const newSet = new Set(prev);
+      newSet.add(tabActual);
+      return newSet;
+    });
+  }, [tabActual]);
   const [currentDate, setCurrentDate] = useState('');
   const [establecimientoDropdownAbierto, setEstablecimientoDropdownAbierto] = useState(false);
   const [establecimientosDocente, setEstablecimientosDocente] = useState([]);
@@ -112,6 +124,50 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
       desc: 'Analíticas de rendimiento de sus cursos. Revise gráficos de aprobación/reprobación, promedios por asignatura e identifique tempranamente a estudiantes que requieren apoyo pedagógico adicional.'
     }
   ];
+
+  const renderTabsContent = () => {
+    const tabsConfig = [
+      {
+        id: 'asistencia',
+        Component: AsistenciaTab,
+        props: { docenteId: docenteActual.id, establecimientoId: establecimientoActual?.id, usuarioId: usuarioDocente?.id }
+      },
+      {
+        id: 'agregar-nota',
+        Component: AgregarNotaTab,
+        props: { docenteId: docenteActual.id, establecimientoId: establecimientoActual?.id, usuarioId: usuarioDocente?.id }
+      },
+      {
+        id: 'modificar-nota',
+        Component: ModificarNotaTab,
+        props: { docenteId: docenteActual.id, establecimientoId: establecimientoActual?.id }
+      },
+      {
+        id: 'ver-notas',
+        Component: VerNotasTab,
+        props: { docenteId: docenteActual.id, establecimientoId: establecimientoActual?.id }
+      },
+      {
+        id: 'progreso',
+        Component: ProgresoTab,
+        props: { docenteId: docenteActual.id, establecimientoId: establecimientoActual?.id }
+      }
+    ];
+
+    return tabsConfig.map(({ id, Component, props }) => {
+      if (!visitedTabs.has(id) && tabActual !== id) return null;
+      const isActive = tabActual === id;
+      return (
+        <div
+          key={id}
+          style={{ display: isActive ? 'block' : 'none' }}
+          role="tabpanel"
+        >
+          <Component {...props} />
+        </div>
+      );
+    });
+  };
 
   return (
     <div className="app-container">
@@ -211,38 +267,7 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
             </nav>
 
             <div className="tabs-content">
-              {tabActual === 'asistencia' && (
-                <AsistenciaTab
-                  docenteId={docenteActual.id}
-                  establecimientoId={establecimientoActual?.id}
-                  usuarioId={usuarioDocente?.id}
-                />
-              )}
-              {tabActual === 'agregar-nota' && (
-                <AgregarNotaTab
-                  docenteId={docenteActual.id}
-                  establecimientoId={establecimientoActual?.id}
-                  usuarioId={usuarioDocente?.id}
-                />
-              )}
-              {tabActual === 'modificar-nota' && (
-                <ModificarNotaTab
-                  docenteId={docenteActual.id}
-                  establecimientoId={establecimientoActual?.id}
-                />
-              )}
-              {tabActual === 'ver-notas' && (
-                <VerNotasTab
-                  docenteId={docenteActual.id}
-                  establecimientoId={establecimientoActual?.id}
-                />
-              )}
-              {tabActual === 'progreso' && (
-                <ProgresoTab
-                  docenteId={docenteActual.id}
-                  establecimientoId={establecimientoActual?.id}
-                />
-              )}
+              {renderTabsContent()}
             </div>
           </div>
         </section>

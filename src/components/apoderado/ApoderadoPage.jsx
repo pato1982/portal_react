@@ -30,6 +30,18 @@ const comunicadosDemo = [];
 
 function ApoderadoPage({ onCambiarVista, usuario }) {
   const [tabActiva, setTabActiva] = useState('informacion');
+
+  // Estado para Keep Alive Tabs
+  const [visitedTabs, setVisitedTabs] = useState(new Set([tabActiva]));
+
+  useEffect(() => {
+    setVisitedTabs(prev => {
+      if (prev.has(tabActiva)) return prev;
+      const newSet = new Set(prev);
+      newSet.add(tabActiva);
+      return newSet;
+    });
+  }, [tabActiva]);
   const [pupilos, setPupilos] = useState([]);
   const [pupilosPendientes, setPupilosPendientes] = useState([]);
   const [pupiloSeleccionado, setPupiloSeleccionado] = useState(null);
@@ -260,18 +272,26 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
   const yearEscolar = new Date().getFullYear();
 
   const renderTabContent = () => {
-    switch (tabActiva) {
-      case 'informacion':
-        return <InformacionTab pupilo={pupiloSeleccionado} apoderado={apoderadoActual} />;
-      case 'notas':
-        return <NotasTab pupilo={pupiloSeleccionado} />;
-      case 'comunicados':
-        return <ComunicadosTab pupilo={pupiloSeleccionado} usuarioId={apoderadoActual.id} />;
-      case 'progreso':
-        return <ProgresoTab pupilo={pupiloSeleccionado} />;
-      default:
-        return <InformacionTab pupilo={pupiloSeleccionado} apoderado={apoderadoActual} />;
-    }
+    const tabsConfig = [
+      { id: 'informacion', Component: InformacionTab, props: { pupilo: pupiloSeleccionado, apoderado: apoderadoActual } },
+      { id: 'notas', Component: NotasTab, props: { pupilo: pupiloSeleccionado } },
+      { id: 'comunicados', Component: ComunicadosTab, props: { pupilo: pupiloSeleccionado, usuarioId: apoderadoActual.id } },
+      { id: 'progreso', Component: ProgresoTab, props: { pupilo: pupiloSeleccionado } }
+    ];
+
+    return tabsConfig.map(({ id, Component, props }) => {
+      if (!visitedTabs.has(id) && tabActiva !== id) return null;
+      const isActive = tabActiva === id;
+      return (
+        <div
+          key={id}
+          style={{ display: isActive ? 'block' : 'none' }}
+          role="tabpanel"
+        >
+          <Component {...props} />
+        </div>
+      );
+    });
   };
 
   return (

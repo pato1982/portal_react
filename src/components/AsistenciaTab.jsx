@@ -853,11 +853,11 @@ function AsistenciaTab() {
             </div>
             <div className="popup-body" style={{ padding: '20px', overflowY: 'auto' }}>
               <div style={{ marginBottom: '15px', padding: '10px', background: '#f8fafc', borderRadius: '6px', fontSize: '14px', color: '#64748b' }}>
-                <strong>Curso:</strong> {filtros.curso}<br />
+                <strong>Ámbito:</strong> Establecimiento Global<br />
                 <strong>Año Escolar:</strong> {anioActual}
               </div>
               <p className="popup-nota" style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '10px', fontStyle: 'italic' }}>
-                * Calculado sobre la asistencia acumulada anual hasta la fecha.
+                * Calculado sobre la asistencia acumulada anual hasta la fecha en todo el establecimiento.
               </p>
 
               {popupBajoUmbral.alumnos.length > 0 ? (
@@ -871,7 +871,7 @@ function AsistenciaTab() {
                         <span style={{ color: '#94a3b8', fontSize: '12px', minWidth: '20px' }}>{index + 1}.</span>
                         <div>
                           <div style={{ fontWeight: '600', color: '#334155' }}>{alumno.nombre_completo}</div>
-                          <div style={{ fontSize: '12px', color: '#64748b' }}>{filtros.curso}</div>
+                          <div style={{ fontSize: '12px', color: '#64748b' }}>{alumno.nombre_curso}</div>
                         </div>
                       </div>
                       <div style={{
@@ -909,7 +909,7 @@ function AsistenciaTab() {
             boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxHeight: '80vh', overflowY: 'auto'
           }}>
             <h4 style={{ marginTop: 0, color: '#ef4444' }}>Alumnos En Riesgo ({mesNombre})</h4>
-            <p style={{ fontSize: '14px', color: '#666' }}>Asistencia inferior al 85% durante este mes.</p>
+            <p style={{ fontSize: '14px', color: '#666' }}>Asistencia inferior al 85% durante este mes para el curso seleccionado.</p>
 
             <table style={{ width: '100%', marginTop: '15px', borderCollapse: 'collapse' }}>
               <thead>
@@ -922,7 +922,10 @@ function AsistenciaTab() {
               <tbody>
                 {popupRiesgoMensual.alumnos.map((a, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '8px' }}>{a.nombre_completo}</td>
+                    <td style={{ padding: '8px' }}>
+                      <div style={{ fontWeight: '600' }}>{a.nombre_completo}</div>
+                      <div style={{ fontSize: '11px', color: '#666' }}>{a.nombre_curso}</div>
+                    </td>
                     <td style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold', color: '#ef4444' }}>{a.porcentaje}%</td>
                     <td style={{ padding: '8px', textAlign: 'center' }}>{a.total_registros - a.asistencias}</td>
                   </tr>

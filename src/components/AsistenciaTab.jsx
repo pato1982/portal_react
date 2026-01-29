@@ -114,15 +114,21 @@ function AsistenciaTab() {
     cargarCursos();
   }, []);
 
-  // Cargar datos cuando cambia el curso o mes
+  // Cargar datos mensuales (Tabla Asistencia)
+  useEffect(() => {
+    if (filtros.cursoId) {
+      cargarAsistencia(filtros.cursoId, mesSeleccionado);
+    }
+  }, [filtros.cursoId, mesSeleccionado]);
+
+  // Cargar datos anuales/fijos (Estadísticas anuales, Alumnos, Bajo Umbral)
   useEffect(() => {
     if (filtros.cursoId) {
       cargarAlumnosDelCurso(filtros.cursoId);
-      cargarAsistencia(filtros.cursoId, mesSeleccionado);
-      cargarEstadisticas(filtros.cursoId, mesSeleccionado);
+      cargarEstadisticas(filtros.cursoId); // Ya no depende del mes
       cargarAlumnosBajoUmbral(filtros.cursoId);
     }
-  }, [filtros.cursoId, mesSeleccionado]);
+  }, [filtros.cursoId]);
 
   const cargarCursos = async () => {
     try {
@@ -168,7 +174,7 @@ function AsistenciaTab() {
   const cargarEstadisticas = async (cursoId, mes) => {
     try {
       const response = await fetch(
-        `${config.apiBaseUrl}/asistencia/estadisticas?curso_id=${cursoId}&mes=${mes}&anio=${anioActual}`
+        `${config.apiBaseUrl}/asistencia/estadisticas?curso_id=${cursoId}&modo=anual&anio=${anioActual}`
       );
       const data = await response.json();
       if (data.success) {
@@ -335,7 +341,7 @@ function AsistenciaTab() {
 
       // Recargar datos
       await cargarAsistencia(filtros.cursoId, mesSeleccionado);
-      await cargarEstadisticas(filtros.cursoId, mesSeleccionado);
+      await cargarEstadisticas(filtros.cursoId);
       await cargarAlumnosBajoUmbral(filtros.cursoId);
       cerrarPopup();
     } catch (error) {
@@ -447,34 +453,34 @@ function AsistenciaTab() {
                 </div>
               </div>
               <div className="form-group">
-                  <label>Mes</label>
-                  <div className="custom-select-container">
-                    <div
-                      className="custom-select-trigger"
-                      onClick={() => setDropdownAbierto(dropdownAbierto === 'mes' ? null : 'mes')}
-                    >
-                      <span>{mesNombre}</span>
-                      <span className="custom-select-arrow">{dropdownAbierto === 'mes' ? '▲' : '▼'}</span>
-                    </div>
-                    {dropdownAbierto === 'mes' && (
-                      <div className="custom-select-options custom-select-scroll">
-                        {mesesEscolares.map((mes) => (
-                          <div
-                            key={mes.indice}
-                            className={`custom-select-option ${mesSeleccionado === mes.indice ? 'selected' : ''}`}
-                            onClick={() => {
-                              setMesSeleccionado(mes.indice);
-                              setMesNombre(mes.nombre);
-                              setDropdownAbierto(null);
-                            }}
-                          >
-                            {mes.nombre}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                <label>Mes</label>
+                <div className="custom-select-container">
+                  <div
+                    className="custom-select-trigger"
+                    onClick={() => setDropdownAbierto(dropdownAbierto === 'mes' ? null : 'mes')}
+                  >
+                    <span>{mesNombre}</span>
+                    <span className="custom-select-arrow">{dropdownAbierto === 'mes' ? '▲' : '▼'}</span>
                   </div>
+                  {dropdownAbierto === 'mes' && (
+                    <div className="custom-select-options custom-select-scroll">
+                      {mesesEscolares.map((mes) => (
+                        <div
+                          key={mes.indice}
+                          className={`custom-select-option ${mesSeleccionado === mes.indice ? 'selected' : ''}`}
+                          onClick={() => {
+                            setMesSeleccionado(mes.indice);
+                            setMesNombre(mes.nombre);
+                            setDropdownAbierto(null);
+                          }}
+                        >
+                          {mes.nombre}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+              </div>
             </div>
           </div>
 
@@ -500,37 +506,51 @@ function AsistenciaTab() {
             </div>
           )}
 
-          {/* Estadisticas del mes */}
+          {/* Estadisticas Anuales */}
           {filtros.cursoId && (
-            <div className="asistencia-stats">
-              <div className="stat-item stat-total">
-                <span className="stat-numero">{estadisticas.total}</span>
-                <span className="stat-label">Total Registros</span>
+            <>
+              <h4 style={{ margin: '20px 0 10px', color: '#64748b', fontSize: '14px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Asistencia Acumulada Anual (Al día de hoy)
+              </h4>
+              <div className="asistencia-stats">
+                <div className="stat-item stat-total">
+                  <span className="stat-numero">{estadisticas.total}</span>
+                  <span className="stat-label">Total Registros</span>
+                </div>
+                <div className="stat-item stat-presentes">
+                  <span className="stat-numero">{estadisticas.presente}</span>
+                  <span className="stat-label">Presentes</span>
+                </div>
+                <div className="stat-item stat-porcentaje">
+                  <span className="stat-numero">{estadisticas.porcentaje_asistencia}%</span>
+                  <span className="stat-label">% Asistencia</span>
+                </div>
+                <div className="stat-item stat-ausentes">
+                  <span className="stat-numero">{estadisticas.ausente}</span>
+                  <span className="stat-label">Ausentes</span>
+                </div>
+                <div className="stat-item stat-justificados">
+                  <span className="stat-numero">{estadisticas.justificado}</span>
+                  <span className="stat-label">Justificados</span>
+                </div>
+                <div
+                  className={`stat-item stat-bajo-umbral ${alumnosBajoUmbral.length > 0 ? 'clickable' : ''}`}
+                  onClick={abrirPopupBajoUmbral}
+                  style={{ position: 'relative', cursor: alumnosBajoUmbral.length > 0 ? 'pointer' : 'default' }}
+                >
+                  {alumnosBajoUmbral.length > 0 && (
+                    <div style={{ position: 'absolute', top: '5px', right: '5px' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}>
+                        <line x1="7" y1="17" x2="17" y2="7"></line>
+                        <polyline points="7 7 17 7 17 17"></polyline>
+                      </svg>
+                    </div>
+                  )}
+                  <span className="stat-numero">{alumnosBajoUmbral.length}</span>
+                  <span className="stat-label">Bajo 85%</span>
+                </div>
               </div>
-              <div className="stat-item stat-presentes">
-                <span className="stat-numero">{estadisticas.presente}</span>
-                <span className="stat-label">Presentes</span>
-              </div>
-              <div className="stat-item stat-porcentaje">
-                <span className="stat-numero">{estadisticas.porcentaje_asistencia}%</span>
-                <span className="stat-label">% Asistencia</span>
-              </div>
-              <div className="stat-item stat-ausentes">
-                <span className="stat-numero">{estadisticas.ausente}</span>
-                <span className="stat-label">Ausentes</span>
-              </div>
-              <div className="stat-item stat-justificados">
-                <span className="stat-numero">{estadisticas.justificado}</span>
-                <span className="stat-label">Justificados</span>
-              </div>
-              <div
-                className={`stat-item stat-bajo-umbral ${alumnosBajoUmbral.length > 0 ? 'clickable' : ''}`}
-                onClick={abrirPopupBajoUmbral}
-              >
-                <span className="stat-numero">{alumnosBajoUmbral.length}</span>
-                <span className="stat-label">Bajo 85%</span>
-              </div>
-            </div>
+            </>
           )}
 
           {/* Tabla de asistencia con scroll */}
@@ -720,29 +740,65 @@ function AsistenciaTab() {
 
       {/* Popup de alumnos bajo 85% */}
       {popupBajoUmbral.visible && (
-        <div className="popup-overlay" onClick={cerrarPopupBajoUmbral}>
-          <div className="popup-bajo-umbral" onClick={(e) => e.stopPropagation()}>
-            <div className="popup-header">
-              <h4>Alumnos con asistencia bajo 85%</h4>
-              <button className="popup-close" onClick={cerrarPopupBajoUmbral}>&times;</button>
+        <div className="popup-overlay" onClick={cerrarPopupBajoUmbral} style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000
+        }}>
+          <div className="popup-bajo-umbral" onClick={(e) => e.stopPropagation()} style={{
+            background: 'white', padding: '0', borderRadius: '8px', width: '90%', maxWidth: '500px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', maxHeight: '80vh'
+          }}>
+            <div className="popup-header" style={{
+              padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              backgroundColor: '#fee2e2'
+            }}>
+              <h4 style={{ margin: 0, color: '#991b1b', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '20px' }}>⚠️</span> Alumnos en Riesgo (Bajo 85%)
+              </h4>
+              <button className="popup-close" onClick={cerrarPopupBajoUmbral} style={{
+                background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#991b1b', lineHeight: 1
+              }}>&times;</button>
             </div>
-            <div className="popup-body">
-              <div className="popup-curso-info">
-                {filtros.curso} - Año {anioActual}
+            <div className="popup-body" style={{ padding: '20px', overflowY: 'auto' }}>
+              <div style={{ marginBottom: '15px', padding: '10px', background: '#f8fafc', borderRadius: '6px', fontSize: '14px', color: '#64748b' }}>
+                <strong>Curso:</strong> {filtros.curso}<br />
+                <strong>Año Escolar:</strong> {anioActual}
               </div>
-              <p className="popup-nota">* Calculado sobre todos los meses del año</p>
-              <ul className="lista-bajo-umbral">
-                {popupBajoUmbral.alumnos.map((alumno, index) => (
-                  <li key={alumno.alumno_id} className="alumno-bajo-umbral">
-                    <span className="alumno-numero">{index + 1}.</span>
-                    <span className="alumno-nombre">{alumno.nombre_completo}</span>
-                    <span className="alumno-porcentaje">{alumno.porcentaje}%</span>
-                  </li>
-                ))}
-              </ul>
+              <p className="popup-nota" style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '10px', fontStyle: 'italic' }}>
+                * Calculado sobre la asistencia acumulada anual hasta la fecha.
+              </p>
+
+              {popupBajoUmbral.alumnos.length > 0 ? (
+                <ul className="lista-bajo-umbral" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {popupBajoUmbral.alumnos.map((alumno, index) => (
+                    <li key={alumno.alumno_id} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '12px', borderBottom: '1px solid #f1f5f9', gap: '10px'
+                    }}>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <span style={{ color: '#94a3b8', fontSize: '12px', minWidth: '20px' }}>{index + 1}.</span>
+                        <div>
+                          <div style={{ fontWeight: '600', color: '#334155' }}>{alumno.nombre_completo}</div>
+                          <div style={{ fontSize: '12px', color: '#64748b' }}>{filtros.curso}</div>
+                        </div>
+                      </div>
+                      <div style={{
+                        background: '#fee2e2', color: '#991b1b', padding: '4px 8px', borderRadius: '12px',
+                        fontWeight: 'bold', fontSize: '13px', minWidth: '60px', textAlign: 'center'
+                      }}>
+                        {alumno.porcentaje}%
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>No hay alumnos bajo el 85% de asistencia.</p>
+              )}
             </div>
-            <div className="popup-footer">
-              <button type="button" className="btn btn-secondary" onClick={cerrarPopupBajoUmbral}>
+            <div className="popup-footer" style={{ padding: '16px 20px', borderTop: '1px solid #e2e8f0', textAlign: 'right' }}>
+              <button type="button" className="btn btn-secondary" onClick={cerrarPopupBajoUmbral} style={{
+                padding: '8px 16px', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white', cursor: 'pointer'
+              }}>
                 Cerrar
               </button>
             </div>

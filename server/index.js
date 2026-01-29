@@ -2971,31 +2971,49 @@ app.get('/api/asistencia', async (req, res) => {
 });
 
 // GET /api/asistencia/estadisticas - Obtener estadísticas/KPIs del mes
+// GET /api/asistencia/estadisticas - Obtener estadísticas/KPIs del mes o acumulado anual
 app.get('/api/asistencia/estadisticas', async (req, res) => {
-    const { curso_id, mes, anio, establecimiento_id = 1 } = req.query;
+    const { curso_id, mes, anio, establecimiento_id = 1, modo } = req.query;
     const anioActual = anio || new Date().getFullYear();
 
-    if (!curso_id || mes === undefined) {
+    if (!curso_id) {
         return res.status(400).json({
             success: false,
-            error: 'Debe especificar curso_id y mes'
+            error: 'Debe especificar curso_id'
+        });
+    }
+
+    if (modo !== 'anual' && mes === undefined) {
+        return res.status(400).json({
+            success: false,
+            error: 'Debe especificar mes o usar modo anual'
         });
     }
 
     try {
-        // Obtener conteo por estado
-        const [estadisticas] = await pool.query(`
+        let query = `
             SELECT
                 estado,
                 COUNT(*) as cantidad
             FROM tb_asistencia
             WHERE curso_id = ?
             AND establecimiento_id = ?
-            AND MONTH(fecha) = ?
             AND YEAR(fecha) = ?
             AND activo = 1
-            GROUP BY estado
-        `, [curso_id, establecimiento_id, parseInt(mes) + 1, anioActual]);
+        `;
+
+        const params = [curso_id, establecimiento_id, anioActual];
+
+        // Si no es anual, filtrar por mes
+        if (modo !== 'anual') {
+            query += ` AND MONTH(fecha) = ?`;
+            params.push(parseInt(mes) + 1); // JS Month 0-11 to SQL 1-12
+        }
+
+        query += ` GROUP BY estado`;
+
+        // Obtener conteo por estado
+        const [estadisticas] = await pool.query(query, params);
 
         // Construir objeto de estadísticas
         const stats = {

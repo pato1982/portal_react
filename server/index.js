@@ -3060,17 +3060,20 @@ app.get('/api/asistencia/alumnos-bajo-umbral', async (req, res) => {
                 al.nombres,
                 al.apellidos,
                 CONCAT(al.apellidos, ', ', al.nombres) as nombre_completo,
+                c.nombre as nombre_curso,
                 COUNT(*) as total_registros,
                 SUM(CASE WHEN a.estado IN ('presente', 'atrasado') THEN 1 ELSE 0 END) as asistencias,
                 ROUND((SUM(CASE WHEN a.estado IN ('presente', 'atrasado') THEN 1 ELSE 0 END) / COUNT(*)) * 100, 1) as porcentaje
             FROM tb_asistencia a
             JOIN tb_alumnos al ON a.alumno_id = al.id
+            LEFT JOIN tb_matriculas m ON a.alumno_id = m.alumno_id AND m.anio_academico = ? AND m.activo = 1
+            LEFT JOIN tb_cursos c ON m.curso_asignado_id = c.id
             WHERE a.establecimiento_id = ?
             AND YEAR(a.fecha) = ?
             AND a.activo = 1
         `;
 
-        const params = [establecimiento_id, anioActual];
+        const params = [anioActual, establecimiento_id, anioActual];
 
         if (curso_id) {
             query += ` AND a.curso_id = ?`;
@@ -3083,7 +3086,7 @@ app.get('/api/asistencia/alumnos-bajo-umbral', async (req, res) => {
         }
 
         query += `
-            GROUP BY a.alumno_id, al.nombres, al.apellidos
+            GROUP BY a.alumno_id, al.nombres, al.apellidos, c.nombre
             HAVING porcentaje < ?
             ORDER BY porcentaje ASC
         `;

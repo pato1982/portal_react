@@ -862,23 +862,35 @@ function AsistenciaTab() {
 
               {popupBajoUmbral.alumnos.length > 0 ? (
                 <ul className="lista-bajo-umbral" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  <li style={{
+                    display: 'grid', gridTemplateColumns: 'minmax(30px, auto) 1.5fr 1fr minmax(60px, auto)',
+                    gap: '15px', padding: '10px 12px', borderBottom: '2px solid #f1f5f9',
+                    fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold'
+                  }}>
+                    <span>#</span>
+                    <span>Alumno</span>
+                    <span style={{ textAlign: 'center' }}>Curso</span>
+                    <span style={{ textAlign: 'center' }}>Asistencia</span>
+                  </li>
                   {popupBajoUmbral.alumnos.map((alumno, index) => (
                     <li key={alumno.alumno_id} style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '12px', borderBottom: '1px solid #f1f5f9', gap: '10px'
+                      padding: '12px', borderBottom: '1px solid #f1f5f9'
                     }}>
-                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <span style={{ color: '#94a3b8', fontSize: '12px', minWidth: '20px' }}>{index + 1}.</span>
-                        <div>
-                          <div style={{ fontWeight: '600', color: '#334155' }}>{alumno.nombre_completo}</div>
-                          <div style={{ fontSize: '12px', color: '#64748b' }}>{alumno.nombre_curso}</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(30px, auto) 1.5fr 1fr minmax(60px, auto)', gap: '15px', alignItems: 'center' }}>
+                        <span style={{ color: '#94a3b8', fontSize: '12px' }}>{index + 1}.</span>
+                        <div style={{ fontWeight: '600', color: '#334155', fontSize: '14px' }}>{alumno.nombre_completo}</div>
+                        <div style={{
+                          fontSize: '12px', color: '#3b82f6', textAlign: 'center', fontWeight: '500',
+                          background: '#eff6ff', padding: '4px 8px', borderRadius: '6px'
+                        }}>
+                          {alumno.nombre_curso || 'N/A'}
                         </div>
-                      </div>
-                      <div style={{
-                        background: '#fee2e2', color: '#991b1b', padding: '4px 8px', borderRadius: '12px',
-                        fontWeight: 'bold', fontSize: '13px', minWidth: '60px', textAlign: 'center'
-                      }}>
-                        {alumno.porcentaje}%
+                        <div style={{
+                          background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '12px',
+                          fontWeight: 'bold', fontSize: '13px', textAlign: 'center'
+                        }}>
+                          {alumno.porcentaje}%
+                        </div>
                       </div>
                     </li>
                   ))}
@@ -924,7 +936,7 @@ function AsistenciaTab() {
                   <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
                     <td style={{ padding: '8px' }}>
                       <div style={{ fontWeight: '600' }}>{a.nombre_completo}</div>
-                      <div style={{ fontSize: '11px', color: '#666' }}>{a.nombre_curso}</div>
+                      <div style={{ fontSize: '11px', color: '#666' }}>{a.nombre_curso || 'Sin curso asignado'}</div>
                     </td>
                     <td style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold', color: '#ef4444' }}>{a.porcentaje}%</td>
                     <td style={{ padding: '8px', textAlign: 'center' }}>{a.total_registros - a.asistencias}</td>

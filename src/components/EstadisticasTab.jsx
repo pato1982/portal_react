@@ -333,9 +333,29 @@ function EstadisticasTab() {
   };
 
   const getDistribucionData = () => {
-    const dest = distribucion.destacados || datos.destacados || 0;
-    const reg = distribucion.regulares || 0;
-    const riesgo = distribucion.enRiesgo || datos.riesgo || 0;
+    // Si estamos en vista general, usamos los datos del endpoint de distribución global
+    // Si estamos en otra vista (docente, curso), usamos los datos específicos que ya incluyen estos contadores
+    let dest = 0;
+    let reg = 0;
+    let riesgo = 0;
+
+    if (vistaActual === 'general') {
+      dest = distribucion.destacados || 0;
+      reg = distribucion.regulares || 0;
+      riesgo = distribucion.enRiesgo || 0;
+    } else {
+      // Vista específica (Docente, Curso, etc.)
+      dest = datos.destacados || datos.alumnosDestacados || 0;
+      // Algunos endpoints no devuelven 'regulares' explícitamente, podemos inferirlo o usar 0
+      reg = datos.regulares || datos.alumnosRegulares || 0;
+      riesgo = datos.riesgo || datos.alumnosRiesgo || 0;
+
+      // Si tenemos total y faltan los regulares, calcularlos por diferencia
+      const total = datos.alumnos || datos.totalAlumnos || 0;
+      if (total > 0 && reg === 0) {
+        reg = Math.max(0, total - dest - riesgo);
+      }
+    }
 
     return {
       labels: ['Destacados', 'Regulares', 'En Riesgo'],

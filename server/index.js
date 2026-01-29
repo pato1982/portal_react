@@ -4054,6 +4054,26 @@ app.get('/api/estadisticas/docente/:docenteId', async (req, res) => {
             WHERE n.docente_id = ? AND n.anio_academico = ? AND n.activo = 1
         `, [docenteId, anio]);
 
+        // KPIs de rendimiento (Riesgo y Destacados del docente)
+        // Se calcula el promedio de las notas que ha puesto ESTE docente a cada alumno
+        const [kpiRendimiento] = await pool.query(`
+            SELECT
+                COUNT(CASE WHEN promedio >= 6.0 THEN 1 END) as destacados,
+                COUNT(CASE WHEN promedio < 4.0 THEN 1 END) as riesgo
+            FROM (
+                SELECT AVG(nota) as promedio
+                FROM tb_notas
+                WHERE docente_id = ? 
+                AND anio_academico = ? 
+                AND activo = 1 
+                AND nota IS NOT NULL
+                GROUP BY alumno_id
+            ) as promedios_alumnos
+        `, [docenteId, anio]);
+
+        const destacados = kpiRendimiento[0]?.destacados || 0;
+        const riesgo = kpiRendimiento[0]?.riesgo || 0;
+
         res.json({
             success: true,
             data: {
@@ -4062,7 +4082,10 @@ app.get('/api/estadisticas/docente/:docenteId', async (req, res) => {
                 asignaturasDetalle: asignaturas,
                 cursos: cursos.map(c => c.nombre),
                 cursosDetalle: cursos,
-                totalAlumnos: alumnosCount[0]?.totalAlumnos || 0
+                totalAlumnos: alumnosCount[0]?.totalAlumnos || 0,
+                destacados: destacados,
+                riesgo: riesgo,
+                regulares: (alumnosCount[0]?.totalAlumnos || 0) - destacados - riesgo
             }
         });
     } catch (error) {

@@ -442,6 +442,28 @@ body {
     font-weight: 600;
 }
 
+/* Ajustes específicos para Tablet para evitar scroll en pestañas */
+@media (min-width: 769px) and (max-width: 1250px) {
+    .tab-btn {
+        padding: 10px 8px;
+        /* Menos padding horizontal */
+        font-size: 10px;
+        /* Fuente un poco más chica */
+        letter-spacing: 0;
+        /* Menos espacio entre letras */
+        white-space: nowrap;
+        /* Evitar que se rompa el texto */
+    }
+
+    /* Si tienes iconos dentro de los tabs, redúcelos/acércalos también */
+    .tab-btn svg {
+        margin-right: 4px;
+        /* Menos margen con el icono */
+        width: 14px;
+        height: 14px;
+    }
+}
+
 /* ==================== TAB CONTENT ==================== */
 .tabs-content {
     padding: 24px;

@@ -96,11 +96,20 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
             // Calcular posición del Personaje (Libro)
             // Lo ponemos flotando al lado o encima
             let pjTop = rect.bottom + 20; // Alineado con el globo
-            let pjLeft = left - 100; // A la izquierda del globo (era -120, movido 20px derecha)
+            let pjLeft = left - 130; // A la izquierda del globo con más margen (era -100)
+
+            // Lógica especial para el último paso (estadisticas) o si no cabe a la izquierda
+            const isLastStep = currentStep === STEPS.length - 1;
 
             if (pjLeft < 0) {
                 // Si no cabe a la izquierda, lo ponemos a la derecha
-                pjLeft = left + 310;
+                pjLeft = left + 330; // Margen derecho aumentado
+            }
+
+            // En el último paso (estadísticas), forzar a la izquierda si hay espacio, o ajustar específicamente
+            if (isLastStep && !isMobile) {
+                // Mantener a la izquierda pero asegurando margen correcto
+                pjLeft = left - 140;
             }
 
             // En móvil, el personaje arriba del globo

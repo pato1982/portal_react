@@ -11,6 +11,7 @@ import config from '../../config/env';
 
 function DocentePage({ onCambiarVista, usuarioDocente }) {
   const [tabActual, setTabActual] = useState(() => localStorage.getItem('docenteActiveTab') || 'asistencia');
+  const [vistaModo, setVistaModo] = useState('contenido'); // 'dashboard' | 'contenido'
 
   // Estado para el tutorial (se muestra si no existe la marca en localStorage)
   const [showTutorial, setShowTutorial] = useState(() => {
@@ -23,7 +24,25 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
   };
 
   const handleTutorialStepChange = (tabId) => {
+    // Al avanzar en el tutorial, aseguramos estar en el modo dashboard (tarjetas)
+    setVistaModo('dashboard');
     setTabActual(tabId);
+  };
+
+  // Efecto para activar el modo dashboard si el tutorial está activo
+  useEffect(() => {
+    if (showTutorial) {
+      setVistaModo('dashboard');
+    }
+  }, [showTutorial]);
+
+  const seleccionarVista = (tabId) => {
+    setTabActual(tabId);
+    setVistaModo('contenido');
+  };
+
+  const volverAMenu = () => {
+    setVistaModo('dashboard');
   };
 
   const DOCENTE_STEPS = [
@@ -144,27 +163,32 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
     {
       id: 'asistencia',
       label: 'Asistencia',
-      desc: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados. Recuerde que este registro es oficial y fundamental para la subvención escolar.'
+      desc: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados.',
+      icon: 'event_available', color: 'blue', img: '/assets/navigation/info.png', badge: 'Registro', size: 'tall'
     },
     {
       id: 'agregar-nota',
       label: 'Agregar Nota',
-      desc: 'Ingrese nuevas calificaciones al libro de clases. Primero seleccione el curso y la asignatura, luego el tipo de evaluación (Prueba, Trabajo, etc.) y finalmente ingrese las notas para cada alumno.'
+      desc: 'Ingrese nuevas calificaciones al libro de clases. Primero seleccione el curso y la asignatura, luego el tipo de evaluación.',
+      icon: 'post_add', color: 'green', img: '/assets/navigation/notas.png', badge: 'Evaluación', size: 'small'
     },
     {
       id: 'modificar-nota',
       label: 'Modificar Nota',
-      desc: 'Permite corregir calificaciones ingresadas erróneamente. Busque la evaluación específica y edite la nota del alumno. Tenga en cuenta que todas las modificaciones quedan registradas para auditoría interna.'
+      desc: 'Permite corregir calificaciones ingresadas erróneamente. Busque la evaluación específica y edite la nota del alumno.',
+      icon: 'edit_note', color: 'orange', img: '/assets/navigation/notas.png', badge: 'Edición', size: 'small'
     },
     {
       id: 'ver-notas',
       label: 'Ver Notas',
-      desc: 'Visualice el panorama completo de calificaciones de sus cursos. Consulte la sábana de notas, promedios parciales y avance curricular de todos sus estudiantes en una sola vista.'
+      desc: 'Visualice el panorama completo de calificaciones de sus cursos. Consulte la sábana de notas y promedios parciales.',
+      icon: 'table_view', color: 'purple', img: '/assets/navigation/notas.png', badge: 'Resumen', size: 'tall'
     },
     {
       id: 'progreso',
       label: 'Progreso',
-      desc: 'Analíticas de rendimiento de sus cursos. Revise gráficos de aprobación/reprobación, promedios por asignatura e identifique tempranamente a estudiantes que requieren apoyo pedagógico adicional.'
+      desc: 'Analíticas de rendimiento de sus cursos. Revise gráficos de aprobación/reprobación y promedios por asignatura.',
+      icon: 'insights', color: 'pink', img: '/assets/navigation/progreso.png', badge: 'Análisis', size: 'tall'
     }
   ];
 
@@ -348,24 +372,73 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
           </div>
 
           <div className="tabs-container">
-            <nav className="tabs-nav">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  data-tab-id={tab.id}
-                  className={`tab-btn ${tabActual === tab.id ? 'active' : ''}`}
-                  onClick={() => setTabActual(tab.id)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                >
-                  {tab.label}
-                  <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
+            {/* Contenido en TABS (Modo Contenido) - Se mantiene montado pero oculto si estamos en dashboard */}
+            <div style={{ display: vistaModo === 'contenido' ? 'block' : 'none' }}>
+              <div className="panel-header-actions" style={{ marginBottom: '15px' }}>
+                <button className="btn-volver-notebook" onClick={volverAMenu} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '14px' }}>
+                  <span className="material-symbols-outlined">arrow_back</span>
+                  Volver al Panel
                 </button>
-              ))}
-            </nav>
+              </div>
+              <nav className="tabs-nav">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    // data-tab-id es usado por el tutorial, pero en modo contenido el tutorial apunta a los botones de arriba
+                    // En modo dashboard apunta a las tarjetas. Ambos deben tener el ID correcto.
+                    className={`tab-btn ${tabActual === tab.id ? 'active' : ''}`}
+                    onClick={() => setTabActual(tab.id)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  >
+                    {tab.label}
+                    <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
+                  </button>
+                ))}
+              </nav>
 
-            <div className="tabs-content">
-              {renderTabsContent()}
+              <div className="tabs-content">
+                {renderTabsContent()}
+              </div>
             </div>
+
+            {/* Contenido en DASHBOARD (Modo Tarjetas) */}
+            {vistaModo === 'dashboard' && (
+              <div className="notebook-grid-admin">
+                {tabs.map((tab, index) => (
+                  <div
+                    key={tab.id}
+                    data-tab-id={tab.id}
+                    className={`notebook-card card-${tab.id} card-${tab.color} ${tab.size === 'tall' ? 'card-tall' : 'card-small'}`}
+                    onClick={() => seleccionarVista(tab.id)}
+                  >
+                    {/* Visual binds */}
+                    {tab.size === 'tall' && (index === 0 || index === 3 || index === 6) && <div className="spiral-bind"></div>}
+                    {tab.size === 'small' && <div className="folder-tab"></div>}
+
+                    <div className="notebook-card-content">
+                      {tab.size === 'tall' && (
+                        <div className="notebook-label-box">
+                          <img src={tab.img} alt={tab.label} />
+                        </div>
+                      )}
+                      <div className="mt-auto">
+                        <h3 className="notebook-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {tab.label}
+                          <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
+                        </h3>
+                        <p className="notebook-desc" style={{ fontSize: '12px', lineHeight: '1.4' }}>{tab.desc}</p>
+                        <div className="notebook-footer">
+                          <span className="notebook-badge">{tab.badge}</span>
+                          <div className="notebook-icon-circle">
+                            <span className="material-symbols-outlined">{tab.icon}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>
@@ -385,7 +458,7 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
         }}
         establecimientoId={establecimientoActual?.id}
       />
-    </div>
+    </div >
   );
 }
 

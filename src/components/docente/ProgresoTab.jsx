@@ -279,6 +279,20 @@ function ProgresoTab({ docenteId, establecimientoId }) {
     }
   }), []);
 
+  // Opciones para grafico distribucion (solo enteros en eje Y)
+  const distributionOptions = useMemo(() => ({
+    ...baseChartOptions,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+          precision: 0
+        }
+      }
+    }
+  }), []);
+
   const chartDistribucion = useMemo(() => ({
     labels: ['1.0-3.9', '4.0-4.9', '5.0-5.9', '6.0-7.0'],
     datasets: [{
@@ -443,7 +457,7 @@ function ProgresoTab({ docenteId, establecimientoId }) {
           <div className="docente-charts-grid" style={{ marginTop: '20px' }}>
             <div className="card docente-chart-card">
               <div className="card-header"><h3>Distribucion de Notas</h3></div>
-              <div className="card-body docente-chart-container"><Bar data={chartDistribucion} options={baseChartOptions} /></div>
+              <div className="card-body docente-chart-container"><Bar data={chartDistribucion} options={distributionOptions} /></div>
             </div>
             <div className="card docente-chart-card">
               <div className="card-header"><h3>Evolucion de Notas (Nota a Nota)</h3></div>

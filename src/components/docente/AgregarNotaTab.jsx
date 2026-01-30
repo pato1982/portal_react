@@ -508,72 +508,95 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   const FormularioDesktop = () => (
     <div className="docente-filtros-row" style={{
       display: 'grid',
-      gridTemplateColumns: isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+      // En Tablet forzamos 3 columnas también para el layout específico
+      gridTemplateColumns: isTablet ? 'repeat(3, 1fr)' : 'repeat(3, 1fr)',
       gap: '15px',
       marginBottom: '15px',
       alignItems: 'end'
     }}>
-      {cargandoCursos ? (
-        <div className="form-group">
-          <label>Curso</label>
-          <div style={{ padding: '8px', color: '#64748b', fontSize: '13px' }}>Cargando...</div>
-        </div>
-      ) : (
+      {/* 
+         LAYOUT TABLET REQUERIDO (Order):
+         Fila 1: Curso (1), Asignatura (2), Trimestre (3)
+         Fila 2: Alumno (4), Tipo Eval (5), Fecha (6)
+         Fila 3: Nota (7)
+      */}
+
+      <div style={{ order: isTablet ? 1 : 0, display: 'contents' }}>
+        {cargandoCursos ? (
+          <div className="form-group">
+            <label>Curso</label>
+            <div style={{ padding: '8px', color: '#64748b', fontSize: '13px' }}>Cargando...</div>
+          </div>
+        ) : (
+          <SelectNativo
+            label="Curso"
+            value={cursoSeleccionado}
+            onChange={(e) => {
+              const curso = cursos.find(c => c.id.toString() === e.target.value);
+              handleCursoChange(e.target.value, curso?.nombre || '');
+            }}
+            options={cursos}
+            placeholder="Seleccionar curso"
+          />
+        )}
+      </div>
+
+      <div style={{ order: isTablet ? 2 : 0, display: 'contents' }}>
         <SelectNativo
-          label="Curso"
-          value={cursoSeleccionado}
+          label="Asignatura"
+          value={asignaturaSeleccionada}
           onChange={(e) => {
-            const curso = cursos.find(c => c.id.toString() === e.target.value);
-            handleCursoChange(e.target.value, curso?.nombre || '');
+            const asig = asignaturas.find(a => a.id.toString() === e.target.value);
+            setAsignaturaSeleccionada(e.target.value);
+            setAsignaturaNombre(asig?.nombre || '');
           }}
-          options={cursos}
-          placeholder="Seleccionar curso"
+          options={asignaturas}
+          placeholder={cargandoAsignaturas ? 'Cargando...' : (cursoSeleccionado ? 'Seleccionar' : 'Primero seleccione curso')}
+          disabled={!cursoSeleccionado || cargandoAsignaturas}
         />
-      )}
-      <SelectNativo
-        label="Asignatura"
-        value={asignaturaSeleccionada}
-        onChange={(e) => {
-          const asig = asignaturas.find(a => a.id.toString() === e.target.value);
-          setAsignaturaSeleccionada(e.target.value);
-          setAsignaturaNombre(asig?.nombre || '');
-        }}
-        options={asignaturas}
-        placeholder={cargandoAsignaturas ? 'Cargando...' : (cursoSeleccionado ? 'Seleccionar' : 'Primero seleccione curso')}
-        disabled={!cursoSeleccionado || cargandoAsignaturas}
-      />
-      <AutocompleteAlumno
-        alumnos={alumnos}
-        alumnoSeleccionado={alumnoSeleccionado}
-        busqueda={busquedaAlumno}
-        onBusquedaChange={(val) => { setBusquedaAlumno(val); setAlumnoSeleccionado(''); }}
-        onSeleccionar={handleSeleccionarAlumno}
-        disabled={!cursoSeleccionado || cargandoAlumnos}
-        placeholder={cargandoAlumnos ? 'Cargando...' : 'Buscar Alumno'}
-      />
-      <SelectNativo
-        label="Trimestre"
-        value={trimestre}
-        onChange={(e) => {
-          setTrimestre(e.target.value);
-          const nombres = { '1': '1er Trimestre', '2': '2do Trimestre', '3': '3er Trimestre' };
-          setTrimestreNombre(nombres[e.target.value] || '');
-        }}
-        options={trimestres}
-        placeholder="Seleccionar"
-      />
-      <SelectNativo
-        label="Tipo Evaluacion"
-        value={tipoEvaluacion}
-        onChange={(e) => {
-          const tipo = tiposEvaluacion.find(t => t.id.toString() === e.target.value);
-          setTipoEvaluacion(e.target.value);
-          setTipoEvaluacionNombre(tipo?.nombre || '');
-        }}
-        options={tiposEvaluacion}
-        placeholder="Seleccionar"
-      />
-      <div className="form-group">
+      </div>
+
+      <div style={{ order: isTablet ? 4 : 0, display: 'contents' }}>
+        <AutocompleteAlumno
+          alumnos={alumnos}
+          alumnoSeleccionado={alumnoSeleccionado}
+          busqueda={busquedaAlumno}
+          onBusquedaChange={(val) => { setBusquedaAlumno(val); setAlumnoSeleccionado(''); }}
+          onSeleccionar={handleSeleccionarAlumno}
+          disabled={!cursoSeleccionado || cargandoAlumnos}
+          placeholder={cargandoAlumnos ? 'Cargando...' : 'Buscar Alumno'}
+        />
+      </div>
+
+      <div style={{ order: isTablet ? 3 : 0, display: 'contents' }}>
+        <SelectNativo
+          label="Trimestre"
+          value={trimestre}
+          onChange={(e) => {
+            setTrimestre(e.target.value);
+            const nombres = { '1': '1er Trimestre', '2': '2do Trimestre', '3': '3er Trimestre' };
+            setTrimestreNombre(nombres[e.target.value] || '');
+          }}
+          options={trimestres}
+          placeholder="Seleccionar"
+        />
+      </div>
+
+      <div style={{ order: isTablet ? 5 : 0, display: 'contents' }}>
+        <SelectNativo
+          label="Tipo Evaluacion"
+          value={tipoEvaluacion}
+          onChange={(e) => {
+            const tipo = tiposEvaluacion.find(t => t.id.toString() === e.target.value);
+            setTipoEvaluacion(e.target.value);
+            setTipoEvaluacionNombre(tipo?.nombre || '');
+          }}
+          options={tiposEvaluacion}
+          placeholder="Seleccionar"
+        />
+      </div>
+
+      <div className="form-group" style={{ order: isTablet ? 6 : 0 }}>
         <label htmlFor="fechaNuevaNota">Fecha</label>
         <input
           type="date"
@@ -584,7 +607,8 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
           required
         />
       </div>
-      <div className="form-group">
+
+      <div className="form-group" style={{ order: isTablet ? 7 : 0 }}>
         <label htmlFor="notaNueva">Nota (1.0 - 7.0)</label>
         <input
           type="number"

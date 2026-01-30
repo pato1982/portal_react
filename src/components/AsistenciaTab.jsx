@@ -601,15 +601,20 @@ function AsistenciaTab() {
           {/* Estilos específicos para móvil para reducir el tamaño de los números KPI */}
           <style>{`
             @media (max-width: 480px) {
+              .asistencia-stats {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 8px !important;
+              }
               .asistencia-stats .stat-numero {
                 font-size: 14px !important;
               }
               .asistencia-stats .stat-item {
-                padding: 6px 4px;
-                min-width: 50px;
+                min-width: auto !important;
+                padding: 10px 4px !important;
               }
               .asistencia-stats .stat-label {
-                font-size: 8px;
+                font-size: 9px !important;
               }
             }
           `}</style>

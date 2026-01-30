@@ -598,6 +598,22 @@ function AsistenciaTab() {
             </div>
           )}
 
+          {/* Estilos específicos para móvil para reducir el tamaño de los números KPI */}
+          <style>{`
+            @media (max-width: 480px) {
+              .asistencia-stats .stat-numero {
+                font-size: 14px !important;
+              }
+              .asistencia-stats .stat-item {
+                padding: 6px 4px;
+                min-width: 50px;
+              }
+              .asistencia-stats .stat-label {
+                font-size: 8px;
+              }
+            }
+          `}</style>
+
           {/* KPIs Mensuales (Curso + Mes) */}
           {filtros.cursoId && (
             <>

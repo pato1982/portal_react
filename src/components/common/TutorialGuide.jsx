@@ -96,7 +96,7 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
             // Calcular posición del Personaje (Libro)
             // Lo ponemos flotando al lado o encima
             let pjTop = rect.bottom + 20; // Alineado con el globo
-            let pjLeft = left - 120; // A la izquierda del globo
+            let pjLeft = left - 100; // A la izquierda del globo (era -120, movido 20px derecha)
 
             if (pjLeft < 0) {
                 // Si no cabe a la izquierda, lo ponemos a la derecha

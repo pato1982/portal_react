@@ -231,7 +231,6 @@ const MatriculasTab = ({ mostrarMensaje }) => {
                 <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <h3>Ficha de Matrícula {form.anio_academico}</h3>
-                        <button onClick={llenarDatosPrueba} className="btn-demo" style={{ cursor: 'pointer', background: '#ecc94b', border: 'none', borderRadius: '4px', padding: '4px 10px', fontSize: '0.85em' }}>⚡ Demo</button>
                     </div>
                     <div style={{ fontSize: '14px', color: '#666' }}>Paso {seccionActual} de 5</div>
                 </div>

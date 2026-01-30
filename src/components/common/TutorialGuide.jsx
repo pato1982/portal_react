@@ -71,8 +71,6 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
         // Si la pestaña activa no coincide con el paso, forzamos el cambio de pestaña
         if (activeTab !== targetId && onStepChange) {
             onStepChange(targetId);
-            // Damos un tiempito para que se renderice
-            setTimeout(calculatePosition, 100);
             return;
         }
 

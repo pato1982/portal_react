@@ -113,6 +113,61 @@ const ModalEliminar = ({ nota, onConfirmar, onCerrar, eliminando }) => (
   </div>
 );
 
+// Componente para filtro de fecha
+const FiltroFecha = ({ filtroCurso, fechasConNotas, filtroFecha, onFechaChange, cargandoFechas }) => {
+  const highlightDatesWithNotes = (date) => {
+    const isHighlighted = fechasConNotas.some(
+      f => f.toDateString() === date.toDateString()
+    );
+    return isHighlighted ? 'fecha-con-notas' : 'fecha-sin-notas';
+  };
+
+  return (
+    <div className="form-group" style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px', height: '14px' }}>
+        <label style={{ marginBottom: 0, display: 'inline-block' }}>Fecha</label>
+        {filtroCurso && fechasConNotas.length > 0 && (
+          <div className="tooltip-container">
+            <span className="tooltip-icon" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '16px',
+              height: '16px',
+              borderRadius: '50%',
+              backgroundColor: '#f59e0b',
+              color: 'white',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              cursor: 'help'
+            }}>?</span>
+            <div className="tooltip-text">
+              Fechas resaltadas tienen notas registradas
+            </div>
+          </div>
+        )}
+      </div>
+      <DatePicker
+        selected={filtroFecha}
+        onChange={onFechaChange}
+        dateFormat="dd/MM/yyyy"
+        locale="es"
+        placeholderText={filtroCurso ? "Seleccionar fecha" : "Primero seleccione curso"}
+        disabled={!filtroCurso || cargandoFechas}
+        isClearable
+        className="form-control"
+        dayClassName={highlightDatesWithNotes}
+        showMonthDropdown
+        showYearDropdown
+        dropdownMode="select"
+        portalId="root"
+        popperPlacement="bottom-end"
+        popperClassName="datepicker-portal"
+      />
+    </div>
+  );
+};
+
 function ModificarNotaTab({ docenteId, establecimientoId }) {
   // Estados para datos de API
   const [cursos, setCursos] = useState([]);
@@ -427,59 +482,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
     return nota >= 4.0 ? 'nota-aprobada' : 'nota-reprobada';
   };
 
-  // Función para resaltar fechas con notas en el calendario
-  const highlightDatesWithNotes = (date) => {
-    const isHighlighted = fechasConNotas.some(
-      f => f.toDateString() === date.toDateString()
-    );
-    return isHighlighted ? 'fecha-con-notas' : 'fecha-sin-notas';
-  };
 
-  // Componente DatePicker personalizado con tooltip
-  const DatePickerCustom = () => (
-    <div className="form-group" style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px', height: '14px' }}>
-        <label style={{ marginBottom: 0, display: 'inline-block' }}>Fecha</label>
-        {filtroCurso && fechasConNotas.length > 0 && (
-          <div className="tooltip-container">
-            <span className="tooltip-icon" style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '16px',
-              height: '16px',
-              borderRadius: '50%',
-              backgroundColor: '#f59e0b',
-              color: 'white',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              cursor: 'help'
-            }}>?</span>
-            <div className="tooltip-text">
-              Fechas resaltadas tienen notas registradas
-            </div>
-          </div>
-        )}
-      </div>
-      <DatePicker
-        selected={filtroFecha}
-        onChange={(date) => setFiltroFecha(date)}
-        dateFormat="dd/MM/yyyy"
-        locale="es"
-        placeholderText={filtroCurso ? "Seleccionar fecha" : "Primero seleccione curso"}
-        disabled={!filtroCurso || cargandoFechas}
-        isClearable
-        className="form-control"
-        dayClassName={highlightDatesWithNotes}
-        showMonthDropdown
-        showYearDropdown
-        dropdownMode="select"
-        portalId="root"
-        popperPlacement="bottom-end"
-        popperClassName="datepicker-portal"
-      />
-    </div>
-  );
 
   return (
     <div className="tab-panel active">
@@ -660,7 +663,13 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
                     onDropdownOpen={() => setDropdownAbierto(null)}
                   />
                 </div>
-                <DatePickerCustom />
+                <FiltroFecha
+                  filtroCurso={filtroCurso}
+                  fechasConNotas={fechasConNotas}
+                  filtroFecha={filtroFecha}
+                  onFechaChange={(date) => setFiltroFecha(date)}
+                  cargandoFechas={cargandoFechas}
+                />
               </div>
               <div className="form-actions form-actions-movil">
                 <button type="button" className="btn btn-secondary" onClick={limpiarBusqueda}>Limpiar</button>
@@ -723,7 +732,13 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
                 />
               </div>
 
-              <DatePickerCustom />
+              <FiltroFecha
+                filtroCurso={filtroCurso}
+                fechasConNotas={fechasConNotas}
+                filtroFecha={filtroFecha}
+                onFechaChange={(date) => setFiltroFecha(date)}
+                cargandoFechas={cargandoFechas}
+              />
 
               <div className="docente-filtros-actions" style={{ gridColumn: isTablet ? '1 / -1' : 'auto', justifyContent: isTablet ? 'center' : 'flex-end', marginTop: isTablet ? '10px' : '0', gap: '8px' }}>
                 <button type="button" className="btn btn-secondary" onClick={limpiarBusqueda} style={{ height: '30px', fontSize: '11px', padding: '0 15px', textTransform: 'uppercase', fontWeight: '600' }}>Limpiar</button>

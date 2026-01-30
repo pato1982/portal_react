@@ -431,7 +431,8 @@ function ProgresoTab({ docenteId, establecimientoId }) {
           <div className="docente-kpis-grid" style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(6, 1fr)', gap: '12px' }}>
             <DocenteKPICard tipo="alumnos" valor={estadisticas.kpis.alumnosConNotas} label="Total Alumnos" variante="primary" />
             <DocenteKPICard tipo="aprobados" valor={estadisticas.kpis.aprobados} label="Aprobados" trend="up" trendValue={`${estadisticas.kpis.porcentajeAprobados}%`} variante="success" />
-            <div onClick={() => setPopupBajoRendimiento(true)} style={{ cursor: 'pointer' }}>
+            <div onClick={() => setPopupBajoRendimiento(true)} style={{ cursor: 'pointer', position: 'relative' }}>
+              <div style={{ position: 'absolute', top: '5px', right: '10px', fontSize: '14px', color: '#dc2626', zIndex: 5, fontWeight: 'bold' }}>↗</div>
               <DocenteKPICard tipo="alerta" valor={estadisticas.kpis.reprobados} label="Requieren Apoyo" trend="down" trendValue={`${estadisticas.kpis.porcentajeReprobados}%`} variante="danger" />
             </div>
             <DocenteKPICard tipo="promedio" valor={estadisticas.kpis.promedioCurso} label="Promedio Curso" variante="info" />

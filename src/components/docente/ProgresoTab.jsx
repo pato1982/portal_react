@@ -490,74 +490,76 @@ function ProgresoTab({ docenteId, establecimientoId }) {
               </div>
             </div>
           </div>
+        </>
+      )}
 
-          {/* Popup Alumnos Requieren Apoyo */}
-          {popupBajoRendimiento && estadisticas && (
-            <div className="popup-overlay" onClick={() => setPopupBajoRendimiento(false)} style={{
-              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100
+      {/* Popup Alumnos Requieren Apoyo */}
+      {popupBajoRendimiento && estadisticas && (
+        <div className="popup-overlay" onClick={() => setPopupBajoRendimiento(false)} style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100
+        }}>
+          <div className="popup-content" onClick={(e) => e.stopPropagation()} style={{
+            background: 'white', padding: '0', borderRadius: '8px', width: '90%', maxWidth: '500px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxHeight: '80vh', display: 'flex', flexDirection: 'column'
+          }}>
+            <div className="popup-header" style={{
+              padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              backgroundColor: '#fee2e2'
             }}>
-              <div className="popup-content" onClick={(e) => e.stopPropagation()} style={{
-                background: 'white', padding: '0', borderRadius: '8px', width: '90%', maxWidth: '500px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)', maxHeight: '80vh', display: 'flex', flexDirection: 'column'
-              }}>
-                <div className="popup-header" style={{
-                  padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  backgroundColor: '#fee2e2'
-                }}>
-                  <h4 style={{ margin: 0, color: '#991b1b', fontSize: '16px', fontWeight: '600' }}>
-                    ⚠️ Alumnos que Requieren Apoyo
-                  </h4>
-                  <button onClick={() => setPopupBajoRendimiento(false)} style={{
-                    background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#991b1b', lineHeight: 1
-                  }}>&times;</button>
-                </div>
-
-                <div className="popup-body" style={{ padding: '20px', overflowY: 'auto' }}>
-                  <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '15px' }}>
-                    Listado de alumnos con promedio insuficiente en la asignatura <strong>{asignaturaNombre}</strong>.
-                  </p>
-
-                  {estadisticas.alumnosAtencion && estadisticas.alumnosAtencion.length > 0 ? (
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                      {estadisticas.alumnosAtencion.map((alumno, index) => (
-                        <li key={index} style={{
-                          padding: '12px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                        }}>
-                          <div>
-                            <div style={{ fontWeight: '600', color: '#334155', fontSize: '14px' }}>
-                              {formatearNombreCompleto(alumno.nombre)}
-                            </div>
-                            <div style={{ fontSize: '12px', color: '#64748b' }}>
-                              {cursoNombre}
-                            </div>
-                          </div>
-                          <div style={{
-                            background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '12px',
-                            fontWeight: 'bold', fontSize: '13px'
-                          }}>
-                            {alumno.promedio.toFixed(1)}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
-                      No hay alumnos que requieran apoyo en este momento.
-                    </div>
-                  )}
-                </div>
-
-                <div className="popup-footer" style={{ padding: '15px 20px', borderTop: '1px solid #e2e8f0', textAlign: 'right' }}>
-                  <button onClick={() => setPopupBajoRendimiento(false)} className="btn btn-secondary" style={{ padding: '6px 16px' }}>
-                    Cerrar
-                  </button>
-                </div>
-              </div>
+              <h4 style={{ margin: 0, color: '#991b1b', fontSize: '16px', fontWeight: '600' }}>
+                ⚠️ Alumnos que Requieren Apoyo
+              </h4>
+              <button onClick={() => setPopupBajoRendimiento(false)} style={{
+                background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#991b1b', lineHeight: 1
+              }}>&times;</button>
             </div>
-          )}
+
+            <div className="popup-body" style={{ padding: '20px', overflowY: 'auto' }}>
+              <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '15px' }}>
+                Listado de alumnos con promedio insuficiente en la asignatura <strong>{asignaturaNombre}</strong>.
+              </p>
+
+              {estadisticas.alumnosAtencion && estadisticas.alumnosAtencion.length > 0 ? (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {estadisticas.alumnosAtencion.map((alumno, index) => (
+                    <li key={index} style={{
+                      padding: '12px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#334155', fontSize: '14px' }}>
+                          {formatearNombreCompleto(alumno.nombre)}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#64748b' }}>
+                          {cursoNombre}
+                        </div>
+                      </div>
+                      <div style={{
+                        background: '#fee2e2', color: '#991b1b', padding: '4px 12px', borderRadius: '12px',
+                        fontWeight: 'bold', fontSize: '13px'
+                      }}>
+                        {alumno.promedio.toFixed(1)}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
+                  No hay alumnos que requieran apoyo en este momento.
+                </div>
+              )}
+            </div>
+
+            <div className="popup-footer" style={{ padding: '15px 20px', borderTop: '1px solid #e2e8f0', textAlign: 'right' }}>
+              <button onClick={() => setPopupBajoRendimiento(false)} className="btn btn-secondary" style={{ padding: '6px 16px' }}>
+                Cerrar
+              </button>
+            </div>
+          </div>
         </div>
-      );
+      )}
+    </div>
+  );
 }
 
-      export default ProgresoTab;
+export default ProgresoTab;

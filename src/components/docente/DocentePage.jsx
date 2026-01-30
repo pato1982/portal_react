@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import HelpTooltip from '../common/HelpTooltip';
+import TutorialGuide from '../common/TutorialGuide';
 import AsistenciaTab from './AsistenciaTab';
 import AgregarNotaTab from './AgregarNotaTab';
 import ModificarNotaTab from './ModificarNotaTab';
@@ -10,6 +11,48 @@ import config from '../../config/env';
 
 function DocentePage({ onCambiarVista, usuarioDocente }) {
   const [tabActual, setTabActual] = useState(() => localStorage.getItem('docenteActiveTab') || 'asistencia');
+
+  // Estado para el tutorial (se muestra si no existe la marca en localStorage)
+  const [showTutorial, setShowTutorial] = useState(() => {
+    return !localStorage.getItem('hasSeenDocenteTour');
+  });
+
+  const cerrarTutorial = () => {
+    setShowTutorial(false);
+    localStorage.setItem('hasSeenDocenteTour', 'true');
+  };
+
+  const handleTutorialStepChange = (tabId) => {
+    setTabActual(tabId);
+  };
+
+  const DOCENTE_STEPS = [
+    {
+      target: 'asistencia',
+      title: 'Asistencia',
+      content: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados.'
+    },
+    {
+      target: 'agregar-nota',
+      title: 'Agregar Nota',
+      content: 'Ingrese nuevas calificaciones al libro de clases. Seleccione curso, asignatura, evaluación y registre las notas.'
+    },
+    {
+      target: 'modificar-nota',
+      title: 'Modificar Nota',
+      content: 'Corrija calificaciones ingresadas erróneamente. Busque la evaluación y edite la nota. Los cambios quedan registrados.'
+    },
+    {
+      target: 'ver-notas',
+      title: 'Ver Notas',
+      content: 'Visualice el panorama completo de calificaciones: sábana de notas, promedios parciales y avance curricular.'
+    },
+    {
+      target: 'progreso',
+      title: 'Progreso',
+      content: 'Analíticas de rendimiento. Revise gráficos de aprobación, promedios e identifique estudiantes que requieren apoyo.'
+    }
+  ];
 
   // Persistir tab activa
   useEffect(() => {
@@ -171,6 +214,41 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
 
   return (
     <div className="app-container">
+      {/* Botón flotante para reactivar tutorial */}
+      {!showTutorial && (
+        <button
+          onClick={() => setShowTutorial(true)}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '20px',
+            zIndex: 90,
+            background: '#1e3a5f',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            title: 'Ver Tutorial'
+          }}
+        >
+          <span className="material-symbols-outlined">help</span>
+        </button>
+      )}
+
+      <TutorialGuide
+        isVisible={showTutorial}
+        onClose={cerrarTutorial}
+        activeTab={tabActual}
+        onStepChange={handleTutorialStepChange}
+        steps={DOCENTE_STEPS}
+      />
+
       <header className="main-header">
         <div className="header-content">
           <div className="brand">
@@ -247,8 +325,26 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
 
       <main className="main-content">
         <section className="control-panel">
-          <div className="panel-header">
+          <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2>Panel de Control - Docente</h2>
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="btn-primary"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: '#f59e0b',
+                border: 'none',
+                padding: '6px 12px',
+                fontSize: '13px',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>help</span>
+              Ver Tutorial
+            </button>
           </div>
 
           <div className="tabs-container">
@@ -256,6 +352,7 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
               {tabs.map(tab => (
                 <button
                   key={tab.id}
+                  data-tab-id={tab.id}
                   className={`tab-btn ${tabActual === tab.id ? 'active' : ''}`}
                   onClick={() => setTabActual(tab.id)}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}

@@ -45,7 +45,7 @@ const STEPS = [
     }
 ];
 
-const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
+const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange, steps = STEPS }) => {
     const [currentStep, setCurrentStep] = useState(0);
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const [personajePos, setPersonajePos] = useState({ top: 0, left: 0 });
@@ -65,7 +65,7 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
         // Buscar el botón de la pestaña actual en el DOM
         // Asumimos que los botones tienen un atributo o clase identificable, ej: data-tab-id="alumnos"
         // O buscamos por texto. Para ser más robustos, añadiremos data-tour-target a los botones en TabsNav.
-        const step = STEPS[currentStep];
+        const step = steps[currentStep];
         const targetId = step.target;
 
         // Si la pestaña activa no coincide con el paso, forzamos el cambio de pestaña
@@ -99,7 +99,7 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
             let pjLeft = left - 130; // A la izquierda del globo con más margen (era -100)
 
             // Lógica especial para el último paso (estadisticas) o si no cabe a la izquierda
-            const isLastStep = currentStep === STEPS.length - 1;
+            const isLastStep = currentStep === steps.length - 1;
 
             if (pjLeft < 0) {
                 // Si no cabe a la izquierda, lo ponemos a la derecha
@@ -128,10 +128,10 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
     };
 
     const handleNext = () => {
-        if (currentStep < STEPS.length - 1) {
+        if (currentStep < steps.length - 1) {
             const nextStep = currentStep + 1;
             setCurrentStep(nextStep);
-            const nextTarget = STEPS[nextStep].target;
+            const nextTarget = steps[nextStep].target;
             if (onStepChange) onStepChange(nextTarget);
         } else {
             onClose(); // Fin del tour
@@ -143,7 +143,7 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
         if (currentStep > 0) {
             const prevStep = currentStep - 1;
             setCurrentStep(prevStep);
-            const prevTarget = STEPS[prevStep].target;
+            const prevTarget = steps[prevStep].target;
             if (onStepChange) onStepChange(prevTarget);
         }
     };
@@ -155,7 +155,7 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
 
     if (!isVisible) return null;
 
-    const step = STEPS[currentStep];
+    const step = steps[currentStep];
 
     return createPortal(
         <div className="tour-overlay">
@@ -188,7 +188,7 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
 
                 <div className="tour-footer">
                     <div className="tour-dots">
-                        {STEPS.map((_, i) => (
+                        {steps.map((_, i) => (
                             <span key={i} className={`tour-dot ${i === currentStep ? 'active' : ''}`} />
                         ))}
                     </div>
@@ -197,7 +197,7 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange }) => {
                             <button onClick={handlePrev} className="tour-btn secondary">Atrás</button>
                         )}
                         <button onClick={handleNext} className="tour-btn primary">
-                            {currentStep === STEPS.length - 1 ? 'Finalizar' : 'Siguiente'}
+                            {currentStep === steps.length - 1 ? 'Finalizar' : 'Siguiente'}
                         </button>
                     </div>
                 </div>

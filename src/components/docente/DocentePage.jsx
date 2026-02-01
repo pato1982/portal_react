@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import HelpTooltip from '../common/HelpTooltip';
+import TutorialGuide from '../common/TutorialGuide';
 import AsistenciaTab from './AsistenciaTab';
 import AgregarNotaTab from './AgregarNotaTab';
 import ModificarNotaTab from './ModificarNotaTab';

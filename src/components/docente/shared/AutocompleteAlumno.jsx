@@ -68,7 +68,6 @@ function AutocompleteAlumno({
           value={busqueda}
           onChange={handleInputChange}
           onFocus={handleFocus}
-          onClick={handleFocus}
           disabled={disabled}
           autoComplete="off"
         />

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import HelpTooltip from '../common/HelpTooltip';
-import TutorialGuide from '../common/TutorialGuide';
 import AsistenciaTab from './AsistenciaTab';
 import AgregarNotaTab from './AgregarNotaTab';
 import ModificarNotaTab from './ModificarNotaTab';
@@ -12,7 +11,6 @@ import config from '../../config/env';
 function DocentePage({ onCambiarVista, usuarioDocente }) {
   const [tabActual, setTabActual] = useState(() => localStorage.getItem('docenteActiveTab') || 'asistencia');
 
-  // Estado para el tutorial (se muestra si no existe la marca en localStorage)
   // Estado para el tutorial (se muestra siempre al recargar por solicitud)
   const [showTutorial, setShowTutorial] = useState(true);
 
@@ -143,27 +141,27 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
     {
       id: 'asistencia',
       label: 'Asistencia',
-      desc: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados.'
+      desc: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados. Recuerde que este registro es oficial y fundamental para la subvención escolar.'
     },
     {
       id: 'agregar-nota',
       label: 'Agregar Nota',
-      desc: 'Ingrese nuevas calificaciones al libro de clases. Primero seleccione el curso y la asignatura, luego el tipo de evaluación.'
+      desc: 'Ingrese nuevas calificaciones al libro de clases. Primero seleccione el curso y la asignatura, luego el tipo de evaluación (Prueba, Trabajo, etc.) y finalmente ingrese las notas para cada alumno.'
     },
     {
       id: 'modificar-nota',
       label: 'Modificar Nota',
-      desc: 'Permite corregir calificaciones ingresadas erróneamente. Busque la evaluación específica y edite la nota del alumno.'
+      desc: 'Permite corregir calificaciones ingresadas erróneamente. Busque la evaluación específica y edite la nota del alumno. Tenga en cuenta que todas las modificaciones quedan registradas para auditoría interna.'
     },
     {
       id: 'ver-notas',
       label: 'Ver Notas',
-      desc: 'Visualice el panorama completo de calificaciones de sus cursos. Consulte la sábana de notas y promedios parciales.'
+      desc: 'Visualice el panorama completo de calificaciones de sus cursos. Consulte la sábana de notas, promedios parciales y avance curricular de todos sus estudiantes en una sola vista.'
     },
     {
       id: 'progreso',
       label: 'Progreso',
-      desc: 'Analíticas de rendimiento de sus cursos. Revise gráficos de aprobación/reprobación y promedios por asignatura.'
+      desc: 'Analíticas de rendimiento de sus cursos. Revise gráficos de aprobación/reprobación, promedios por asignatura e identifique tempranamente a estudiantes que requieren apoyo pedagógico adicional.'
     }
   ];
 
@@ -384,7 +382,7 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
         }}
         establecimientoId={establecimientoActual?.id}
       />
-    </div >
+    </div>
   );
 }
 

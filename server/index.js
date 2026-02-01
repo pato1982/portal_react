@@ -1921,7 +1921,7 @@ app.get('/api/docente/:docenteId/fechas-con-notas', async (req, res) => {
 
     try {
         let query = `
-            SELECT DISTINCT DATE(fecha_evaluacion) as fecha
+            SELECT DISTINCT DATE_FORMAT(fecha_evaluacion, '%Y-%m-%d') as fecha
             FROM tb_notas
             WHERE docente_id = ?
             AND establecimiento_id = ?
@@ -1940,7 +1940,8 @@ app.get('/api/docente/:docenteId/fechas-con-notas', async (req, res) => {
         const [fechas] = await pool.query(query, params);
 
         // Retornar array de fechas en formato YYYY-MM-DD
-        const fechasArray = fechas.map(f => f.fecha.toISOString().split('T')[0]);
+        // Al usar DATE_FORMAT en SQL, f.fecha ya es un string
+        const fechasArray = fechas.map(f => f.fecha);
 
         res.json({ success: true, data: fechasArray });
     } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 
 function AutocompleteAlumno({
   alumnos,
@@ -13,12 +13,13 @@ function AutocompleteAlumno({
   onDropdownOpen
 }) {
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
+  const containerRef = useRef(null);
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       // Si el clic fue dentro, no hacer nada
-      if (event.target.closest('.docente-autocomplete-container')) {
+      if (containerRef.current && containerRef.current.contains(event.target)) {
         return;
       }
       setMostrarDropdown(false);
@@ -68,7 +69,7 @@ function AutocompleteAlumno({
   return (
     <div className="form-group">
       {mostrarLabel && <label>{label}</label>}
-      <div className="docente-autocomplete-container">
+      <div className="docente-autocomplete-container" ref={containerRef}>
         <input
           type="text"
           className="form-control"

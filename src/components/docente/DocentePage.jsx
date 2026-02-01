@@ -162,32 +162,27 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
     {
       id: 'asistencia',
       label: 'Asistencia',
-      desc: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados.',
-      icon: 'event_available', color: 'blue', img: '/assets/navigation/info.png', badge: 'Registro', size: 'tall'
+      desc: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados.'
     },
     {
       id: 'agregar-nota',
       label: 'Agregar Nota',
-      desc: 'Ingrese nuevas calificaciones al libro de clases. Primero seleccione el curso y la asignatura, luego el tipo de evaluación.',
-      icon: 'post_add', color: 'green', img: '/assets/navigation/notas.png', badge: 'Evaluación', size: 'small'
+      desc: 'Ingrese nuevas calificaciones al libro de clases. Primero seleccione el curso y la asignatura, luego el tipo de evaluación.'
     },
     {
       id: 'modificar-nota',
       label: 'Modificar Nota',
-      desc: 'Permite corregir calificaciones ingresadas erróneamente. Busque la evaluación específica y edite la nota del alumno.',
-      icon: 'edit_note', color: 'orange', img: '/assets/navigation/notas.png', badge: 'Edición', size: 'small'
+      desc: 'Permite corregir calificaciones ingresadas erróneamente. Busque la evaluación específica y edite la nota del alumno.'
     },
     {
       id: 'ver-notas',
       label: 'Ver Notas',
-      desc: 'Visualice el panorama completo de calificaciones de sus cursos. Consulte la sábana de notas y promedios parciales.',
-      icon: 'table_view', color: 'purple', img: '/assets/navigation/notas.png', badge: 'Resumen', size: 'tall'
+      desc: 'Visualice el panorama completo de calificaciones de sus cursos. Consulte la sábana de notas y promedios parciales.'
     },
     {
       id: 'progreso',
       label: 'Progreso',
-      desc: 'Analíticas de rendimiento de sus cursos. Revise gráficos de aprobación/reprobación y promedios por asignatura.',
-      icon: 'insights', color: 'pink', img: '/assets/navigation/progreso.png', badge: 'Análisis', size: 'tall'
+      desc: 'Analíticas de rendimiento de sus cursos. Revise gráficos de aprobación/reprobación y promedios por asignatura.'
     }
   ];
 
@@ -402,39 +397,39 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
 
             {/* Contenido en DASHBOARD (Modo Tarjetas) */}
             {vistaModo === 'dashboard' && (
-              <div className="notebook-grid-admin">
-                {tabs.map((tab, index) => (
-                  <div
+              <div className="dashboard-grid">
+                {tabs.map((tab) => (
+                  <button
                     key={tab.id}
                     data-tab-id={tab.id}
-                    className={`notebook-card card-${tab.id} card-${tab.color} ${tab.size === 'tall' ? 'card-tall' : 'card-small'}`}
+                    className="dashboard-card-btn"
                     onClick={() => seleccionarVista(tab.id)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '2rem',
+                      backgroundColor: 'white',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      gap: '1rem',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}
                   >
-                    {/* Visual binds */}
-                    {tab.size === 'tall' && (index === 0 || index === 3 || index === 6) && <div className="spiral-bind"></div>}
-                    {tab.size === 'small' && <div className="folder-tab"></div>}
-
-                    <div className="notebook-card-content">
-                      {tab.size === 'tall' && (
-                        <div className="notebook-label-box">
-                          <img src={tab.img} alt={tab.label} />
-                        </div>
-                      )}
-                      <div className="mt-auto">
-                        <h3 className="notebook-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          {tab.label}
-                          <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
-                        </h3>
-                        <p className="notebook-desc" style={{ fontSize: '12px', lineHeight: '1.4' }}>{tab.desc}</p>
-                        <div className="notebook-footer">
-                          <span className="notebook-badge">{tab.badge}</span>
-                          <div className="notebook-icon-circle">
-                            <span className="material-symbols-outlined">{tab.icon}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    <span className="material-symbols-outlined" style={{ fontSize: '48px', color: '#3b82f6' }}>
+                      {tab.id === 'asistencia' ? 'event_available' :
+                        tab.id === 'agregar-nota' ? 'post_add' :
+                          tab.id === 'modificar-nota' ? 'edit_note' :
+                            tab.id === 'ver-notas' ? 'table_view' : 'insights'}
+                    </span>
+                    <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b' }}>{tab.label}</h3>
+                    <p style={{ margin: 0, fontSize: '0.875rem', color: '#64748b', textAlign: 'center' }}>
+                      {tab.desc}
+                    </p>
+                  </button>
                 ))}
               </div>
             )}

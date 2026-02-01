@@ -11,7 +11,6 @@ import config from '../../config/env';
 
 function DocentePage({ onCambiarVista, usuarioDocente }) {
   const [tabActual, setTabActual] = useState(() => localStorage.getItem('docenteActiveTab') || 'asistencia');
-  const [vistaModo, setVistaModo] = useState('contenido'); // 'dashboard' | 'contenido'
 
   // Estado para el tutorial (se muestra si no existe la marca en localStorage)
   // Estado para el tutorial (se muestra siempre al recargar por solicitud)
@@ -23,25 +22,7 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
   };
 
   const handleTutorialStepChange = (tabId) => {
-    // Al avanzar en el tutorial, aseguramos estar en el modo dashboard (tarjetas)
-    setVistaModo('dashboard');
     setTabActual(tabId);
-  };
-
-  // Efecto para activar el modo dashboard si el tutorial está activo
-  useEffect(() => {
-    if (showTutorial) {
-      setVistaModo('dashboard');
-    }
-  }, [showTutorial]);
-
-  const seleccionarVista = (tabId) => {
-    setTabActual(tabId);
-    setVistaModo('contenido');
-  };
-
-  const volverAMenu = () => {
-    setVistaModo('dashboard');
   };
 
   const DOCENTE_STEPS = [
@@ -366,73 +347,24 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
           </div>
 
           <div className="tabs-container">
-            {/* Contenido en TABS (Modo Contenido) - Se mantiene montado pero oculto si estamos en dashboard */}
-            <div style={{ display: vistaModo === 'contenido' ? 'block' : 'none' }}>
-              <div className="panel-header-actions" style={{ marginBottom: '15px' }}>
-                <button className="btn-volver-notebook" onClick={volverAMenu} style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '14px' }}>
-                  <span className="material-symbols-outlined">arrow_back</span>
-                  Volver al Panel
+            <nav className="tabs-nav">
+              {tabs.map(tab => (
+                <button
+                  key={tab.id}
+                  data-tab-id={tab.id}
+                  className={`tab-btn ${tabActual === tab.id ? 'active' : ''}`}
+                  onClick={() => setTabActual(tab.id)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  {tab.label}
+                  <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
                 </button>
-              </div>
-              <nav className="tabs-nav">
-                {tabs.map(tab => (
-                  <button
-                    key={tab.id}
-                    // data-tab-id es usado por el tutorial, pero en modo contenido el tutorial apunta a los botones de arriba
-                    // En modo dashboard apunta a las tarjetas. Ambos deben tener el ID correcto.
-                    className={`tab-btn ${tabActual === tab.id ? 'active' : ''}`}
-                    onClick={() => setTabActual(tab.id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                  >
-                    {tab.label}
-                    <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
-                  </button>
-                ))}
-              </nav>
+              ))}
+            </nav>
 
-              <div className="tabs-content">
-                {renderTabsContent()}
-              </div>
+            <div className="tabs-content">
+              {renderTabsContent()}
             </div>
-
-            {/* Contenido en DASHBOARD (Modo Tarjetas) */}
-            {vistaModo === 'dashboard' && (
-              <div className="dashboard-grid">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    data-tab-id={tab.id}
-                    className="dashboard-card-btn"
-                    onClick={() => seleccionarVista(tab.id)}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '2rem',
-                      backgroundColor: 'white',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '12px',
-                      cursor: 'pointer',
-                      gap: '1rem',
-                      transition: 'all 0.2s ease',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '48px', color: '#3b82f6' }}>
-                      {tab.id === 'asistencia' ? 'event_available' :
-                        tab.id === 'agregar-nota' ? 'post_add' :
-                          tab.id === 'modificar-nota' ? 'edit_note' :
-                            tab.id === 'ver-notas' ? 'table_view' : 'insights'}
-                    </span>
-                    <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#1e293b' }}>{tab.label}</h3>
-                    <p style={{ margin: 0, fontSize: '0.875rem', color: '#64748b', textAlign: 'center' }}>
-                      {tab.desc}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </section>
       </main>

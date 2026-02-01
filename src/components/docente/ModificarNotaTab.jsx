@@ -290,7 +290,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
     cargarAlumnos();
   }, [filtroCurso]);
 
-  // Cargar fechas con notas cuando se selecciona curso
+  // Cargar fechas con notas cuando se selecciona curso o cambian filtros
   useEffect(() => {
     const cargarFechasConNotas = async () => {
       if (!filtroCurso || !docenteId || !establecimientoId) {
@@ -300,12 +300,15 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
 
       setCargandoFechas(true);
       try {
-        const response = await fetch(
-          `${config.apiBaseUrl}/docente/${docenteId}/fechas-con-notas?establecimiento_id=${establecimientoId}&curso_id=${filtroCurso}`
-        );
+        let url = `${config.apiBaseUrl}/docente/${docenteId}/fechas-con-notas?establecimiento_id=${establecimientoId}&curso_id=${filtroCurso}`;
+
+        if (filtroAsignatura) url += `&asignatura_id=${filtroAsignatura}`;
+        if (filtroAlumnoId) url += `&alumno_id=${filtroAlumnoId}`;
+
+        const response = await fetch(url);
         const data = await response.json();
         if (data.success) {
-          // Convertir strings a objetos Date
+          // Convertir strings a objetos Date y ajustar zona horaria
           const fechas = data.data.map(f => new Date(f + 'T00:00:00'));
           setFechasConNotas(fechas);
         }
@@ -317,7 +320,7 @@ function ModificarNotaTab({ docenteId, establecimientoId }) {
     };
 
     cargarFechasConNotas();
-  }, [filtroCurso, docenteId, establecimientoId]);
+  }, [filtroCurso, filtroAsignatura, filtroAlumnoId, docenteId, establecimientoId]);
 
   const handleCursoChange = (cursoId, nombre = '') => {
     setFiltroCurso(cursoId);

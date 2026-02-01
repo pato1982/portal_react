@@ -1917,7 +1917,7 @@ app.get('/api/docente/:docenteId/notas-recientes', async (req, res) => {
 // GET /api/docente/:docenteId/fechas-con-notas - Obtener fechas donde el docente ha registrado notas
 app.get('/api/docente/:docenteId/fechas-con-notas', async (req, res) => {
     const { docenteId } = req.params;
-    const { establecimiento_id, curso_id } = req.query;
+    const { establecimiento_id, curso_id, asignatura_id, alumno_id } = req.query;
 
     try {
         let query = `
@@ -1933,6 +1933,16 @@ app.get('/api/docente/:docenteId/fechas-con-notas', async (req, res) => {
         if (curso_id) {
             query += ` AND curso_id = ?`;
             params.push(curso_id);
+        }
+
+        if (asignatura_id) {
+            query += ` AND asignatura_id = ?`;
+            params.push(asignatura_id);
+        }
+
+        if (alumno_id) {
+            query += ` AND alumno_id = ?`;
+            params.push(alumno_id);
         }
 
         query += ` ORDER BY fecha DESC`;

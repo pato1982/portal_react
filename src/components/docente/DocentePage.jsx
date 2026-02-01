@@ -14,9 +14,8 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
   const [vistaModo, setVistaModo] = useState('contenido'); // 'dashboard' | 'contenido'
 
   // Estado para el tutorial (se muestra si no existe la marca en localStorage)
-  const [showTutorial, setShowTutorial] = useState(() => {
-    return !localStorage.getItem('hasSeenDocenteTour');
-  });
+  // Estado para el tutorial (se muestra siempre al recargar por solicitud)
+  const [showTutorial, setShowTutorial] = useState(true);
 
   const cerrarTutorial = () => {
     setShowTutorial(false);

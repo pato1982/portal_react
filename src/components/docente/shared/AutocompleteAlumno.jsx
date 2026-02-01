@@ -17,12 +17,20 @@ function AutocompleteAlumno({
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.docente-autocomplete-container')) {
-        setMostrarDropdown(false);
+      // Si el clic fue dentro, no hacer nada
+      if (event.target.closest('.docente-autocomplete-container')) {
+        return;
       }
+      setMostrarDropdown(false);
     };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside); // Soporte touch
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const alumnosFiltrados = useMemo(() => {
@@ -69,6 +77,8 @@ function AutocompleteAlumno({
           onChange={handleInputChange}
           onFocus={handleFocus}
           onClick={handleFocus}
+          onMouseDown={handleFocus} // Refuerzo para click
+          onTouchStart={handleFocus} // Refuerzo para touch
           disabled={disabled}
           autoComplete="off"
         />

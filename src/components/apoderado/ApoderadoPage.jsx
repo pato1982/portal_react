@@ -346,10 +346,33 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
 
       <main className="apoderado-main">
         <div className="control-panel">
-          <div className="panel-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
-              Panel de Apoderado
-            </h2>
+          <div className="panel-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', margin: 0 }}>
+                Panel Apoderado
+              </h2>
+              <button
+                onClick={() => setShowTutorial(true)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: 'white',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  padding: '6px 12px',
+                  borderRadius: '20px',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  transition: 'background 0.2s'
+                }}
+                title="Ver tutorial de ayuda"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>help</span>
+                <span>Tutorial</span>
+              </button>
+            </div>
+
             {/* Notificación de pupilos pendientes */}
             {pupilosPendientes.length > 0 && (
               <button
@@ -438,7 +461,18 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
           </div>
 
           <div className="tabs-container">
-            <div className="tabs-nav" style={{ display: 'flex', gap: '10px', borderBottom: '1px solid #e2e8f0', paddingBottom: '0', marginBottom: '25px', overflowX: 'auto' }}>
+            <div className="tabs-nav" style={{
+              display: 'flex',
+              gap: '10px',
+              borderBottom: '1px solid #e2e8f0',
+              paddingBottom: '0',
+              marginBottom: '25px',
+              overflowX: 'auto',
+              position: 'relative',
+              zIndex: showTutorial ? 10005 : 1, // Elevado para el tutorial
+              background: showTutorial ? 'white' : 'transparent', // Fondo blanco para resaltar
+              borderRadius: showTutorial ? '8px' : '0'
+            }}>
               {tabs.map(tab => (
                 <button
                   key={tab.id}

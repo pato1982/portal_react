@@ -32,10 +32,8 @@ const comunicadosDemo = [];
 function ApoderadoPage({ onCambiarVista, usuario }) {
   const [tabActiva, setTabActiva] = useState('informacion');
 
-  // Estado para el tutorial
-  const [showTutorial, setShowTutorial] = useState(() => {
-    return !localStorage.getItem('hasSeenApoderadoTour');
-  });
+  // Estado para el tutorial (siempre visible al cargar)
+  const [showTutorial, setShowTutorial] = useState(true);
 
   const cerrarTutorial = () => {
     setShowTutorial(false);
@@ -346,32 +344,10 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
 
       <main className="apoderado-main">
         <div className="control-panel">
-          <div className="panel-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', margin: 0 }}>
-                Panel Apoderado
-              </h2>
-              <button
-                onClick={() => setShowTutorial(true)}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  color: 'white',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  padding: '6px 12px',
-                  borderRadius: '20px',
-                  fontSize: '0.8rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  transition: 'background 0.2s'
-                }}
-                title="Ver tutorial de ayuda"
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>help</span>
-                <span>Tutorial</span>
-              </button>
-            </div>
+          <div className="panel-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
+              Panel de Apoderado
+            </h2>
 
             {/* Notificación de pupilos pendientes */}
             {pupilosPendientes.length > 0 && (
@@ -655,6 +631,33 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
         usuario={apoderadoActual}
         pupiloSeleccionado={pupiloSeleccionado}
       />
+
+      {/* Botón flotante para reactivar tutorial */}
+      {!showTutorial && (
+        <button
+          onClick={() => setShowTutorial(true)}
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '20px',
+            zIndex: 90,
+            background: '#1e3a5f',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            title: 'Ver Tutorial'
+          }}
+        >
+          <span className="material-symbols-outlined">help</span>
+        </button>
+      )}
 
       {/* Tutorial Guía */}
       <TutorialGuide

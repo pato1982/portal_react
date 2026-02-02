@@ -201,7 +201,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
       id: 'informacion',
       label: 'Ficha de Información',
       color: 'pink',
-      desc: 'Acceda al expediente digital completo de su pupilo. Aquí puede revisar y validar los datos personales, consultar la ficha médica (alergias, tratamientos), contactos de emergencia y descargar documentos oficiales como certificados de alumno regular.',
+      desc: 'Visualice la información administrativa del alumno y del apoderado. Aquí podrá revisar los datos personales registrados en el sistema, como información básica del alumno, curso asignado y datos de contacto del apoderado titular.',
       badge: 'Datos Pupilo',
       icon: 'person_book',
       img: '/assets/navigation/info.png'
@@ -210,7 +210,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
       id: 'notas',
       label: 'Libro de Notas',
       color: 'blue',
-      desc: 'Manténgase al día con el rendimiento académico. Revise en tiempo real las calificaciones parciales, ponderaciones y promedios por asignatura. Permite detectar oportunamente si es necesario reforzar alguna materia.',
+      desc: 'Acceda al libro digital de calificaciones. Consulte el detalle de notas parciales por trimestre, promedios por asignatura y el promedio general acumulado del año escolar en tiempo real.',
       badge: 'Calificaciones',
       icon: 'auto_stories',
       img: '/assets/navigation/notas.png'
@@ -219,7 +219,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
       id: 'comunicados',
       label: 'Cuaderno de Comunicados',
       color: 'green',
-      desc: 'Canal directo con el colegio. Reciba notificaciones importantes, citaciones a reuniones, avisos de actividades y mensajes personales de los profesores. Es vital revisar esta sección periódicamente.',
+      desc: 'Tablón oficial de anuncios del establecimiento. Manténgase informado sobre reuniones, actividades académicas, eventos escolares y avisos administrativos importantes enviados por el colegio.',
       badge: 'Avisos',
       icon: 'drafts',
       img: '/assets/navigation/comunicados.png'
@@ -228,7 +228,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
       id: 'progreso',
       label: 'Libro de Progreso',
       color: 'yellow',
-      desc: 'Visualización gráfica de la evolución académica. Observe tendencias de rendimiento, comparación con el promedio del curso y cumplimiento de metas educativas a lo largo del año escolar.',
+      desc: 'Panel estadístico del rendimiento académico. Observe la evolución mensual del promedio de notas, indicadores de aprobación, asistencia y el desempeño detallado por cada asignatura mediante gráficos interactivos.',
       badge: 'Evolución',
       icon: 'trending_up',
       img: '/assets/navigation/progreso.png'

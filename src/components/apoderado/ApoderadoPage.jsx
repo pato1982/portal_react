@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import HelpTooltip from '../common/HelpTooltip';
+import TutorialGuide from '../common/TutorialGuide';
 import InformacionTab from './InformacionTab';
 import NotasTab from './NotasTab';
 import ComunicadosTab from './ComunicadosTab';
@@ -30,6 +31,43 @@ const comunicadosDemo = [];
 
 function ApoderadoPage({ onCambiarVista, usuario }) {
   const [tabActiva, setTabActiva] = useState('informacion');
+
+  // Estado para el tutorial
+  const [showTutorial, setShowTutorial] = useState(() => {
+    return !localStorage.getItem('hasSeenApoderadoTour');
+  });
+
+  const cerrarTutorial = () => {
+    setShowTutorial(false);
+    localStorage.setItem('hasSeenApoderadoTour', 'true');
+  };
+
+  const handleTutorialStepChange = (tabId) => {
+    setTabActiva(tabId);
+  };
+
+  const APODERADO_STEPS = [
+    {
+      target: 'informacion',
+      title: 'Ficha de Información',
+      content: 'Visualice la información administrativa del alumno y del apoderado. Aquí podrá revisar los datos personales registrados en el sistema.'
+    },
+    {
+      target: 'notas',
+      title: 'Libro de Notas',
+      content: 'Acceda al libro digital de calificaciones. Consulte notas parciales, promedios por asignatura y el promedio general.'
+    },
+    {
+      target: 'comunicados',
+      title: 'Cuaderno de Comunicados',
+      content: 'Tablón oficial de anuncios. Manténgase informado sobre reuniones, actividades académicas y avisos importantes.'
+    },
+    {
+      target: 'progreso',
+      title: 'Libro de Progreso',
+      content: 'Panel estadístico del rendimiento. Observe la evolución mensual de notas, asistencia y desempeño por asignatura.'
+    }
+  ];
 
   // Estado para Keep Alive Tabs
   const [visitedTabs, setVisitedTabs] = useState(new Set([tabActiva]));
@@ -404,6 +442,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
               {tabs.map(tab => (
                 <button
                   key={tab.id}
+                  data-tab-id={tab.id}
                   className={`tab-btn ${tabActiva === tab.id ? 'active' : ''}`}
                   onClick={() => setTabActiva(tab.id)}
                   style={{
@@ -581,6 +620,15 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
       <ChatApoderado
         usuario={apoderadoActual}
         pupiloSeleccionado={pupiloSeleccionado}
+      />
+
+      {/* Tutorial Guía */}
+      <TutorialGuide
+        steps={APODERADO_STEPS}
+        activeTab={tabActiva}
+        isVisible={showTutorial}
+        onClose={cerrarTutorial}
+        onStepChange={handleTutorialStepChange}
       />
     </div>
   );

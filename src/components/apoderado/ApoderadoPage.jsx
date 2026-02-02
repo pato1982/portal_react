@@ -650,7 +650,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
             position: 'fixed',
             bottom: '20px',
             left: '20px',
-            zIndex: 90,
+            zIndex: 1000,
             background: '#1e3a5f',
             color: 'white',
             border: 'none',
@@ -665,7 +665,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
             title: 'Ver Tutorial'
           }}
         >
-          <span className="material-symbols-outlined">help</span>
+          <span className="material-symbols-outlined">menu_book</span>
         </button>
       )}
 

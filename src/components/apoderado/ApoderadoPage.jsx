@@ -232,6 +232,16 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
     };
   }, [mostrarSelectorPupilo]);
 
+  // Auto-scroll al tab activo durante el tutorial
+  useEffect(() => {
+    if (showTutorial) {
+      const activeTabEl = document.querySelector(`button[data-tab-id="${tabActiva}"]`);
+      if (activeTabEl) {
+        activeTabEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      }
+    }
+  }, [tabActiva, showTutorial]);
+
   const tabs = [
     {
       id: 'informacion',
@@ -445,7 +455,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
               marginBottom: '25px',
               overflowX: 'auto',
               position: 'relative',
-              zIndex: showTutorial ? 10005 : 1, // Elevado para el tutorial
+              zIndex: showTutorial ? 100005 : 1, // Elevado para el tutorial
               background: showTutorial ? 'white' : 'transparent', // Fondo blanco para resaltar
               borderRadius: showTutorial ? '8px' : '0'
             }}>

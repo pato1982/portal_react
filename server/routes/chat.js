@@ -122,7 +122,22 @@ router.get('/contactos', async (req, res) => {
                         d.foto_url,
                         'docente' AS tipo,
                         0 AS es_admin,
-                        GROUP_CONCAT(DISTINCT tas.nombre SEPARATOR ', ') as asignaturas,
+                        GROUP_CONCAT(DISTINCT 
+                            CASE 
+                                WHEN tas.nombre LIKE '%Matemática%' THEN 'Mat'
+                                WHEN tas.nombre LIKE '%Lenguaje%' THEN 'Len'
+                                WHEN tas.nombre LIKE '%Historia%' THEN 'His'
+                                WHEN tas.nombre LIKE '%Ciencias Naturales%' THEN 'Cs.Nat'
+                                WHEN tas.nombre LIKE '%Inglés%' THEN 'Ing'
+                                WHEN tas.nombre LIKE '%Artes Visuales%' THEN 'Artes'
+                                WHEN tas.nombre LIKE '%Música%' THEN 'Mús'
+                                WHEN tas.nombre LIKE '%Educación Física%' THEN 'Ed.Fís'
+                                WHEN tas.nombre LIKE '%Tecnología%' THEN 'Tec'
+                                WHEN tas.nombre LIKE '%Religión%' THEN 'Rel'
+                                WHEN tas.nombre LIKE '%Orientación%' THEN 'Ori'
+                                ELSE LEFT(tas.nombre, 3)
+                            END
+                        SEPARATOR ', ') as asignaturas,
                         (SELECT COUNT(*) FROM tb_chat_mensajes m 
                          JOIN tb_chat_conversaciones c ON m.conversacion_id = c.id 
                          WHERE c.establecimiento_id = ? AND ((c.usuario1_id = ? AND c.usuario2_id = u.id) OR (c.usuario2_id = ? AND c.usuario1_id = u.id)) 

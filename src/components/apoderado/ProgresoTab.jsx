@@ -146,15 +146,39 @@ function ProgresoTab({ pupilo }) {
     const { asignaturas, promediosPorAsignatura } = datosProgreso;
 
     // Función para abreviar asignaturas
+    // Función para abreviar asignaturas
     const abreviar = (nombre) => {
+      if (!nombre) return '';
+      // Normalizar nombre para búsqueda
       const map = {
-        'Matemáticas': 'Mat', 'Lenguaje y Comunicación': 'Len', 'Lenguaje': 'Len',
-        'Historia, Geografía y Ciencias Sociales': 'His', 'Historia': 'His',
-        'Ciencias Naturales': 'Cs.Nat', 'Educación Física y Salud': 'E.Fís',
-        'Educación Física': 'E.Fís', 'Artes Visuales': 'Artes', 'Inglés': 'Ing'
+        'Matemática': 'Mat',
+        'Matemáticas': 'Mat',
+        'Lenguaje y Comunicación': 'Len y Com',
+        'Lenguaje': 'Lenguaje',
+        'Historia, Geografía y Ciencias Sociales': 'Hist y Geo',
+        'Historia': 'Historia',
+        'Ciencias Naturales': 'Cs. Nat',
+        'Biología': 'Biol',
+        'Física': 'Fís',
+        'Química': 'Quím',
+        'Inglés': 'Ing',
+        'Artes Visuales': 'Artes',
+        'Música': 'Mús',
+        'Educación Física y Salud': 'Ed. Fís',
+        'Educación Física': 'Ed. Fís',
+        'Tecnología': 'Tec',
+        'Religión': 'Rel',
+        'Orientación': 'Ori',
+        'Filosofía': 'Filo'
       };
-      if (isMobile && map[nombre]) return map[nombre];
-      return nombre.length > 10 ? nombre.substring(0, 8) + '...' : nombre;
+
+      // Buscar coincidencia exacta o parcial
+      for (const [key, val] of Object.entries(map)) {
+        if (nombre.includes(key)) return val;
+      }
+
+      // Fallback inteligente
+      return nombre.length > 8 ? nombre.substring(0, 5) + '.' : nombre;
     };
 
     const labels = asignaturas.map(a => abreviar(a));

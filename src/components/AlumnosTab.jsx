@@ -269,7 +269,7 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
 
         /* Ajuste específico para Tablet y Desktop: Bajar posición (Despegar del header) */
         @media (min-width: 768px) {
-            .modal-overlay { align-items: flex-start; padding-top: 120px; }
+            .modal-overlay { align-items: flex-start; padding-top: 90px; padding-bottom: 50px; }
             .modal-xl { margin: 0 auto; }
         }
         

@@ -186,7 +186,16 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
                   <input type="text" className="form-control" name="enfermedades_cronicas" value={formAlumno.enfermedades_cronicas} onChange={handleChange} placeholder="Ninguna" />
                 </div>
                 <div className="form-group">
-                  <label title="Necesidades Educativas Especiales">{isMobile ? 'Nec. Edu. Esp.' : 'Nec. Esp. (NEE)'}</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                    <label style={{ margin: 0 }} title="Necesidades Educativas Especiales">{isMobile ? 'Nec. Edu. Esp.' : 'Nec. Esp. (NEE)'}</label>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); alert('Necesidades Educativas Especiales'); }}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#3b82f6', display: 'flex', alignItems: 'center' }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </button>
+                  </div>
                   <select className="form-control" name="tiene_nee" value={formAlumno.tiene_nee} onChange={handleChange}>
                     <option value="0">No</option>
                     <option value="1">Sí</option>
@@ -247,12 +256,15 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
       <style>{`
         .modal-xl { max-width: 900px; width: 95%; }
         
-        /* Grid System: 2 cols on mobile, 3 cols on tablet/desktop */
+        /* Grid System: 1 col on mobile, 2 on small tablet, 3 on desktop */
         .grid-responsive { 
             display: grid; 
-            grid-template-columns: 1fr 1fr; 
+            grid-template-columns: 1fr; 
             gap: 15px; 
             margin-bottom: 20px;
+        }
+        @media (min-width: 640px) {
+            .grid-responsive { grid-template-columns: 1fr 1fr; }
         }
         @media (min-width: 768px) {
             .grid-responsive { grid-template-columns: 1fr 1fr 1fr; }
@@ -268,12 +280,14 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
         .form-control { width: 100%; box-sizing: border-box; }
         .form-group label { font-weight: 500; font-size: 0.9em; margin-bottom: 4px; display: block; }
         @media (max-width: 768px) {
-          .form-group label { font-size: 0.75rem; } 
+          .form-group label { font-size: 0.75rem; }
+          .info-item label { font-size: 0.7rem !important; }
+          .data-val { font-size: 0.85rem; word-break: break-word; }
         }
         
         /* Estilos de ReadOnly Info */
         .info-item label { display: block; font-size: 0.8rem; color: #6b7280; margin-bottom: 2px; text-transform: uppercase; font-weight: 600; }
-        .readonly-val, .data-val { font-weight: 500; color: #1f2937; min-height: 24px; padding: 4px 0; border-bottom: 1px dotted #e5e7eb; }
+        .readonly-val, .data-val { font-weight: 500; color: #1f2937; min-height: 24px; padding: 4px 0; border-bottom: 1px dotted #e5e7eb; word-break: break-all; }
         
         .badge-warning { background: #fff7ed; color: #c2410c; padding: 2px 8px; border-radius: 12px; font-size: 0.85em; border: 1px solid #fed7aa; display: inline-block;}
         .highlight { color: #2563eb; font-weight: 600; }

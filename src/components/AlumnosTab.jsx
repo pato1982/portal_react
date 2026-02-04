@@ -255,7 +255,7 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
       </div>
       <style>{`
         /* Centrado del modal */
-        .modal-overlay { display: flex; align-items: center; justify-content: center; padding: 10px; z-index: 1050; }
+        .modal-overlay { display: flex; align-items: center; justify-content: center; padding: 10px; z-index: 10000; }
         
         /* Modal más compacto en escritorio/tablet (680px) */
         .modal-xl { 
@@ -265,6 +265,12 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
             max-height: 90vh; 
             display: flex; 
             flex-direction: column; 
+        }
+
+        /* Ajuste específico para Tablet y Desktop: Bajar posición (Despegar del header) */
+        @media (min-width: 768px) {
+            .modal-overlay { align-items: flex-start; padding-top: 120px; }
+            .modal-xl { margin: 0 auto; }
         }
         
         /* Ajuste de contenido para ser más "chico" */

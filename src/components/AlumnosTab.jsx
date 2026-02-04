@@ -254,14 +254,33 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
         </div>
       </div>
       <style>{`
-        .modal-xl { max-width: 900px; width: 95%; }
+        /* Centrado del modal */
+        .modal-overlay { display: flex; align-items: center; justify-content: center; padding: 10px; z-index: 1050; }
         
+        /* Modal más compacto en escritorio/tablet (680px) */
+        .modal-xl { 
+            max-width: 680px; 
+            width: 95%; 
+            margin: auto; 
+            max-height: 90vh; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        /* Ajuste de contenido para ser más "chico" */
+        .modal-xl .modal-header { padding: 15px 20px; }
+        .modal-xl .modal-header h3 { font-size: 1.15rem; margin: 0; }
+        .modal-xl .form-control { font-size: 0.9rem; padding: 6px 10px; height: auto; }
+        .modal-xl .modal-tab-btn { padding: 8px 12px; font-size: 0.9rem; }
+        .modal-xl .modal-body { padding: 0 20px 15px; }
+        .modal-xl .modal-footer { padding: 12px 20px; }
+
         /* Grid System: 1 col on mobile, 2 on small tablet, 3 on desktop */
         .grid-responsive { 
             display: grid; 
             grid-template-columns: 1fr; 
-            gap: 15px; 
-            margin-bottom: 20px;
+            gap: 12px; /* Gap reducido */
+            margin-bottom: 15px;
         }
         @media (min-width: 640px) {
             .grid-responsive { grid-template-columns: 1fr 1fr; }
@@ -271,15 +290,16 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
         }
         
         .section-divider {
-            font-size: 0.95rem; font-weight: 700; color: #4b5563;
-            border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; margin: 25px 0 15px 0;
+            font-size: 0.85rem; font-weight: 700; color: #4b5563;
+            border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; margin: 20px 0 12px 0;
             text-transform: uppercase; letter-spacing: 0.5px;
         }
         
         /* Estilos de inputs en el modal para que se ajusten al grid */
         .form-control { width: 100%; box-sizing: border-box; }
-        .form-group label { font-weight: 500; font-size: 0.9em; margin-bottom: 4px; display: block; }
+        .form-group label { font-weight: 500; font-size: 0.85em; margin-bottom: 3px; display: block; }
         @media (max-width: 768px) {
+          .modal-xl { width: 100%; max-height: 100vh; border-radius: 0; }
           .form-group label { font-size: 0.75rem; }
           .info-item label { font-size: 0.7rem !important; }
           .data-val { font-size: 0.85rem; word-break: break-word; }

@@ -161,7 +161,7 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
                   <input type="text" className="form-control" name="apellidos" value={formAlumno.apellidos} onChange={handleChange} />
                 </div>
                 <div className="form-group">
-                  <label>{isMobile ? 'Dir.' : 'Dirección'}</label>
+                  <label>{isMobile ? 'Dirección' : 'Dirección'}</label>
                   <input type="text" className="form-control" name="direccion" value={formAlumno.direccion} onChange={handleChange} />
                 </div>
                 <div className="form-group">
@@ -182,11 +182,11 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
                   <input type="text" className="form-control" name="alergias" value={formAlumno.alergias} onChange={handleChange} placeholder="Ninguna" />
                 </div>
                 <div className="form-group">
-                  <label title="Enfermedades Crónicas">{isMobile ? 'Enf. Crón.' : 'Enf. Crónicas'}</label>
+                  <label title="Enfermedades Crónicas">{isMobile ? 'Enf. Crónicas' : 'Enf. Crónicas'}</label>
                   <input type="text" className="form-control" name="enfermedades_cronicas" value={formAlumno.enfermedades_cronicas} onChange={handleChange} placeholder="Ninguna" />
                 </div>
                 <div className="form-group">
-                  <label title="Necesidades Educativas Especiales">{isMobile ? 'NEE' : 'Nec. Esp. (NEE)'}</label>
+                  <label title="Necesidades Educativas Especiales">{isMobile ? 'Nec. Edu. Esp.' : 'Nec. Esp. (NEE)'}</label>
                   <select className="form-control" name="tiene_nee" value={formAlumno.tiene_nee} onChange={handleChange}>
                     <option value="0">No</option>
                     <option value="1">Sí</option>
@@ -199,7 +199,7 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
                   </div>
                 )}
                 <div className="form-group">
-                  <label>{isMobile ? 'Cont. Emerg.' : 'Cont. Emergencia'}</label>
+                  <label>{isMobile ? 'Contacto Emerg.' : 'Cont. Emergencia'}</label>
                   <input type="text" className="form-control" name="contacto_emergencia_nombre" value={formAlumno.contacto_emergencia_nombre} onChange={handleChange} />
                 </div>
                 <div className="form-group">
@@ -267,6 +267,9 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
         /* Estilos de inputs en el modal para que se ajusten al grid */
         .form-control { width: 100%; box-sizing: border-box; }
         .form-group label { font-weight: 500; font-size: 0.9em; margin-bottom: 4px; display: block; }
+        @media (max-width: 768px) {
+          .form-group label { font-size: 0.75rem; } 
+        }
         
         /* Estilos de ReadOnly Info */
         .info-item label { display: block; font-size: 0.8rem; color: #6b7280; margin-bottom: 2px; text-transform: uppercase; font-weight: 600; }

@@ -346,7 +346,7 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
           </div>
 
           <div className="tabs-container">
-            <nav className="tabs-nav">
+            <nav className="tabs-nav" style={{ position: 'relative', zIndex: showTutorial ? 100005 : 1, background: showTutorial ? 'white' : 'transparent', borderRadius: showTutorial ? '8px' : '0' }}>
               {tabs.map(tab => (
                 <button
                   key={tab.id}

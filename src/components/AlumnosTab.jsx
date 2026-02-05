@@ -293,6 +293,7 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
         }
         @media (min-width: 768px) {
             .grid-responsive { grid-template-columns: 1fr 1fr 1fr; }
+            .grid-responsive.info-grid { grid-template-columns: 1fr 1fr; } /* Apoderado: 2 columnas */
         }
         
         .section-divider {

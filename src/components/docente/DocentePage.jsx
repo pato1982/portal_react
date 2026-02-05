@@ -166,6 +166,16 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
     }
   ];
 
+  // Auto-scroll al tab activo durante el tutorial
+  useEffect(() => {
+    if (showTutorial) {
+      const activeTabEl = document.querySelector(`button[data-tab-id="${tabActual}"]`);
+      if (activeTabEl) {
+        activeTabEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [tabActual, showTutorial]);
+
   const renderTabsContent = () => {
     const tabsConfig = [
       {

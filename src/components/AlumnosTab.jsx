@@ -137,7 +137,7 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
           <button type="button" className={`modal-tab-btn ${activeTab === 'apoderado' ? 'active' : ''}`} onClick={() => setActiveTab('apoderado')}>Apoderado</button>
         </div>
 
-        <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+        <div className="modal-body">
           {activeTab === 'alumno' && (
             <>
               <div className="grid-responsive">
@@ -270,7 +270,7 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
         /* Ajuste específico para Tablet y Desktop: Bajar posición (Despegar del header) */
         @media (min-width: 768px) {
             .modal-overlay { align-items: flex-start; padding-top: 90px; padding-bottom: 50px; }
-            .modal-xl { margin: 0 auto; }
+            .modal-xl { margin: 0 auto; max-height: calc(100vh - 160px); }
         }
         
         /* Ajuste de contenido para ser más "chico" */
@@ -278,7 +278,7 @@ const ModalEditarAlumno = ({ alumno: alumnoInicial, cursos, onGuardar, onCerrar 
         .modal-xl .modal-header h3 { font-size: 1.15rem; margin: 0; }
         .modal-xl .form-control { font-size: 0.9rem; padding: 6px 10px; height: auto; }
         .modal-xl .modal-tab-btn { padding: 8px 12px; font-size: 0.9rem; }
-        .modal-xl .modal-body { padding: 0 20px 15px; }
+        .modal-xl .modal-body { padding: 0 20px 15px; flex: 1; overflow-y: auto; }
         .modal-xl .modal-footer { padding: 12px 20px; }
 
         /* Grid System: 1 col on mobile, 2 on small tablet, 3 on desktop */

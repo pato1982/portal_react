@@ -128,41 +128,125 @@ function AdminPage({ usuario, onCerrarSesion, mostrarMensaje }) {
                 </div>
 
                 {vistaModo === 'tarjetas' ? (
-                    <div className="notebook-grid-admin">
-                        {tabs.map((tab, index) => (
-                            <div
-                                key={tab.id}
-                                data-tab-id={tab.id}
-                                className={`notebook-card card-${tab.id} card-${tab.color} ${tab.size === 'tall' ? 'card-tall' : 'card-small'}`}
-                                onClick={() => seleccionarVista(tab.id)}
-                            >
-                                {/* Visual binds */}
-                                {tab.size === 'tall' && (index === 0 || index === 3 || index === 6) && <div className="spiral-bind"></div>}
-                                {tab.size === 'small' && <div className="folder-tab"></div>}
+                    <>
+                        <style>{`
+                            .octagonal-system-container {
+                                display: flex;
+                                justify-content: center;
+                                padding: 20px 0;
+                            }
+                            .octagonal-grid {
+                                display: grid;
+                                grid-template-areas:
+                                    "pos0 pos1 pos2"
+                                    "pos3 center pos4"
+                                    "pos5 pos6 pos7";
+                                gap: 20px;
+                                max-width: 800px;
+                                width: 100%;
+                            }
+                            .octagon-btn {
+                                position: relative;
+                                background: linear-gradient(145deg, #1e3a5f, #152e4d);
+                                color: white;
+                                border: none;
+                                cursor: pointer;
+                                aspect-ratio: 1;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                padding: 15px;
+                                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                                clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+                                text-align: center;
+                                box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                            }
+                            .octagon-btn:hover {
+                                transform: scale(1.05) translateY(-5px);
+                                background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+                                z-index: 10;
+                                box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+                            }
+                            .octagon-btn .material-symbols-outlined {
+                                font-size: 42px;
+                                margin-bottom: 10px;
+                                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                            }
+                            .octagon-btn .btn-label {
+                                font-weight: 700;
+                                font-size: 1rem;
+                                line-height: 1.2;
+                                text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                            }
+                            .center-brand {
+                                grid-area: center;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                flex-direction: column;
+                            }
+                            
+                            /* Tablet & Mobile responsive adjustments */
+                            @media (max-width: 900px) {
+                                .octagonal-grid {
+                                    gap: 15px;
+                                    max-width: 600px;
+                                }
+                                .octagon-btn .material-symbols-outlined { font-size: 32px; }
+                                .octagon-btn .btn-label { font-size: 0.9rem; }
+                            }
 
-                                <div className="notebook-card-content">
-                                    {tab.size === 'tall' && (
-                                        <div className="notebook-label-box">
-                                            <img src={tab.img} alt={tab.label} />
-                                        </div>
-                                    )}
-                                    <div className="mt-auto">
-                                        <h3 className="notebook-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            {tab.label}
-                                            <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
-                                        </h3>
-                                        <p className="notebook-desc">{tab.desc}</p>
-                                        <div className="notebook-footer">
-                                            <span className="notebook-badge">{tab.badge}</span>
-                                            <div className="notebook-icon-circle">
-                                                <span className="material-symbols-outlined">{tab.icon}</span>
-                                            </div>
-                                        </div>
+                            @media (max-width: 600px) {
+                                .octagonal-grid {
+                                    grid-template-areas:
+                                        "pos0 pos1"
+                                        "pos2 pos3"
+                                        "pos4 pos5"
+                                        "pos6 pos7";
+                                    max-width: 100%;
+                                    gap: 10px;
+                                }
+                                .center-brand { display: none; }
+                                .octagon-btn {
+                                    clip-path: none; /* En móvil, volver a cuadrados redondeados para mejor uso del espacio */
+                                    border-radius: 12px;
+                                    aspect-ratio: auto;
+                                    padding: 20px 10px;
+                                }
+                                .octagon-btn .material-symbols-outlined { font-size: 32px; margin-bottom: 5px; }
+                            }
+                        `}</style>
+                        <div className="octagonal-system-container">
+                            <div className="octagonal-grid">
+                                {tabs.map((tab, index) => (
+                                    <button
+                                        key={tab.id}
+                                        className="octagon-btn"
+                                        onClick={() => seleccionarVista(tab.id)}
+                                        style={{ gridArea: `pos${index}` }}
+                                    >
+                                        <span className="material-symbols-outlined">{tab.icon}</span>
+                                        <span className="btn-label">{tab.label}</span>
+                                    </button>
+                                ))}
+                                <div className="center-brand">
+                                    <div style={{
+                                        width: '100px',
+                                        height: '100px',
+                                        borderRadius: '50%',
+                                        background: '#f1f5f9',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.1)'
+                                    }}>
+                                        <span className="material-symbols-outlined" style={{ fontSize: '48px', color: '#64748b' }}>admin_panel_settings</span>
                                     </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    </>
                 ) : (
                     <div className="notebook-content-view">
                         <div className="notebook-content-header" style={{ justifyContent: 'space-between' }}>

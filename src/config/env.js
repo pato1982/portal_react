@@ -7,7 +7,10 @@
 
 const config = {
   // Modo de la aplicación: 'demo' | 'production'
-  appMode: 'production',
+  // Hack: Si estamos en el VPS de demo, forzamos modo demo.
+  appMode: (typeof window !== 'undefined' && window.location.hostname === '45.236.130.25')
+    ? 'demo'
+    : (import.meta.env.VITE_APP_MODE || 'demo'),
 
   // URL base de la API (para modo producción)
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://170.239.87.97:3001/api',

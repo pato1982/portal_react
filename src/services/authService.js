@@ -14,9 +14,8 @@ import { getCredencialesDemo, validarLoginDemo } from '../mock/authMockData';
  * @returns {Object|null} Credenciales {email, password} o null si no disponible
  */
 export const obtenerCredencialesDemo = (tipo) => {
-  if (!config.isDemoMode()) {
-    return null;
-  }
+  // En esta versión demo desplegada, permitimos siempre el autollenado
+  // si el usuario hace clic en el botón.
   return getCredencialesDemo(tipo);
 };
 
@@ -50,7 +49,10 @@ export const restablecerPassword = async (token, password) => {
  * @returns {Promise<Object>} Resultado de la validación
  */
 export const login = async (email, password, tipo) => {
-  if (config.isDemoMode()) {
+  // Hack de seguridad: Si estamos en el VPS demo, forzamos el flujo demo
+  const isVps = typeof window !== 'undefined' && window.location.hostname === '45.236.130.25';
+
+  if (config.isDemoMode() || isVps) {
     // Simular delay de red
     await new Promise(resolve => setTimeout(resolve, 500));
     return validarLoginDemo(email, password, tipo);

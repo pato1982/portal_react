@@ -1,15 +1,26 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import config from '../../config/env';
 
-function NotasTab({ pupilo }) {
-  const [notas, setNotas] = useState([]);
+function NotasTab({ pupilo, notas: notasProp }) {
+  const [notas, setNotas] = useState(notasProp || []);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [notaSeleccionada, setNotaSeleccionada] = useState(null);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
-  // Cargar notas cuando cambia el pupilo
+  // Actualizar notas si cambian las props (ej: filtro en padre)
   useEffect(() => {
+    if (notasProp) {
+      setNotas(notasProp);
+    }
+  }, [notasProp]);
+
+  // Cargar notas desde API solo si NO se proveen por props
+  useEffect(() => {
+    // Si tenemos notas por props (incluso array vacio si es intencional, pero aqui asumimos que si se pasa es para usarlo)
+    // Para ser robustos: si notasProp no es undefined, usamos eso.
+    if (notasProp !== undefined) return;
+
     const cargarNotas = async () => {
       if (!pupilo?.id) {
         setNotas([]);
@@ -38,7 +49,7 @@ function NotasTab({ pupilo }) {
     };
 
     cargarNotas();
-  }, [pupilo?.id]);
+  }, [pupilo?.id, notasProp]);
 
   // Obtener asignaturas unicas
   const asignaturas = useMemo(() => {
@@ -213,6 +224,27 @@ function NotasTab({ pupilo }) {
 
   return (
     <div className="tab-panel active" onClick={cerrarPopup}>
+      <style>{`
+        @media (max-width: 699px) {
+          .card-header h3 {
+            font-size: 12px !important;
+          }
+          .asignatura-nombre {
+            font-size: 11px !important;
+            padding: 4px 1px !important;
+            white-space: normal !important; /* Permitir saltos de línea si es necesario */
+            line-height: 1.1 !important;
+            max-width: 80px; /* Limitar ancho para forzar quiebre si es muy largo */
+          }
+          .nota-valor {
+            font-size: 9px !important;
+          }
+          .asignatura-header {
+            text-align: center !important;
+            vertical-align: middle !important;
+          }
+        }
+      `}</style>
       <div className="card">
         <div className="card-header">
           <h3>Libro de Calificaciones</h3>
@@ -387,17 +419,17 @@ function NotasTab({ pupilo }) {
           <div className="nota-popup-body">
             <div className="nota-popup-fecha">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
               {formatearFecha(notaSeleccionada.fecha)}
             </div>
             {notaSeleccionada.comentario && (
               <div className="nota-popup-comentario">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
                 {notaSeleccionada.comentario}
               </div>

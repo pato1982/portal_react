@@ -68,8 +68,11 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange, steps = ST
         const step = steps[currentStep];
         const targetId = step.target;
 
-        // Si la pestaña activa no coincide con el paso, forzamos el cambio de pestaña
-        if (activeTab !== targetId && onStepChange) {
+        // Si la pestaña activa no coincide con el paso, verificar si necesitamos cambiar
+        // EXCEPCIÓN: En el menú de apoderado, activeTab es 'menu' pero los targets son botones internos
+        const isMenuApoderado = activeTab === 'menu' && ['informacion', 'notas', 'comunicados', 'progreso'].includes(targetId);
+
+        if (activeTab !== targetId && !isMenuApoderado && onStepChange) {
             onStepChange(targetId);
             return;
         }
@@ -112,12 +115,35 @@ const TutorialGuide = ({ activeTab, isVisible, onClose, onStepChange, steps = ST
                 pjLeft = left - 140;
             }
 
-            // En móvil, el personaje arriba del globo
+            // En móvil, lógica específica para situarse junto al botón
             if (isMobile) {
-                pjTop = rect.bottom + 10;
-                pjLeft = window.innerWidth / 2 - 60; // Centrado
+                // Intentar poner personaje arriba a la izquierda del elemento
+                pjLeft = rect.left;
+                if (pjLeft > window.innerWidth - 120) pjLeft = window.innerWidth - 120; // Evitar desborde derecho
+                if (pjLeft < 10) pjLeft = 10; // Evitar desborde izquierdo
 
-                top = pjTop + 200; // Globo más abajo
+                pjTop = rect.top - 90; // Justo encima
+
+                // Si está muy arriba y se sale de pantalla, ponerlo abajo
+                let bubbleTop = rect.bottom + 10;
+
+                if (pjTop < 50) {
+                    pjTop = rect.bottom + 10; // Personaje abajo
+                    bubbleTop = pjTop + 100; // Globo más abajo
+                } else {
+                    // Personaje arriba, globo abajo del elemento (para no tapar personaje)
+                    bubbleTop = rect.bottom + 10;
+                }
+
+                // Definir posición del globo
+                top = bubbleTop;
+                left = 10; // Margen izquierdo fijo
+
+                // Ajuste fino si es el último elemento de la grilla
+                if (top + 200 > window.innerHeight) {
+                    top = rect.top - 200; // Si no cabe abajo, intentar poner globo arriba del todo
+                    if (pjTop > top) pjTop = top - 90; // Mover personaje más arriba aun
+                }
             }
 
             setPersonajePos({ top: pjTop, left: pjLeft });

@@ -7750,6 +7750,10 @@ select.form-control {
     position: relative;
 }
 
+.chatv2-nav-badge {
+    display: none !important;
+}
+
 .chatv2-avatar.small {
     width: 38px;
     height: 38px;
@@ -8407,12 +8411,23 @@ select.form-control {
 /* TABLET REFACTOR (601px - 1100px): Full 3-column Layout */
 @media (min-width: 601px) and (max-width: 1100px) {
     .chatv2-modal {
-        width: 98vw;
-        height: 90vh;
+        width: auto !important;
+        height: auto !important;
         max-width: none;
+
+        /* AJUSTE TABLET: Flotante expandido */
+        top: 55px !important;
+        bottom: 15px !important;
+        left: 15px !important;
+        right: 15px !important;
+        transform: none !important;
+
         display: flex;
         flex-direction: column;
-        /* Modal structure */
+    }
+
+    .chatv2-modal.active {
+        transform: none !important;
     }
 
     .chatv2-content {
@@ -8492,18 +8507,53 @@ select.form-control {
 /* Móvil (< 600px): Layout de una columna */
 @media (max-width: 600px) {
     .chatv2-modal {
-        width: 100%;
-        height: 100%;
+        width: auto !important;
+        height: auto !important;
         max-width: none;
         max-height: none;
-        border-radius: 0;
-        top: 0;
-        left: 0;
-        transform: translateY(100%);
+        border-radius: 16px !important;
+        /* Alargar hacia abajo: Top fijo 50px, Bottom minimo 10px */
+        top: 75px !important;
+        bottom: 60px !important;
+        left: 10px !important;
+        right: 10px !important;
+
+        transform: translateY(120%);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
     }
 
     .chatv2-modal.active {
         transform: translateY(0);
+    }
+
+    /* Reduccion Header Principal Modal */
+    .chatv2-header {
+        padding: 8px 12px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+    }
+
+    .chatv2-header-title {
+        font-size: 12px !important;
+    }
+
+    .chatv2-header-icon {
+        width: 16px !important;
+        height: 16px !important;
+        margin-right: 6px !important;
+    }
+
+    .chatv2-close-btn {
+        width: 24px !important;
+        height: 24px !important;
+        padding: 2px !important;
+    }
+
+    .chatv2-close-btn svg {
+        width: 16px !important;
+        height: 16px !important;
     }
 
     /* FIX: Contenedor en Columna */
@@ -8544,15 +8594,41 @@ select.form-control {
     }
 
     .chatv2-nav-item span {
-        font-size: 11px;
+        font-size: 9px !important;
+        /* Texto nav mas chico */
         margin-top: 0;
-        margin-left: 6px;
+        margin-left: 4px;
         display: block !important;
     }
 
     .chatv2-nav-item svg {
-        width: 18px;
-        height: 18px;
+        width: 16px !important;
+        /* Icono nav mas chico */
+        height: 16px !important;
+    }
+
+    /* Reduccion Contenido Lista */
+    .chatv2-list-item {
+        padding: 8px 10px !important;
+        gap: 8px !important;
+    }
+
+    .chatv2-item-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 12px !important;
+    }
+
+    .chatv2-list-item-name {
+        font-size: 11px !important;
+    }
+
+    .chatv2-list-item-msg {
+        font-size: 10px !important;
+    }
+
+    .chatv2-list-item-time {
+        font-size: 9px !important;
     }
 
     .chatv2-list {
@@ -8563,6 +8639,63 @@ select.form-control {
         overflow-y: auto;
     }
 
+    /* Reduccion Contenido Chat Mensajes */
+    .chatv2-message {
+        font-size: 10px !important;
+        padding: 0 !important;
+        /* El padding lo maneja la burbuja */
+        border-radius: 10px !important;
+        max-width: 80% !important;
+    }
+
+    .chatv2-message-bubble {
+        padding: 5px 14px !important;
+        min-height: auto !important;
+    }
+
+    .chatv2-message-bubble p {
+        font-size: 10px !important;
+        margin: 0 !important;
+        line-height: 1.3 !important;
+    }
+
+    .chatv2-message-time {
+        font-size: 8px !important;
+        margin-top: 2px !important;
+    }
+
+    .chatv2-date-separator span {
+        font-size: 9px !important;
+        padding: 2px 8px !important;
+    }
+
+    .chatv2-chat-header-name {
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        display: block !important;
+    }
+
+    .chatv2-chat-header-status {
+        font-size: 10px !important;
+        display: block !important;
+    }
+
+    .chatv2-chat-header .chatv2-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 12px !important;
+    }
+
+    .chatv2-input-wrapper input {
+        font-size: 11px !important;
+        height: 36px !important;
+    }
+
+    .chatv2-send-btn {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
     /* Buscador Sticky */
     .chatv2-search {
         position: sticky;
@@ -8570,6 +8703,12 @@ select.form-control {
         z-index: 40;
         background: white;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        padding: 8px !important;
+    }
+
+    .chatv2-search input {
+        font-size: 11px !important;
+        height: 32px !important;
     }
 
     .chatv2-list.hidden-mobile {

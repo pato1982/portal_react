@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import HelpTooltip from '../common/HelpTooltip';
-import TutorialGuide from '../common/TutorialGuide';
+
 import InformacionTab from './InformacionTab';
 import NotasTab from './NotasTab';
 import ComunicadosTab from './ComunicadosTab';
@@ -8,6 +8,7 @@ import ProgresoTab from './ProgresoTab';
 import ChatApoderado from './ChatApoderado';
 import Header from '../Header';
 import config from '../../config/env';
+import '../../styles/apoderado_menu.css';
 
 // Datos base del apoderado (estructura mínima para la sesión demo)
 const apoderadoDemo = {
@@ -23,49 +24,77 @@ const apoderadoDemo = {
   nombre_establecimiento: 'Sin establecimiento'
 };
 
-// Sin notas registradas
-const notasDemo = [];
+// Pupilo Demo
+const pupiloDemo = {
+  id: 1,
+  nombres: 'Vicente',
+  apellidos: 'Muñoz',
+  curso_nombre: '1° Medio A',
+  establecimiento_id: 1,
+  rut: '22.333.444-5',
+  fecha_nacimiento: '2010-05-12',
+  sexo: 'Masculino'
+};
 
-// Sin comunicados
-const comunicadosDemo = [];
+// Datos demo de Notas
+const notasDemo = [
+  // Matemáticas
+  { id: 1, alumno_id: 1, asignatura: 'Matemáticas', trimestre: 1, nota: 6.5, fecha: '2025-03-15', numero_evaluacion: 1, comentario: 'Excelente desempeño' },
+  { id: 2, alumno_id: 1, asignatura: 'Matemáticas', trimestre: 1, nota: 5.8, fecha: '2025-04-02', numero_evaluacion: 2 },
+  { id: 3, alumno_id: 1, asignatura: 'Matemáticas', trimestre: 1, nota: 7.0, fecha: '2025-04-20', numero_evaluacion: 3, comentario: 'Prueba perfecta' },
+  { id: 4, alumno_id: 1, asignatura: 'Matemáticas', trimestre: 2, nota: 6.2, fecha: '2025-06-10', numero_evaluacion: 1 },
+  // Lenguaje
+  { id: 5, alumno_id: 1, asignatura: 'Lenguaje y Comunicación', trimestre: 1, nota: 5.5, fecha: '2025-03-18', numero_evaluacion: 1 },
+  { id: 6, alumno_id: 1, asignatura: 'Lenguaje y Comunicación', trimestre: 1, nota: 6.0, fecha: '2025-04-05', numero_evaluacion: 2 },
+  { id: 7, alumno_id: 1, asignatura: 'Lenguaje y Comunicación', trimestre: 2, nota: 6.8, fecha: '2025-06-12', numero_evaluacion: 1 },
+  // Historia
+  { id: 8, alumno_id: 1, asignatura: 'Historia', trimestre: 1, nota: 6.9, fecha: '2025-03-22', numero_evaluacion: 1 },
+  { id: 9, alumno_id: 1, asignatura: 'Historia', trimestre: 1, nota: 6.7, fecha: '2025-04-10', numero_evaluacion: 2 },
+  // Ciencias
+  { id: 10, alumno_id: 1, asignatura: 'Ciencias Naturales', trimestre: 1, nota: 5.0, fecha: '2025-03-25', numero_evaluacion: 1 },
+  { id: 11, alumno_id: 1, asignatura: 'Ciencias Naturales', trimestre: 1, nota: 5.2, fecha: '2025-04-15', numero_evaluacion: 2 },
+  // Inglés
+  { id: 12, alumno_id: 1, asignatura: 'Inglés', trimestre: 1, nota: 7.0, fecha: '2025-03-28', numero_evaluacion: 1 },
+];
+
+// Datos demo de Comunicados
+const comunicadosDemo = [
+  {
+    id: 1,
+    alumno_id: 1,
+    titulo: 'Reunión de Apoderados',
+    contenido: 'Se cita a reunión de apoderados para el día Martes 20 a las 19:00 hrs. Tabla: Rendimiento académico primer trimestre.',
+    fecha_envio: '2025-05-15T10:30:00',
+    remitente_nombre: 'Profesor Jefe',
+    leido: false,
+    tipo: 'reunion'
+  },
+  {
+    id: 2,
+    alumno_id: 1,
+    titulo: 'Salida Pedagógica al Museo',
+    contenido: 'Estimados apoderados, el próximo viernes realizaremos una visita al Museo de Historia Natural. Se requiere autorización firmada.',
+    fecha_envio: '2025-05-10T09:15:00',
+    remitente_nombre: 'Coordinación Académica',
+    leido: true,
+    tipo: 'actividad'
+  },
+  {
+    id: 3,
+    alumno_id: 1,
+    titulo: 'Feria Científica 2025',
+    contenido: 'Invitamos a toda la comunidad escolar a participar de nuestra feria científica anual este sábado a partir de las 10:00 hrs.',
+    fecha_envio: '2025-05-05T14:45:00',
+    remitente_nombre: 'Dirección',
+    leido: true,
+    tipo: 'general'
+  }
+];
 
 function ApoderadoPage({ onCambiarVista, usuario }) {
-  const [tabActiva, setTabActiva] = useState('informacion');
+  const [tabActiva, setTabActiva] = useState('menu');
 
-  // Estado para el tutorial (siempre visible al cargar)
-  const [showTutorial, setShowTutorial] = useState(true);
 
-  const cerrarTutorial = () => {
-    setShowTutorial(false);
-    localStorage.setItem('hasSeenApoderadoTour', 'true');
-  };
-
-  const handleTutorialStepChange = (tabId) => {
-    setTabActiva(tabId);
-  };
-
-  const APODERADO_STEPS = [
-    {
-      target: 'informacion',
-      title: 'Ficha de Información',
-      content: 'Visualice la información administrativa del alumno y del apoderado. Aquí podrá revisar los datos personales registrados en el sistema.'
-    },
-    {
-      target: 'notas',
-      title: 'Libro de Notas',
-      content: 'Acceda al libro digital de calificaciones. Consulte notas parciales, promedios por asignatura y el promedio general.'
-    },
-    {
-      target: 'comunicados',
-      title: 'Cuaderno de Comunicados',
-      content: 'Tablón oficial de anuncios. Manténgase informado sobre reuniones, actividades académicas y avisos importantes.'
-    },
-    {
-      target: 'progreso',
-      title: 'Libro de Progreso',
-      content: 'Panel estadístico del rendimiento. Observe la evolución mensual de notas, asistencia y desempeño por asignatura.'
-    }
-  ];
 
   // Estado para Keep Alive Tabs
   const [visitedTabs, setVisitedTabs] = useState(new Set([tabActiva]));
@@ -131,11 +160,16 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
 
       console.log('Respuesta API Pupilos:', data);
 
-      if (data.success) {
-        setPupilos(data.data || []);
+      if (data.success && data.data && data.data.length > 0) {
+        setPupilos(data.data);
+      } else {
+        // Fallback a demo si no API
+        console.warn('Usando datos demo para pupilos');
+        setPupilos([pupiloDemo]);
       }
     } catch (error) {
-      console.error('Error cargando pupilos:', error);
+      console.error('Error cargando pupilos, usando demo:', error);
+      setPupilos([pupiloDemo]);
     }
   };
 
@@ -225,22 +259,16 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
 
     if (mostrarSelectorPupilo) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [mostrarSelectorPupilo]);
 
-  // Auto-scroll al tab activo durante el tutorial
-  useEffect(() => {
-    if (showTutorial) {
-      const activeTabEl = document.querySelector(`button[data-tab-id="${tabActiva}"]`);
-      if (activeTabEl) {
-        activeTabEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-      }
-    }
-  }, [tabActiva, showTutorial]);
+
 
   const tabs = [
     {
@@ -320,9 +348,9 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
   const renderTabContent = () => {
     const tabsConfig = [
       { id: 'informacion', Component: InformacionTab, props: { pupilo: pupiloSeleccionado, apoderado: apoderadoActual } },
-      { id: 'notas', Component: NotasTab, props: { pupilo: pupiloSeleccionado } },
-      { id: 'comunicados', Component: ComunicadosTab, props: { pupilo: pupiloSeleccionado, usuarioId: apoderadoActual.id } },
-      { id: 'progreso', Component: ProgresoTab, props: { pupilo: pupiloSeleccionado } }
+      { id: 'notas', Component: NotasTab, props: { pupilo: pupiloSeleccionado, notas: notasFiltradas } },
+      { id: 'comunicados', Component: ComunicadosTab, props: { pupilo: pupiloSeleccionado, usuarioId: apoderadoActual.id, comunicados: comunicadosFiltrados } },
+      { id: 'progreso', Component: ProgresoTab, props: { pupilo: pupiloSeleccionado, notas: notasFiltradas } }
     ];
 
     return tabsConfig.map(({ id, Component, props }) => {
@@ -355,149 +383,176 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
       <main className="apoderado-main">
         <div className="control-panel">
           <div className="panel-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
-              Panel de Apoderado
+            <h2 className="panel-title" style={{ fontWeight: 'bold', color: 'white' }}>
+              {tabActiva === 'menu' ? 'Panel de Apoderado' : tabs.find(t => t.id === tabActiva)?.label || 'Panel de Apoderado'}
             </h2>
 
-            {/* Notificación de pupilos pendientes */}
-            {pupilosPendientes.length > 0 && (
-              <button
-                onClick={() => setMostrarModalPendientes(true)}
-                style={{
-                  background: '#f59e0b',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontWeight: '500',
-                  animation: 'pulse 2s infinite'
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>notification_important</span>
-                {pupilosPendientes.length} pupilo(s) pendiente(s)
-              </button>
-            )}
-          </div>
+            {/* Contenedor de Acciones del Header (Tutorial y Pupilos Pendientes) */}
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
 
-          {/* Selector de Pupilo (Estilo Standard) */}
-          <div className="pupilo-selector-container" ref={dropdownRef} style={{ marginBottom: '20px' }}>
-            <button
-              className="btn-pupilo-current"
-              onClick={() => setMostrarSelectorPupilo(!mostrarSelectorPupilo)}
-              style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
-            >
-              {pupiloSeleccionado ? (
-                <>
-                  <div className="avatar-mini" style={{ width: '30px', height: '30px', background: '#3b82f6', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-                    {pupiloSeleccionado.nombres.charAt(0)}
-                  </div>
-                  <span style={{ fontWeight: '500', color: '#64748b' }}>{pupiloSeleccionado.nombres} {pupiloSeleccionado.apellidos} ({pupiloSeleccionado.curso_nombre || 'Sin curso'})</span>
-                </>
-              ) : (
-                <span style={{ fontWeight: '500', color: '#94a3b8' }}>Sin pupilos registrados</span>
-              )}
-              <span className="material-symbols-outlined">expand_more</span>
-            </button>
-            {mostrarSelectorPupilo && (
-              <div className="pupilo-dropdown" style={{ position: 'absolute', marginTop: '5px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', zIndex: 50, minWidth: '250px' }}>
-                {pupilos.map(pupilo => (
-                  <div
-                    key={pupilo.id}
-                    className={`pupilo-dropdown-item ${pupiloSeleccionado && pupilo.id === pupiloSeleccionado.id ? 'active' : ''}`}
-                    onClick={() => handleCambiarPupilo(pupilo)}
-                    style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px' }}
-                  >
-                    <div className="pupilo-dropdown-avatar" style={{ width: '32px', height: '32px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#64748b' }}>
-                      {pupilo.nombres.charAt(0)}{pupilo.apellidos.charAt(0)}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '14px', fontWeight: '500', color: '#334155' }}>{pupilo.nombres} {pupilo.apellidos}</div>
-                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>{pupilo.curso_nombre || 'Sin curso'}</div>
-                    </div>
-                  </div>
-                ))}
-                {pupilos.length === 0 && (
-                  <div style={{ padding: '12px 16px', color: '#94a3b8', fontSize: '14px' }}>
-                    No tiene pupilos vinculados
-                  </div>
-                )}
-                {/* Separador si hay pupilos pendientes */}
-                {pupilosPendientes.length > 0 && (
-                  <>
-                    <div style={{ borderTop: '2px solid #f59e0b', margin: '0' }}></div>
-                    <div
-                      style={{ padding: '12px 16px', cursor: 'pointer', background: '#fffbeb', color: '#d97706', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}
-                      onClick={() => { setMostrarSelectorPupilo(false); setMostrarModalPendientes(true); }}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>pending</span>
-                      {pupilosPendientes.length} pupilo(s) pendiente(s) de vincular
-                    </div>
-                  </>
-                )}
-                <div style={{ padding: '12px 16px', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #f1f5f9' }} onClick={() => setMostrarModalAgregar(true)}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person_add</span>
-                  Agregar Pupilo
-                </div>
-              </div>
-            )}
-          </div>
 
-          <div className="tabs-container">
-            <div className="tabs-nav" style={{
-              display: 'flex',
-              gap: '10px',
-              borderBottom: '1px solid #e2e8f0',
-              paddingBottom: '0',
-              marginBottom: '25px',
-              overflowX: 'auto',
-              position: 'relative',
-              zIndex: showTutorial ? 100005 : 1, // Elevado para el tutorial
-              background: showTutorial ? 'white' : 'transparent', // Fondo blanco para resaltar
-              borderRadius: showTutorial ? '8px' : '0'
-            }}>
-              {tabs.map(tab => (
+
+              {/* Notificación de pupilos pendientes */}
+              {pupilosPendientes.length > 0 && (
                 <button
-                  key={tab.id}
-                  data-tab-id={tab.id}
-                  className={`tab-btn ${tabActiva === tab.id ? 'active' : ''}`}
-                  onClick={() => setTabActiva(tab.id)}
+                  onClick={() => setMostrarModalPendientes(true)}
                   style={{
-                    padding: '12px 20px',
-                    background: 'none',
+                    background: '#f59e0b',
+                    color: 'white',
                     border: 'none',
-                    borderBottom: tabActiva === tab.id ? `3px solid var(--edu-${tab.color})` : '3px solid transparent',
-                    color: tabActiva === tab.id ? '#1e293b' : '#64748b',
-                    fontWeight: tabActiva === tab.id ? '600' : '500',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    transition: 'all 0.2s'
+                    fontWeight: '500',
+                    animation: 'pulse 2s infinite'
                   }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>{tab.icon}</span>
-                  {tab.label}
-
-                  {/* Integración del Tooltip de Ayuda */}
-                  <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
-
-                  {tab.id === 'comunicados' && comunicadosNoLeidos > 0 && (
-                    <span style={{ background: '#ef4444', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '10px', marginLeft: '5px' }}>
-                      {comunicadosNoLeidos}
-                    </span>
-                  )}
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>notification_important</span>
+                  {pupilosPendientes.length} pupilo(s) pendiente(s)
                 </button>
-              ))}
-            </div>
-
-            <div className="tabs-content">
-              {renderTabContent()}
+              )}
             </div>
           </div>
+
+          {/* Contenedor Flex para Selector (Normal) */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0' }}>
+
+            {/* Selector de Pupilo (Estilo Standard) */}
+            <div className="pupilo-selector-container" ref={dropdownRef} style={{ marginBottom: '0', position: 'relative' }}>
+              <button
+                className="btn-pupilo-current"
+                onClick={() => setMostrarSelectorPupilo(!mostrarSelectorPupilo)}
+                style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+              >
+                {pupiloSeleccionado ? (
+                  <>
+                    <div className="avatar-mini" style={{ width: '30px', height: '30px', background: '#3b82f6', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
+                      {pupiloSeleccionado.nombres.charAt(0)}
+                    </div>
+                    <span style={{ fontWeight: '500', color: '#64748b' }}>{pupiloSeleccionado.nombres} {pupiloSeleccionado.apellidos} ({pupiloSeleccionado.curso_nombre || 'Sin curso'})</span>
+                  </>
+                ) : (
+                  <span style={{ fontWeight: '500', color: '#94a3b8' }}>Sin pupilos registrados</span>
+                )}
+                <span className="material-symbols-outlined">expand_more</span>
+              </button>
+              {mostrarSelectorPupilo && (
+                <div className="pupilo-dropdown" style={{ position: 'absolute', top: '100%', left: '0', marginTop: '5px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', zIndex: 50, minWidth: '250px' }}>
+                  {pupilos.map(pupilo => (
+                    <div
+                      key={pupilo.id}
+                      className={`pupilo-dropdown-item ${pupiloSeleccionado && pupilo.id === pupiloSeleccionado.id ? 'active' : ''}`}
+                      onClick={() => handleCambiarPupilo(pupilo)}
+                      style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px' }}
+                    >
+                      <div className="pupilo-dropdown-avatar" style={{ width: '32px', height: '32px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#64748b' }}>
+                        {pupilo.nombres.charAt(0)}{pupilo.apellidos.charAt(0)}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: '500', color: '#334155' }}>{pupilo.nombres} {pupilo.apellidos}</div>
+                        <div style={{ fontSize: '12px', color: '#94a3b8' }}>{pupilo.curso_nombre || 'Sin curso'}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {pupilos.length === 0 && (
+                    <div style={{ padding: '12px 16px', color: '#94a3b8', fontSize: '14px' }}>
+                      No tiene pupilos vinculados
+                    </div>
+                  )}
+                  {/* Separador si hay pupilos pendientes */}
+                  {pupilosPendientes.length > 0 && (
+                    <>
+                      <div style={{ borderTop: '2px solid #f59e0b', margin: '0' }}></div>
+                      <div
+                        style={{ padding: '12px 16px', cursor: 'pointer', background: '#fffbeb', color: '#d97706', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        onClick={() => { setMostrarSelectorPupilo(false); setMostrarModalPendientes(true); }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>pending</span>
+                        {pupilosPendientes.length} pupilo(s) pendiente(s) de vincular
+                      </div>
+                    </>
+                  )}
+                  <div style={{ padding: '12px 16px', cursor: 'pointer', color: '#3b82f6', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #f1f5f9' }} onClick={() => setMostrarModalAgregar(true)}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person_add</span>
+                    Agregar Pupilo
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* BOTÓN VOLVER FLOTANTE FIJO (FIXED) */}
+            {tabActiva !== 'menu' && (
+              <button
+                className="btn-volver-menu"
+                onClick={() => setTabActiva('menu')}
+                style={{
+                  position: 'fixed',
+                  top: '85px', /* Debajo del header (~60px) + margen */
+                  right: '25px', /* Margen derecho */
+                  zIndex: 9999,
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 16px',
+                  backgroundColor: 'white',
+                  border: '2px solid #3b82f6',
+                  color: '#3b82f6',
+                  borderRadius: '50px',
+                  fontWeight: '700',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)' /* Sombra fuerte para flotar sobre contenido */
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px', fontWeight: 'bold' }}>arrow_back</span>
+                Volver
+              </button>
+            )}
+          </div>
+
+
+          {tabActiva === 'menu' ? (
+            /* === VISTA DE MENÚ (GRID DE LIBROS) === */
+            <div className="apoderado-menu-grid">
+              {tabs.map(tab => (
+                <div
+                  key={tab.id}
+                  className={`menu-card-libro ${tab.color}`}
+                  onClick={() => setTabActiva(tab.id)}
+                  data-tab-id={tab.id} // Para tutorial si es necesario
+                >
+                  <span className="material-symbols-outlined menu-card-icon">{tab.icon}</span>
+
+                  <div className="menu-card-info">
+                    <div className="menu-card-title">{tab.label}</div>
+                    <div className="menu-card-desc">
+                      {tab.desc}
+                    </div>
+                  </div>
+
+                  {/* Badge de notificaciones (ej: comunicados no leídos) */}
+                  {tab.id === 'comunicados' && comunicadosNoLeidos > 0 && (
+                    <div className="libro-badge">
+                      {comunicadosNoLeidos}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* === VISTA DE CONTENIDO (CON BOTÓN VOLVER) === */
+            <div className="apoderado-content-view">
+              {/* Botón volver eliminado de aquí */}
+
+              <div className="tabs-content" style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                {renderTabContent()}
+              </div>
+            </div>
+          )}
         </div>
 
       </main>
@@ -636,47 +691,13 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
         }
       `}</style>
 
+
       {/* Chat Flotante */}
       <ChatApoderado
         usuario={apoderadoActual}
         pupiloSeleccionado={pupiloSeleccionado}
       />
 
-      {/* Botón flotante para reactivar tutorial */}
-      {!showTutorial && (
-        <button
-          onClick={() => setShowTutorial(true)}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            left: '20px',
-            zIndex: 1000,
-            background: '#1e3a5f',
-            color: 'white',
-            border: 'none',
-            borderRadius: '50%',
-            width: '50px',
-            height: '50px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            title: 'Ver Tutorial'
-          }}
-        >
-          <span className="material-symbols-outlined">menu_book</span>
-        </button>
-      )}
-
-      {/* Tutorial Guía */}
-      <TutorialGuide
-        steps={APODERADO_STEPS}
-        activeTab={tabActiva}
-        isVisible={showTutorial}
-        onClose={cerrarTutorial}
-        onStepChange={handleTutorialStepChange}
-      />
     </div>
   );
 }

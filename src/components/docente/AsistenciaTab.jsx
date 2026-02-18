@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useResponsive, useDropdown } from '../../hooks';
 import { SelectNativo, SelectMovil } from './shared';
 import { ordenarCursos } from './shared/utils';
+
 import config from '../../config/env';
+import { cursosDB as cursosDemo } from '../../data/demoData';
 
 // Componente radio para asistencia
 const AsistenciaRadio = ({ alumnoId, estado, estadoActual, onChange, disabled }) => (
@@ -126,25 +128,9 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
   // Cargar cursos del docente
   useEffect(() => {
     const cargarCursos = async () => {
-      if (!docenteId || !establecimientoId) {
-        setCargandoCursos(false);
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          `${config.apiBaseUrl}/docente/${docenteId}/cursos?establecimiento_id=${establecimientoId}`
-        );
-        const data = await response.json();
-
-        if (data.success) {
-          setCursos(ordenarCursos(data.data));
-        }
-      } catch (error) {
-        console.error('Error al cargar cursos:', error);
-      } finally {
-        setCargandoCursos(false);
-      }
+      // Mock Demo
+      setCursos(ordenarCursos(cursosDemo));
+      setCargandoCursos(false);
     };
 
     cargarCursos();
@@ -166,60 +152,41 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
 
     setCargandoAlumnos(true);
 
-    try {
-      // Cargar alumnos del curso
-      const responseAlumnos = await fetch(`${config.apiBaseUrl}/curso/${cursoSeleccionado}/alumnos`);
-      const dataAlumnos = await responseAlumnos.json();
+    setCargandoAlumnos(true);
 
-      if (!dataAlumnos.success) {
-        alert('Error al cargar alumnos');
-        return;
-      }
+    // Mock Demo Lista Alumnos y Asistencia
+    setTimeout(() => {
+      const alumnosMock = Array.from({ length: 25 }, (_, i) => ({
+        id: i + 1,
+        nombres: `Alumno ${i + 1}`,
+        apellidos: `Estudiante`,
+        rut: `11.111.11${i}-K`
+      }));
 
-      // Ordenar alfabeticamente por apellido
-      const alumnosOrdenados = dataAlumnos.data.sort((a, b) => (a.apellidos || '').localeCompare(b.apellidos || ''));
+      // Ordenar
+      const alumnosOrdenados = alumnosMock.sort((a, b) => (a.apellidos || '').localeCompare(b.apellidos || ''));
       setAlumnos(alumnosOrdenados);
 
-      // Verificar si ya existe asistencia para hoy
-      const responseAsistencia = await fetch(
-        `${config.apiBaseUrl}/asistencia/verificar/${cursoSeleccionado}/${fechaHoy}`
-      );
-      const dataAsistencia = await responseAsistencia.json();
+      // Mock asistencia random
+      const asistenciaInicial = {};
+      alumnosOrdenados.forEach(alumno => {
+        const rand = Math.random();
+        let estado = 'presente';
+        if (rand > 0.8) estado = 'ausente';
+        else if (rand > 0.9) estado = 'tardio';
 
-      if (dataAsistencia.success && dataAsistencia.existe) {
-        // Cargar asistencia existente
-        const asistenciaInicial = {};
-        alumnosOrdenados.forEach(alumno => {
-          const registro = dataAsistencia.data[alumno.id];
-          asistenciaInicial[alumno.id] = {
-            estado: registro?.estado || 'presente',
-            observacion: registro?.observacion || ''
-          };
-        });
-        setAsistencia(asistenciaInicial);
-        setAsistenciaExistente(true);
-        setModoEdicion(false);
-      } else {
-        // Nueva asistencia - todos presentes por defecto
-        const asistenciaInicial = {};
-        alumnosOrdenados.forEach(alumno => {
-          asistenciaInicial[alumno.id] = {
-            estado: 'presente',
-            observacion: ''
-          };
-        });
-        setAsistencia(asistenciaInicial);
-        setAsistenciaExistente(false);
-        setModoEdicion(true);
-      }
+        asistenciaInicial[alumno.id] = {
+          estado: estado,
+          observacion: ''
+        };
+      });
 
+      setAsistencia(asistenciaInicial);
+      setAsistenciaExistente(Math.random() > 0.5); // Randomly say it exists or not
+      setModoEdicion(true); // Always allow edit in demo
       setMostrarLista(true);
-    } catch (error) {
-      console.error('Error al cargar lista:', error);
-      alert('Error al cargar la lista');
-    } finally {
       setCargandoAlumnos(false);
-    }
+    }, 500);
   };
 
   const handleAsistenciaChange = (alumnoId, estado) => {
@@ -262,35 +229,14 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
 
     setGuardando(true);
 
-    try {
-      const response = await fetch(`${config.apiBaseUrl}/asistencia/registrar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          establecimiento_id: establecimientoId,
-          curso_id: cursoSeleccionado,
-          fecha: fechaHoy,
-          asistencia,
-          registrado_por: usuarioId,
-          docente_id: docenteId
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert('Asistencia guardada exitosamente');
-        setAsistenciaExistente(true);
-        setModoEdicion(false);
-      } else {
-        alert(data.error || 'Error al guardar asistencia');
-      }
-    } catch (error) {
-      console.error('Error al guardar asistencia:', error);
-      alert('Error al guardar asistencia');
-    } finally {
+    setGuardando(true);
+    // Mock Save
+    setTimeout(() => {
+      alert('Asistencia guardada exitosamente (DEMO)');
+      setAsistenciaExistente(true);
+      setModoEdicion(false);
       setGuardando(false);
-    }
+    }, 600);
   };
 
   const handleModificarAsistencia = () => {
@@ -414,16 +360,16 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
                 flexDirection: 'row',
                 justifyContent: 'center',
                 alignItems: 'center',
-                gap: '12px',
-                padding: '8px 10px',
+                gap: '15px',
+                padding: '16px 10px',
                 backgroundColor: '#f8fafc',
                 borderBottom: '1px solid #e2e8f0',
                 flexWrap: 'wrap'
               }}>
-                <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '500' }}>P = Presente</span>
-                <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: '500' }}>A = Ausente</span>
-                <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '500' }}>T = Tardio</span>
-                <span style={{ fontSize: '10px', color: '#3b82f6', fontWeight: '500' }}>J = Justificado</span>
+                <span style={{ fontSize: '24px', color: '#10b981', fontWeight: '800' }}>P = Presente</span>
+                <span style={{ fontSize: '24px', color: '#ef4444', fontWeight: '800' }}>A = Ausente</span>
+                <span style={{ fontSize: '24px', color: '#f59e0b', fontWeight: '800' }}>T = Tardio</span>
+                <span style={{ fontSize: '24px', color: '#3b82f6', fontWeight: '800' }}>J = Justificado</span>
               </div>
             )}
             <div className="table-container-scroll" style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '4px' }}>

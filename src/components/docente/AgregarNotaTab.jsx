@@ -3,6 +3,7 @@ import { useResponsive, useDropdown } from '../../hooks';
 import { SelectNativo, SelectMovil, AutocompleteAlumno } from './shared';
 import { ordenarCursos } from './shared/utils';
 import config from '../../config/env';
+import { cursosDB as cursosDemo, asignaturasDB as asignaturasDemo } from '../../data/demoData';
 
 // Simple Error Boundary for this component
 class ComponentErrorBoundary extends React.Component {
@@ -162,24 +163,9 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   // Cargar cursos del docente
   useEffect(() => {
     const cargarCursos = async () => {
-      if (!docenteId || !establecimientoId) {
-        setCargandoCursos(false);
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          `${config.apiBaseUrl}/docente/${docenteId}/cursos?establecimiento_id=${establecimientoId}`
-        );
-        const data = await response.json();
-        if (data.success) {
-          setCursos(ordenarCursos(data.data || []));
-        }
-      } catch (error) {
-        console.error('Error al cargar cursos:', error);
-      } finally {
-        setCargandoCursos(false);
-      }
+      // Mock Demo
+      setCursos(ordenarCursos(cursosDemo));
+      setCargandoCursos(false);
     };
 
     cargarCursos();
@@ -188,19 +174,12 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   // Cargar tipos de evaluación
   useEffect(() => {
     const cargarTiposEvaluacion = async () => {
-      if (!establecimientoId) return;
-
-      try {
-        const response = await fetch(
-          `${config.apiBaseUrl}/tipos-evaluacion?establecimiento_id=${establecimientoId}`
-        );
-        const data = await response.json();
-        if (data.success) {
-          setTiposEvaluacion(data.data || []);
-        }
-      } catch (error) {
-        console.error('Error al cargar tipos de evaluación:', error);
-      }
+      // Mock Demo
+      setTiposEvaluacion([
+        { id: 1, nombre: 'Prueba Escrita' },
+        { id: 2, nombre: 'Trabajo Práctico' },
+        { id: 3, nombre: 'Interrogación' }
+      ]);
     };
 
     cargarTiposEvaluacion();
@@ -209,25 +188,16 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   // Cargar asignaturas cuando se selecciona curso
   useEffect(() => {
     const cargarAsignaturas = async () => {
-      if (!cursoSeleccionado || !docenteId || !establecimientoId) {
+      if (!cursoSeleccionado) {
         setAsignaturas([]);
         return;
       }
-
       setCargandoAsignaturas(true);
-      try {
-        const response = await fetch(
-          `${config.apiBaseUrl}/docente/${docenteId}/asignaturas-por-curso/${cursoSeleccionado}?establecimiento_id=${establecimientoId}`
-        );
-        const data = await response.json();
-        if (data.success) {
-          setAsignaturas(data.data || []);
-        }
-      } catch (error) {
-        console.error('Error al cargar asignaturas:', error);
-      } finally {
+      // Mock Demo
+      setTimeout(() => {
+        setAsignaturas(asignaturasDemo);
         setCargandoAsignaturas(false);
-      }
+      }, 200);
     };
 
     cargarAsignaturas();
@@ -242,17 +212,17 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
       }
 
       setCargandoAlumnos(true);
-      try {
-        const response = await fetch(`${config.apiBaseUrl}/curso/${cursoSeleccionado}/alumnos`);
-        const data = await response.json();
-        if (data.success) {
-          setAlumnos(data.data || []);
-        }
-      } catch (error) {
-        console.error('Error al cargar alumnos:', error);
-      } finally {
+      // Mock Demo
+      setTimeout(() => {
+        const alumnosMock = Array.from({ length: 25 }, (_, i) => ({
+          id: i + 1,
+          nombres: `Alumno ${i + 1}`,
+          apellidos: `Estudiante`,
+          nombre_completo: `Alumno ${i + 1} Estudiante`
+        }));
+        setAlumnos(alumnosMock);
         setCargandoAlumnos(false);
-      }
+      }, 200);
     };
 
     cargarAlumnos();
@@ -260,24 +230,23 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
 
   // Cargar notas recientes
   const cargarNotasRecientes = async (cursoId = null, alumnoId = null) => {
-    if (!docenteId || !establecimientoId) return;
-
     setCargandoNotas(true);
-    try {
-      let url = `${config.apiBaseUrl}/docente/${docenteId}/notas-recientes?establecimiento_id=${establecimientoId}&limit=50`; // Aumenté el limite para que el scroll tenga sentido
-      if (cursoId) url += `&curso_id=${cursoId}`;
-      if (alumnoId) url += `&alumno_id=${alumnoId}`;
-
-      const response = await fetch(url);
-      const data = await response.json();
-      if (data.success) {
-        setNotasRecientes(data.data || []);
-      }
-    } catch (error) {
-      console.error('Error al cargar notas recientes:', error);
-    } finally {
+    // Mock Demo
+    setTimeout(() => {
+      const notasMock = Array.from({ length: 15 }, (_, i) => ({
+        id: i + 1,
+        fecha_evaluacion: new Date(new Date().setDate(new Date().getDate() - i)).toISOString().split('T')[0],
+        alumno_nombres: `Alumno ${Math.floor(Math.random() * 25) + 1} Estudiante`,
+        alumno_apellidos: 'Estudiante',
+        curso_nombre: cursosDemo.find(c => c.id === (cursoId || 1))?.nombre || 'Curso Demo',
+        asignatura_nombre: asignaturasDemo[Math.floor(Math.random() * asignaturasDemo.length)].nombre,
+        trimestre: Math.floor(Math.random() * 3) + 1,
+        nota: (Math.random() * 6 + 1).toFixed(1),
+        es_pendiente: Math.random() > 0.9
+      }));
+      setNotasRecientes(notasMock);
       setCargandoNotas(false);
-    }
+    }, 300);
   };
 
   // Cargar notas recientes al inicio
@@ -295,15 +264,15 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
         return;
       }
 
-      try {
-        const response = await fetch(`${config.apiBaseUrl}/curso/${filtroCurso}/alumnos`);
-        const data = await response.json();
-        if (data.success) {
-          setAlumnosFiltro(data.data || []);
-        }
-      } catch (error) {
-        console.error('Error al cargar alumnos para filtro:', error);
-      }
+      // Mock filter
+      setTimeout(() => {
+        const alumnosMock = Array.from({ length: 25 }, (_, i) => ({
+          id: i + 1,
+          nombres: `Alumno ${i + 1}`,
+          apellidos: `Estudiante`
+        }));
+        setAlumnosFiltro(alumnosMock);
+      }, 100);
     };
 
     cargarAlumnosFiltro();
@@ -366,38 +335,16 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
     setGuardando(true);
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/notas/registrar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          establecimiento_id: establecimientoId,
-          alumno_id: parseInt(alumnoSeleccionado),
-          asignatura_id: parseInt(asignaturaSeleccionada),
-          curso_id: parseInt(cursoSeleccionado),
-          docente_id: docenteId,
-          registrado_por: usuarioId,
-          tipo_evaluacion_id: tipoEvaluacion ? parseInt(tipoEvaluacion) : null,
-          trimestre: parseInt(trimestre),
-          nota: notaPendiente ? null : parseFloat(nota),
-          es_pendiente: notaPendiente,
-          fecha_evaluacion: fecha,
-          comentario: comentario || null
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        alert('Nota registrada exitosamente');
+      // Mock Save
+      setTimeout(() => {
+        alert('Nota registrada exitosamente (DEMO)');
         limpiarFormulario();
         cargarNotasRecientes(filtroCurso || null, filtroAlumno || null);
-      } else {
-        alert(data.error || 'Error al registrar nota');
-      }
+        setGuardando(false);
+      }, 600);
     } catch (error) {
       console.error('Error al registrar nota:', error);
       alert('Error al registrar nota');
-    } finally {
       setGuardando(false);
     }
   };

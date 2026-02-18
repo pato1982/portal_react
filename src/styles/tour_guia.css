@@ -215,25 +215,25 @@
     }
 
     .tour-bubble {
-        position: relative !important;
-        top: auto !important;
-        left: auto !important;
-        transform: none !important;
-        width: 90%;
-        max-width: 350px;
-        margin-top: 25px;
-        /* Separación robusta */
-        animation: popInBubbleMobile 0.5s ease-out forwards;
+        position: absolute !important;
+        /* Permitir control top/left desde JS */
+        width: 100%;
+        max-width: 90%;
+        margin-top: 0;
+        left: 5% !important;
+        /* Centrado horizontal aproximado pero controlable */
         opacity: 0;
+        animation: popInBubbleMobile 0.5s ease-out forwards;
     }
 
     .tour-character {
-        position: relative !important;
-        top: auto !important;
-        left: auto !important;
-        width: 100px;
+        position: absolute !important;
+        /* Permitir control top/left desde JS */
         margin-bottom: 0;
         z-index: 101000;
+        width: 80px;
+        /* Un poco más pequeño en móvil */
+        transition: top 0.3s ease, left 0.3s ease;
     }
 
     .tour-character img {

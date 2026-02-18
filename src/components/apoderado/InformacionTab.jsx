@@ -34,14 +34,34 @@ function InformacionTab({ pupilo, apoderado }) {
 
   return (
     <div className="tab-panel active">
+      <style>{`
+        @media (max-width: 699px) {
+          .card-header h3 {
+            font-size: 10px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important; /* Separación del icono */
+          }
+          .card-header h3 svg {
+            width: 14px !important;
+            height: 14px !important;
+          }
+          .info-label {
+            font-size: 10px !important;
+          }
+          .info-value {
+            font-size: 12px !important;
+          }
+        }
+      `}</style>
       <div className="info-section">
         {/* Datos del Alumno */}
         <div className="card">
           <div className="card-header">
             <h3>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
               </svg>
               Datos del Alumno
             </h3>
@@ -91,10 +111,10 @@ function InformacionTab({ pupilo, apoderado }) {
           <div className="card-header">
             <h3>
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
               Datos del Apoderado
             </h3>

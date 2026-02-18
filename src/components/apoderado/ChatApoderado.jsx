@@ -400,9 +400,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
             <span className="chatv2-header-title">
               Mensajería {pupiloSeleccionado ? `- ${pupiloSeleccionado.nombres}` : ''}
             </span>
-            {totalNoLeidos > 0 && (
-              <span className="chatv2-header-badge">{totalNoLeidos}</span>
-            )}
           </div>
           <button className="chatv2-close-btn" onClick={toggleChat}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -429,7 +426,6 @@ function ChatApoderado({ usuario, pupiloSeleccionado }) {
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                   <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
-                {totalNoLeidos > 0 && <span className="chatv2-nav-badge">{totalNoLeidos}</span>}
               </div>
               <span>Docentes</span>
             </button>

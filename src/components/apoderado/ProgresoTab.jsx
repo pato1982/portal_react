@@ -28,7 +28,7 @@ ChartJS.register(
   Filler
 );
 
-function ProgresoTab({ pupilo }) {
+function ProgresoTab({ pupilo, notas: notasProp }) {
   const [asignaturaSeleccionada, setAsignaturaSeleccionada] = useState('todas');
 
   // Hook responsivo para tamaños de pantalla
@@ -42,6 +42,59 @@ function ProgresoTab({ pupilo }) {
 
   // Cargar datos de progreso cuando cambia el pupilo
   useEffect(() => {
+    // Si hay prop de notas (DEMO MODE o data pre-cargada)
+    if (notasProp && notasProp.length > 0) {
+      // Calcular datosProgreso localmente
+      const raw = notasProp;
+      setNotasRaw(raw);
+
+      // 1. Asignaturas únicas
+      const asignaturasUnique = [...new Set(raw.map(n => n.asignatura))];
+
+      // 2. Promedios por asignatura
+      const promediosAsig = {};
+      asignaturasUnique.forEach(asig => {
+        const notasAsig = raw.filter(n => n.asignatura === asig);
+        const suma = notasAsig.reduce((acc, n) => acc + parseFloat(n.nota), 0);
+        promediosAsig[asig] = (suma / notasAsig.length).toFixed(1);
+      });
+
+      // 3. Promedios mensuales
+      const promediosMensuales = {};
+      for (let m = 3; m <= 12; m++) {
+        const result = raw.filter(n => {
+          const f = new Date(n.fecha || n.fecha_evaluacion);
+          return f.getMonth() + 1 === m;
+        });
+        if (result.length > 0) {
+          const sum = result.reduce((acc, n) => acc + parseFloat(n.nota), 0);
+          promediosMensuales[m] = parseFloat((sum / result.length).toFixed(1));
+        } else {
+          promediosMensuales[m] = null;
+        }
+      }
+
+      // 4. Estadísticas generales
+      const notasValidas = raw.filter(n => n.nota);
+      const sumaTotal = notasValidas.reduce((acc, n) => acc + parseFloat(n.nota), 0);
+      const promedioGral = notasValidas.length ? (sumaTotal / notasValidas.length).toFixed(1) : 0;
+      const aprobados = notasValidas.filter(n => parseFloat(n.nota) >= 4.0).length;
+      const porcentajeAprobacion = notasValidas.length ? (aprobados / notasValidas.length) * 100 : 0;
+
+      setDatosProgreso({
+        estadisticas: {
+          promedio: promedioGral,
+          porcentajeAprobacion: porcentajeAprobacion,
+          totalNotas: notasValidas.length
+        },
+        promediosPorAsignatura: promediosAsig,
+        promediosMensuales: promediosMensuales,
+        asignaturas: asignaturasUnique,
+        asistencia: { porcentaje: 92 } // Mock asistencia
+      });
+      return;
+    }
+
     const cargarProgreso = async () => {
       if (!pupilo?.id) {
         setDatosProgreso(null);
@@ -79,7 +132,7 @@ function ProgresoTab({ pupilo }) {
     };
 
     cargarProgreso();
-  }, [pupilo?.id]);
+  }, [pupilo?.id, notasProp]);
 
   // Estadísticas para KPIs
   const estadisticasFiltradas = useMemo(() => {
@@ -257,6 +310,39 @@ function ProgresoTab({ pupilo }) {
         .chart-header { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
         .chart-body { flex: 1; min-height: 220px; padding: 15px; position: relative; }
         .nota-excelente { color: #059669; } .nota-buena { color: #2563eb; } .nota-suficiente { color: #d97706; } .nota-insuficiente { color: #dc2626; }
+        
+        @media (max-width: 699px) {
+          .chart-header h3, h3 {
+            font-size: 14px !important;
+          }
+          .kpi-val {
+            font-size: 16px !important;
+          }
+          .chart-card {
+            border-radius: 0 !important;
+          }
+          .kpi-label {
+            font-size: 10px !important;
+          }
+          .chart-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+          }
+          .chart-header h3 {
+            font-size: 10px !important;
+            flex: 1 !important; /* Que ocupe el espacio */
+            white-space: nowrap !important;
+          }
+          .chart-header select {
+            font-size: 11px !important; /* Agrandar un poco texto */
+            padding: 2px 0px !important; /* Reducir padding horizontal */
+            width: auto !important;
+            max-width: 110px !important; /* Limitar ancho máximo */
+            text-overflow: ellipsis !important;
+            margin-left: 5px !important;
+          }
+        }
       `}</style>
 
       <div className="progreso-grid">

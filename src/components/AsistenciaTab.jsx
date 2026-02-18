@@ -2,12 +2,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useDropdown } from '../hooks';
 import { useMensaje } from '../contexts';
 import config from '../config/env';
+import { cursosDB as cursosDemo } from '../data/demoData';
 
 function AsistenciaTab() {
   const { mostrarMensaje } = useMensaje();
   const [filtros, setFiltros] = useState({
-    curso: '',
-    cursoId: null
+    curso: cursosDemo?.[0]?.nombre || '',
+    cursoId: cursosDemo?.[0]?.id || null
   });
   // Año escolar: marzo (2) a diciembre (11)
   const [mesSeleccionado, setMesSeleccionado] = useState(2); // Marzo por defecto
@@ -149,91 +150,90 @@ function AsistenciaTab() {
   }, [filtros.cursoId]);
 
   const cargarCursos = async () => {
-    try {
-      const response = await fetch(`${config.apiBaseUrl}/cursos`);
-      const data = await response.json();
-      if (data.success) {
-        setCursosDB(data.data || []);
-      }
-    } catch (error) {
-      console.error('Error cargando cursos:', error);
+    setCursosDB(cursosDemo);
+
+    // Auto-seleccionar primer curso para DEMO si hay cursos y no hay selección
+    if (cursosDemo && cursosDemo.length > 0 && !filtros.cursoId) {
+      const primerCurso = cursosDemo[0];
+      setFiltros(prev => ({
+        ...prev,
+        curso: primerCurso.nombre,
+        cursoId: primerCurso.id
+      }));
     }
   };
 
   const cargarAlumnosDelCurso = async (cursoId) => {
-    try {
-      const response = await fetch(`${config.apiBaseUrl}/alumnos/por-curso/${cursoId}`);
-      const data = await response.json();
-      if (data.success) {
-        setAlumnosDelCurso(data.data || []);
-      }
-    } catch (error) {
-      console.error('Error cargando alumnos:', error);
-    }
+    // Mock alumnos
+    const alumnos = Array.from({ length: 25 }, (_, i) => ({
+      id: i + 1,
+      nombre_completo: `Alumno Estudiante ${i + 1} del Curso ${cursoId}`,
+      rut: `22.333.${String(i).padStart(3, '0')}-K`
+    }));
+    setAlumnosDelCurso(alumnos);
   };
 
   const cargarAsistencia = async (cursoId, mes) => {
     setCargando(true);
-    try {
-      const response = await fetch(
-        `${config.apiBaseUrl}/asistencia?curso_id=${cursoId}&mes=${mes}&anio=${anioActual}`
-      );
-      const data = await response.json();
-      if (data.success) {
-        setAsistenciaData(data.data || {});
+    // Mock Asistencia
+    setTimeout(() => {
+      const mockAsistencia = {};
+      // Generar asistencia aleatoria para los primeros 25 IDs
+      for (let i = 1; i <= 25; i++) {
+        mockAsistencia[i] = {};
+        for (let d = 1; d <= 31; d++) {
+          if (Math.random() > 0.8) {
+            const estados = ['ausente', 'atrasado', 'justificado'];
+            mockAsistencia[i][d] = {
+              id: `${i}-${d}`,
+              estado: estados[Math.floor(Math.random() * estados.length)],
+              observacion: ''
+            };
+          } else {
+            mockAsistencia[i][d] = {
+              id: `${i}-${d}`,
+              estado: 'presente',
+              observacion: ''
+            };
+          }
+        }
       }
-    } catch (error) {
-      console.error('Error cargando asistencia:', error);
-    } finally {
+      setAsistenciaData(mockAsistencia);
       setCargando(false);
-    }
+    }, 300);
   };
 
   const cargarEstadisticas = async (cursoId) => {
-    try {
-      let url = `${config.apiBaseUrl}/asistencia/estadisticas?modo=anual&anio=${anioActual}`;
-      if (cursoId) url += `&curso_id=${cursoId}`;
-
-      const response = await fetch(url);
-      const data = await response.json();
-      if (data.success) {
-        setEstadisticas(data.data);
-      }
-    } catch (error) {
-      console.error('Error cargando estadísticas:', error);
-    }
+    // Mock estadisticas
+    setEstadisticas({
+      total: 1250,
+      presente: 1100,
+      ausente: 100,
+      justificado: 30,
+      atrasado: 20,
+      porcentaje_asistencia: '88.5'
+    });
   };
 
   const cargarAlumnosBajoUmbral = async (cursoId) => {
-    try {
-      let url = `${config.apiBaseUrl}/asistencia/alumnos-bajo-umbral?anio=${anioActual}`;
-      if (cursoId) url += `&curso_id=${cursoId}`;
-
-      const response = await fetch(url);
-      const data = await response.json();
-      if (data.success) {
-        setAlumnosBajoUmbral(data.data || []);
-      }
-    } catch (error) {
-      console.error('Error cargando alumnos bajo umbral:', error);
-    }
+    // Mock bajo umbral
+    setAlumnosBajoUmbral([
+      { id: 5, nombre: 'Alumno Estudiante 5', porcentaje: '82.5%' },
+      { id: 12, nombre: 'Alumno Estudiante 12', porcentaje: '75.0%' }
+    ]);
   };
 
   const cargarDatosMensuales = async (cursoId, mes) => {
-    try {
-      // 1. Estadisticas
-      const resStats = await fetch(`${config.apiBaseUrl}/asistencia/estadisticas?curso_id=${cursoId}&mes=${mes}&anio=${anioActual}`);
-      const dataStats = await resStats.json();
-      if (dataStats.success) setStatsMensuales(dataStats.data);
-
-      // 2. Riesgo (Bajo Umbral en ese mes)
-      const resRiesgo = await fetch(`${config.apiBaseUrl}/asistencia/alumnos-bajo-umbral?curso_id=${cursoId}&mes=${mes}&anio=${anioActual}`);
-      const dataRiesgo = await resRiesgo.json();
-      if (dataRiesgo.success) setRiesgoMensual(dataRiesgo.data || []);
-
-    } catch (error) {
-      console.error('Error cargando datos mensuales:', error);
-    }
+    // Mock datos mensuales
+    setStatsMensuales({
+      total: 450,
+      presente: 420,
+      ausente: 20,
+      justificado: 5,
+      atrasado: 5,
+      porcentaje_asistencia: '93.3'
+    });
+    setRiesgoMensual([]);
   };
 
   // Generar días del mes seleccionado (excluyendo solo fines de semana)
@@ -336,56 +336,25 @@ function AsistenciaTab() {
 
     setPopup(prev => ({ ...prev, guardando: true }));
 
-    try {
-      const fechaFormateada = `${anioActual}-${String(mesSeleccionado + 1).padStart(2, '0')}-${String(popup.diaInfo.dia).padStart(2, '0')}`;
+    // Mock Guardar
+    setTimeout(async () => {
+      mostrarMensaje('Exito', 'Asistencia registrada correctamente (DEMO)', 'success');
 
-      if (popup.registroId) {
-        // Actualizar registro existente
-        const response = await fetch(`${config.apiBaseUrl}/asistencia/${popup.registroId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            estado: popup.estadoNuevo,
-            observacion: popup.observacion
-          })
-        });
-        const data = await response.json();
-        if (data.success) {
-          mostrarMensaje('Exito', 'Asistencia actualizada correctamente', 'success');
-        } else {
-          throw new Error(data.error);
-        }
-      } else {
-        // Crear nuevo registro
-        const response = await fetch(`${config.apiBaseUrl}/asistencia`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            alumno_id: popup.alumno.id,
-            curso_id: filtros.cursoId,
-            fecha: fechaFormateada,
-            estado: popup.estadoNuevo,
-            observacion: popup.observacion
-          })
-        });
-        const data = await response.json();
-        if (data.success) {
-          mostrarMensaje('Exito', 'Asistencia registrada correctamente', 'success');
-        } else {
-          throw new Error(data.error);
-        }
-      }
+      // Actualizar localmente el estado para reflejar el cambio en la UI
+      setAsistenciaData(prev => {
+        const newData = { ...prev };
+        if (!newData[popup.alumno.id]) newData[popup.alumno.id] = {};
 
-      // Recargar datos
-      await cargarAsistencia(filtros.cursoId, mesSeleccionado);
-      await cargarEstadisticas(filtros.cursoId);
-      await cargarAlumnosBajoUmbral(filtros.cursoId);
+        newData[popup.alumno.id][popup.diaInfo.dia] = {
+          id: popup.registroId || `new-${Date.now()}`,
+          estado: popup.estadoNuevo,
+          observacion: popup.observacion
+        };
+        return newData;
+      });
+
       cerrarPopup();
-    } catch (error) {
-      console.error('Error guardando asistencia:', error);
-      mostrarMensaje('Error', 'Error al guardar asistencia', 'error');
-      setPopup(prev => ({ ...prev, guardando: false }));
-    }
+    }, 500);
   };
 
   // Renderizar icono de asistencia

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import HelpTooltip from '../common/HelpTooltip';
-import TutorialGuide from '../common/TutorialGuide';
 import AsistenciaTab from './AsistenciaTab';
 import AgregarNotaTab from './AgregarNotaTab';
 import ModificarNotaTab from './ModificarNotaTab';
@@ -8,54 +7,12 @@ import VerNotasTab from './VerNotasTab';
 import ProgresoTab from './ProgresoTab';
 import ChatDocenteV2 from '../ChatDocenteV2';
 import config from '../../config/env';
+import '../../styles/apoderado_menu.css';
 
 function DocentePage({ onCambiarVista, usuarioDocente }) {
   const [tabActual, setTabActual] = useState(() => localStorage.getItem('docenteActiveTab') || 'asistencia');
 
-  // Estado para el tutorial (se muestra siempre al recargar por solicitud)
-  const [showTutorial, setShowTutorial] = useState(true);
-
-  const cerrarTutorial = () => {
-    setShowTutorial(false);
-    localStorage.setItem('hasSeenDocenteTour', 'true');
-  };
-
-  const handleTutorialStepChange = (tabId) => {
-    setTabActual(tabId);
-  };
-
-  const DOCENTE_STEPS = [
-    {
-      target: 'asistencia',
-      title: 'Asistencia',
-      content: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados.'
-    },
-    {
-      target: 'agregar-nota',
-      title: 'Agregar Nota',
-      content: 'Ingrese nuevas calificaciones al libro de clases. Seleccione curso, asignatura, evaluación y registre las notas.'
-    },
-    {
-      target: 'modificar-nota',
-      title: 'Modificar Nota',
-      content: 'Corrija calificaciones ingresadas erróneamente. Busque la evaluación y edite la nota. Los cambios quedan registrados.'
-    },
-    {
-      target: 'ver-notas',
-      title: 'Ver Notas',
-      content: 'Visualice el panorama completo de calificaciones: sábana de notas, promedios parciales y avance curricular.'
-    },
-    {
-      target: 'progreso',
-      title: 'Progreso',
-      content: 'Analíticas de rendimiento. Revise gráficos de aprobación, promedios e identifique estudiantes que requieren apoyo.'
-    }
-  ];
-
-  // Persistir tab activa
-  useEffect(() => {
-    localStorage.setItem('docenteActiveTab', tabActual);
-  }, [tabActual]);
+  const [vistaActual, setVistaActual] = useState('menu');
 
   // Estado para Keep Alive Tabs (Optimización de carga)
   const [visitedTabs, setVisitedTabs] = useState(new Set([tabActual]));
@@ -68,6 +25,7 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
       return newSet;
     });
   }, [tabActual]);
+
   const [currentDate, setCurrentDate] = useState('');
   const [establecimientoDropdownAbierto, setEstablecimientoDropdownAbierto] = useState(false);
   const [establecimientosDocente, setEstablecimientosDocente] = useState([]);
@@ -76,7 +34,6 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
   const dropdownRef = useRef(null);
 
   // Lógica de visibilidad de ayuda (Solo establecimiento ID 1)
-  // Nota: establecimientoActual.id puede ser 1 numeral o '1' string, importante validar ambos o parsear.
   const mostrarAyuda = establecimientoActual?.id === 1 || establecimientoActual?.id === '1';
 
   // Datos del docente desde el usuario logueado
@@ -96,32 +53,16 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
     updateDate();
   }, []);
 
-  // Cargar establecimientos del docente
+  // Cargar establecimientos del docente (DEMO LOCAL)
   useEffect(() => {
-    const cargarEstablecimientos = async () => {
-      if (!docenteActual.id) {
-        setCargandoEstablecimientos(false);
-        return;
-      }
-
-      try {
-        const response = await fetch(`${config.apiBaseUrl}/docente/${docenteActual.id}/establecimientos`);
-        const data = await response.json();
-
-        if (data.success && data.data.length > 0) {
-          setEstablecimientosDocente(data.data);
-          setEstablecimientoActual(data.data[0]);
-        } else {
-          setEstablecimientosDocente([]);
-          setEstablecimientoActual({ id: 0, nombre: 'Sin establecimiento', comuna: '' });
-        }
-      } catch (error) {
-        console.error('Error al cargar establecimientos:', error);
-        setEstablecimientosDocente([]);
-        setEstablecimientoActual({ id: 0, nombre: 'Sin establecimiento', comuna: '' });
-      } finally {
-        setCargandoEstablecimientos(false);
-      }
+    const cargarEstablecimientos = () => {
+      // Datos simulados para modo local/demo
+      const dataDemo = [
+        { id: 1, nombre: 'Colegio Demo', comuna: 'Santiago' }
+      ];
+      setEstablecimientosDocente(dataDemo);
+      setEstablecimientoActual(dataDemo[0]);
+      setCargandoEstablecimientos(false);
     };
 
     cargarEstablecimientos();
@@ -142,39 +83,39 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
     {
       id: 'asistencia',
       label: 'Asistencia',
-      desc: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados. Recuerde que este registro es oficial y fundamental para la subvención escolar.'
+      icon: 'how_to_reg',
+      color: 'azul',
+      desc: 'Herramienta diaria para el registro de asistencia. Seleccione el curso y marque los alumnos presentes, ausentes o atrasados.'
     },
     {
       id: 'agregar-nota',
       label: 'Agregar Nota',
-      desc: 'Ingrese nuevas calificaciones al libro de clases. Primero seleccione el curso y la asignatura, luego el tipo de evaluación (Prueba, Trabajo, etc.) y finalmente ingrese las notas para cada alumno.'
+      icon: 'post_add',
+      color: 'celeste',
+      desc: 'Ingrese nuevas calificaciones al libro de clases. Primero seleccione el curso y la asignatura, luego el tipo de evaluación.'
     },
     {
       id: 'modificar-nota',
       label: 'Modificar Nota',
-      desc: 'Permite corregir calificaciones ingresadas erróneamente. Busque la evaluación específica y edite la nota del alumno. Tenga en cuenta que todas las modificaciones quedan registradas para auditoría interna.'
+      icon: 'edit_note',
+      color: 'naranja',
+      desc: 'Permite corregir calificaciones ingresadas erróneamente. Busque la evaluación específica y edite la nota del alumno.'
     },
     {
       id: 'ver-notas',
       label: 'Ver Notas',
-      desc: 'Visualice el panorama completo de calificaciones de sus cursos. Consulte la sábana de notas, promedios parciales y avance curricular de todos sus estudiantes en una sola vista.'
+      icon: 'table_view',
+      color: 'verde',
+      desc: 'Visualice el panorama completo de calificaciones de sus cursos. Consulte la sábana de notas y promedios.'
     },
     {
       id: 'progreso',
       label: 'Progreso',
-      desc: 'Analíticas de rendimiento de sus cursos. Revise gráficos de aprobación/reprobación, promedios por asignatura e identifique tempranamente a estudiantes que requieren apoyo pedagógico adicional.'
+      icon: 'monitoring',
+      color: 'morado',
+      desc: 'Analíticas de rendimiento de sus cursos. Revise gráficos de aprobación/reprobación y promedios por asignatura.'
     }
   ];
-
-  // Auto-scroll al tab activo durante el tutorial
-  useEffect(() => {
-    if (showTutorial) {
-      const activeTabEl = document.querySelector(`button[data-tab-id="${tabActual}"]`);
-      if (activeTabEl) {
-        activeTabEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }
-    }
-  }, [tabActual, showTutorial]);
 
   const renderTabsContent = () => {
     const tabsConfig = [
@@ -222,41 +163,6 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
 
   return (
     <div className="app-container">
-      {/* Botón flotante para reactivar tutorial */}
-      {!showTutorial && (
-        <button
-          onClick={() => setShowTutorial(true)}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            left: '20px',
-            zIndex: 90,
-            background: '#1e3a5f',
-            color: 'white',
-            border: 'none',
-            borderRadius: '50%',
-            width: '50px',
-            height: '50px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            title: 'Ver Tutorial'
-          }}
-        >
-          <span className="material-symbols-outlined">help</span>
-        </button>
-      )}
-
-      <TutorialGuide
-        isVisible={showTutorial}
-        onClose={cerrarTutorial}
-        activeTab={tabActual}
-        onStepChange={handleTutorialStepChange}
-        steps={DOCENTE_STEPS}
-      />
-
       <header className="main-header">
         <div className="header-content">
           <div className="brand">
@@ -329,51 +235,66 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
             </button>
           </div>
         </div>
-      </header>
+      </header >
 
-      <main className="main-content">
+      <main className="main-content apoderado-main">
         <section className="control-panel">
           <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2>Panel de Control - Docente</h2>
-            <button
-              onClick={() => setShowTutorial(true)}
-              className="btn-primary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                backgroundColor: '#f59e0b',
-                border: 'none',
-                padding: '6px 12px',
-                fontSize: '13px',
-                borderRadius: '6px',
-                cursor: 'pointer'
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>help</span>
-              Ver Tutorial
-            </button>
+            <h2>{vistaActual === 'menu' ? 'Panel de Control - Docente' : tabs.find(t => t.id === tabActual)?.label}</h2>
+            {vistaActual === 'contenido' && (
+              <button
+                onClick={() => setVistaActual('menu')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 16px',
+                  backgroundColor: 'white',
+                  border: '2px solid #3b82f6',
+                  color: '#3b82f6',
+                  borderRadius: '50px',
+                  fontWeight: '700',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px', fontWeight: 'bold' }}>arrow_back</span>
+                Volver
+              </button>
+            )}
           </div>
 
           <div className="tabs-container">
-            <nav className="tabs-nav" style={{ position: 'relative', zIndex: showTutorial ? 100005 : 1, background: showTutorial ? 'white' : 'transparent', borderRadius: showTutorial ? '8px' : '0' }}>
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  data-tab-id={tab.id}
-                  className={`tab-btn ${tabActual === tab.id ? 'active' : ''}`}
-                  onClick={() => setTabActual(tab.id)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                >
-                  {tab.label}
-                  <HelpTooltip content={tab.desc} isVisible={mostrarAyuda} />
-                </button>
-              ))}
-            </nav>
+            {vistaActual === 'menu' ? (
+              <div className="apoderado-menu-grid">
+                {tabs.map(tab => (
+                  <div
+                    key={tab.id}
+                    className={`menu-card-libro ${tab.color}`}
+                    onClick={() => {
+                      setTabActual(tab.id);
+                      setVistaActual('contenido');
+                    }}
+                  >
+                    <span className="material-symbols-outlined menu-card-icon">{tab.icon}</span>
 
-            <div className="tabs-content">
-              {renderTabsContent()}
-            </div>
+                    <div className="menu-card-info">
+                      <div className="menu-card-title">{tab.label}</div>
+                      <div className="menu-card-desc">
+                        {tab.desc}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="apoderado-content-view">
+                <div className="tabs-content" style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                  {renderTabsContent()}
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </main>
@@ -393,7 +314,7 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
         }}
         establecimientoId={establecimientoActual?.id}
       />
-    </div>
+    </div >
   );
 }
 

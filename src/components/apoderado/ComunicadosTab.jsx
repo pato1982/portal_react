@@ -2,8 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useResponsive } from '../../hooks';
 import config from '../../config/env';
 
-function ComunicadosTab({ pupilo, usuarioId }) {
-  const [comunicados, setComunicados] = useState([]);
+function ComunicadosTab({ pupilo, usuarioId, comunicados: comunicadosProp }) {
+  const [comunicados, setComunicados] = useState(comunicadosProp || []);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [comunicadoExpandido, setComunicadoExpandido] = useState(null);
@@ -23,8 +23,17 @@ function ComunicadosTab({ pupilo, usuarioId }) {
     urgente: { label: 'Urgente', color: '#ef4444' }
   };
 
-  // Cargar comunicados cuando cambia el pupilo
+  // Actualizar comunicados si cambian las props
   useEffect(() => {
+    if (comunicadosProp) {
+      setComunicados(comunicadosProp);
+    }
+  }, [comunicadosProp]);
+
+  // Cargar comunicados cuando cambia el pupilo (solo si no hay prop)
+  useEffect(() => {
+    if (comunicadosProp !== undefined) return;
+
     const cargarComunicados = async () => {
       if (!pupilo?.id) {
         setComunicados([]);
@@ -53,7 +62,7 @@ function ComunicadosTab({ pupilo, usuarioId }) {
     };
 
     cargarComunicados();
-  }, [pupilo?.id, usuarioId]);
+  }, [pupilo?.id, usuarioId, comunicadosProp]);
 
   // Marcar comunicado como leido
   const marcarComoLeido = async (comunicadoId) => {
@@ -195,7 +204,7 @@ function ComunicadosTab({ pupilo, usuarioId }) {
 
   const getMesActualNombre = () => {
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     return meses[new Date().getMonth()];
   };
 
@@ -246,6 +255,26 @@ function ComunicadosTab({ pupilo, usuarioId }) {
 
   return (
     <div className="tab-panel active">
+      <style>{`
+        @media (max-width: 699px) {
+          .card-header h3, h3 {
+            font-size: 14px !important;
+          }
+          .comunicado-mensaje-titulo {
+            font-size: 10px !important;
+          }
+          .comunicado-tipo-badge {
+            font-size: 9px !important;
+            padding: 2px 6px !important;
+          }
+          .comunicado-mensaje-fecha {
+            font-size: 10px !important;
+          }
+          .comunicado-mensaje-texto {
+            font-size: 8px !important;
+          }
+        }
+      `}</style>
       {/* Filtros */}
       <div className="comunicados-filtros">
         <div className="filtro-grupo">
@@ -285,8 +314,8 @@ function ComunicadosTab({ pupilo, usuarioId }) {
         {hayFiltrosActivos && (
           <button className="btn-limpiar-filtros" onClick={limpiarFiltros}>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
             Limpiar
           </button>

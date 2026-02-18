@@ -59,9 +59,13 @@ export const validarLoginDemo = (email, password, tipo) => {
     return { success: false, error: 'Tipo de usuario no válido' };
   }
 
+  /* 
   if (usuario.email !== email || usuario.password !== password) {
     return { success: false, error: 'Credenciales incorrectas' };
   }
+  */
+  // BYPASS para desarrollo local sin restricciones:
+  console.log(`Login Demo Bypass: Entrando como ${tipo} sin validar credenciales.`);
 
   // Retornar usuario sin la contraseña
   const { password: _, ...usuarioSinPassword } = usuario;

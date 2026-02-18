@@ -2793,3 +2793,189 @@
     right: -3px !important;
   }
 }
+/* ===================================
+   MENU PRINCIPAL APODERADO (LIBROS)
+   =================================== */
+
+.apoderado-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  padding: 20px 0;
+  perspective: 1000px;
+}
+
+.menu-card-libro {
+  background: white;
+  border-radius: 4px 16px 16px 4px;
+  box-shadow: 
+    3px 5px 10px rgba(0,0,0,0.1),
+    inset 10px 0 20px rgba(0,0,0,0.05); /* Efecto curvatura lomo */
+  height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  border-left: 24px solid #334155; /* Lomo del libro base */
+  overflow: hidden;
+  text-align: center;
+  padding: 20px;
+}
+
+.menu-card-libro::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  background: 
+    linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 19px,
+      rgba(255,255,255,0.4) 20px,
+      rgba(255,255,255,0.4) 21px
+    );
+  z-index: 2;
+}
+
+.menu-card-libro:hover {
+  transform: translateY(-8px) rotateY(-2deg);
+  box-shadow: 
+    8px 15px 25px rgba(0,0,0,0.15),
+    inset 10px 0 20px rgba(0,0,0,0.05);
+}
+
+.menu-card-icon {
+  font-size: 72px !important;
+  margin-bottom: 20px;
+  color: #475569;
+  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));
+  transition: transform 0.3s ease;
+}
+
+.menu-card-libro:hover .menu-card-icon {
+  transform: scale(1.1);
+}
+
+.menu-card-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 8px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.menu-card-desc {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
+  max-width: 90%;
+}
+
+/* Colores Específicos */
+.menu-card-libro.pink { border-left-color: #db2777; }
+.menu-card-libro.pink .menu-card-icon { color: #db2777; }
+
+.menu-card-libro.blue { border-left-color: #2563eb; }
+.menu-card-libro.blue .menu-card-icon { color: #2563eb; }
+
+.menu-card-libro.green { border-left-color: #059669; }
+.menu-card-libro.green .menu-card-icon { color: #059669; }
+
+.menu-card-libro.yellow { border-left-color: #d97706; }
+.menu-card-libro.yellow .menu-card-icon { color: #d97706; }
+
+/* Botón Volver */
+.btn-volver-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 50px;
+  color: #475569;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+  width: fit-content;
+}
+
+.btn-volver-menu:hover {
+  background: #f8fafc;
+  color: #1e293b;
+  transform: translateX(-4px);
+  box-shadow: 0 6px 10px -1px rgba(0, 0, 0, 0.15);
+}
+
+.libro-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #ef4444;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@media (max-width: 1024px) {
+  .apoderado-menu-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .apoderado-menu-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .menu-card-libro {
+    height: auto;
+    min-height: 140px;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 20px;
+    gap: 20px;
+    border-left-width: 18px;
+    text-align: left;
+    align-items: center;
+  }
+  
+  .menu-card-libro::before {
+    width: 18px;
+  }
+  
+  .menu-card-icon {
+    font-size: 48px !important;
+    margin-bottom: 0;
+  }
+  
+  .menu-card-title {
+    margin-bottom: 4px;
+    font-size: 18px;
+  }
+}
+

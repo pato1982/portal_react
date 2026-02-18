@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import '../styles/login.css';
-import { obtenerCredencialesDemo, login, esModoDemo } from '../services/authService';
+import { login, esModoDemo } from '../services/authService';
 
 function LoginPage({ onVolver, onLoginExitoso }) {
   const [formData, setFormData] = useState({
@@ -21,11 +21,8 @@ function LoginPage({ onVolver, onLoginExitoso }) {
 
   const seleccionarTipo = (tipo) => {
     setTipoSeleccionado(tipo);
-    // Obtener credenciales demo del servicio (solo en modo demo)
-    const credenciales = obtenerCredencialesDemo(tipo);
-    if (credenciales) {
-      setFormData(credenciales);
-    }
+    // Ya no autollenamos credenciales (Modo Producción Limpio)
+    setFormData({ email: '', password: '' });
     setError('');
   };
 

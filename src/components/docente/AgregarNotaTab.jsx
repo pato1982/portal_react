@@ -3,7 +3,7 @@ import { useResponsive, useDropdown } from '../../hooks';
 import { SelectNativo, SelectMovil, AutocompleteAlumno } from './shared';
 import { ordenarCursos } from './shared/utils';
 import config from '../../config/env';
-import { cursosDB as cursosDemo, asignaturasDB as asignaturasDemo } from '../../data/demoData';
+// Demo data removed
 
 // Simple Error Boundary for this component
 class ComponentErrorBoundary extends React.Component {
@@ -163,8 +163,8 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   // Cargar cursos del docente
   useEffect(() => {
     const cargarCursos = async () => {
-      // Mock Demo
-      setCursos(ordenarCursos(cursosDemo));
+      // Sin demo
+      setCursos([]);
       setCargandoCursos(false);
     };
 
@@ -193,9 +193,9 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
         return;
       }
       setCargandoAsignaturas(true);
-      // Mock Demo
+      // Sin demo
       setTimeout(() => {
-        setAsignaturas(asignaturasDemo);
+        setAsignaturas([]);
         setCargandoAsignaturas(false);
       }, 200);
     };
@@ -228,23 +228,11 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
     cargarAlumnos();
   }, [cursoSeleccionado]);
 
-  // Cargar notas recientes
   const cargarNotasRecientes = async (cursoId = null, alumnoId = null) => {
     setCargandoNotas(true);
-    // Mock Demo
+    // Sin demo
     setTimeout(() => {
-      const notasMock = Array.from({ length: 15 }, (_, i) => ({
-        id: i + 1,
-        fecha_evaluacion: new Date(new Date().setDate(new Date().getDate() - i)).toISOString().split('T')[0],
-        alumno_nombres: `Alumno ${Math.floor(Math.random() * 25) + 1} Estudiante`,
-        alumno_apellidos: 'Estudiante',
-        curso_nombre: cursosDemo.find(c => c.id === (cursoId || 1))?.nombre || 'Curso Demo',
-        asignatura_nombre: asignaturasDemo[Math.floor(Math.random() * asignaturasDemo.length)].nombre,
-        trimestre: Math.floor(Math.random() * 3) + 1,
-        nota: (Math.random() * 6 + 1).toFixed(1),
-        es_pendiente: Math.random() > 0.9
-      }));
-      setNotasRecientes(notasMock);
+      setNotasRecientes([]);
       setCargandoNotas(false);
     }, 300);
   };

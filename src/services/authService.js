@@ -1,23 +1,10 @@
 /**
  * Servicio de Autenticación
  *
- * En modo demo usa datos mock locales
- * En modo producción conecta a la API real
+ * Modo Producción (Sin mocks)
  */
 
 import config from '../config/env';
-import { getCredencialesDemo, validarLoginDemo } from '../mock/authMockData';
-
-/**
- * Obtiene las credenciales para auto-llenado (solo en modo demo)
- * @param {string} tipo - Tipo de usuario: 'administrador' | 'docente' | 'apoderado'
- * @returns {Object|null} Credenciales {email, password} o null si no disponible
- */
-export const obtenerCredencialesDemo = (tipo) => {
-  // En esta versión demo desplegada, permitimos siempre el autollenado
-  // si el usuario hace clic en el botón.
-  return getCredencialesDemo(tipo);
-};
 
 /**
  * Restablece la contraseña usuando el token
@@ -25,10 +12,6 @@ export const obtenerCredencialesDemo = (tipo) => {
  * @param {string} password 
  */
 export const restablecerPassword = async (token, password) => {
-  if (config.isDemoMode()) {
-    await new Promise(r => setTimeout(r, 1000));
-    return { success: true };
-  }
   try {
     const response = await fetch(`${config.apiBaseUrl}/auth/reset-password`, {
       method: 'POST',
@@ -49,16 +32,6 @@ export const restablecerPassword = async (token, password) => {
  * @returns {Promise<Object>} Resultado de la validación
  */
 export const login = async (email, password, tipo) => {
-  // Hack de seguridad: Si estamos en el VPS demo, forzamos el flujo demo
-  const isVps = typeof window !== 'undefined' && window.location.hostname === '45.236.130.25';
-
-  if (config.isDemoMode() || isVps) {
-    // Simular delay de red
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return validarLoginDemo(email, password, tipo);
-  }
-
-  // Modo producción: llamar a la API real
   try {
     const response = await fetch(`${config.apiBaseUrl}/auth/login`, {
       method: 'POST',
@@ -91,11 +64,6 @@ export const login = async (email, password, tipo) => {
  * @returns {Promise<void>}
  */
 export const logout = async () => {
-  if (config.isDemoMode()) {
-    localStorage.removeItem('auth_token');
-    return;
-  }
-
   try {
     const token = localStorage.getItem('auth_token');
     if (token) {
@@ -118,10 +86,6 @@ export const logout = async () => {
  * @returns {Promise<Object|null>} Usuario actual o null
  */
 export const verificarSesion = async () => {
-  if (config.isDemoMode()) {
-    return null; // En modo demo no hay sesión persistente
-  }
-
   try {
     const token = localStorage.getItem('auth_token');
     if (!token) return null;
@@ -149,10 +113,9 @@ export const verificarSesion = async () => {
  * Verifica si estamos en modo demo
  * @returns {boolean}
  */
-export const esModoDemo = () => config.isDemoMode();
+export const esModoDemo = () => false; // Siempre falso en modo producción limpio
 
 export default {
-  obtenerCredencialesDemo,
   login,
   logout,
   verificarSesion,

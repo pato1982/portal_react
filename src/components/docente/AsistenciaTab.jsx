@@ -4,7 +4,7 @@ import { SelectNativo, SelectMovil } from './shared';
 import { ordenarCursos } from './shared/utils';
 
 import config from '../../config/env';
-import { cursosDB as cursosDemo } from '../../data/demoData';
+import { cursosDB as cursosDemo, alumnosPorCursoDB } from '../../data/demoData';
 
 // Componente radio para asistencia
 const AsistenciaRadio = ({ alumnoId, estado, estadoActual, onChange, disabled }) => (
@@ -156,15 +156,22 @@ function AsistenciaTab({ docenteId, establecimientoId, usuarioId }) {
 
     // Mock Demo Lista Alumnos y Asistencia
     setTimeout(() => {
-      const alumnosMock = Array.from({ length: 25 }, (_, i) => ({
-        id: i + 1,
-        nombres: `Alumno ${i + 1}`,
-        apellidos: `Estudiante`,
-        rut: `11.111.11${i}-K`
-      }));
+      let alumnosOrdenados = [];
+      const alumnosDelCurso = alumnosPorCursoDB[cursoSeleccionado];
 
-      // Ordenar
-      const alumnosOrdenados = alumnosMock.sort((a, b) => (a.apellidos || '').localeCompare(b.apellidos || ''));
+      if (alumnosDelCurso) {
+        // Usar datos definidos en demoData.js
+        alumnosOrdenados = [...alumnosDelCurso].sort((a, b) => (a.apellidos || '').localeCompare(b.apellidos || ''));
+      } else {
+        // Fallback: Generar alumnos random si no hay datos específicos
+        const alumnosMock = Array.from({ length: 25 }, (_, i) => ({
+          id: i + 1,
+          nombres: `Alumno ${i + 1}`,
+          apellidos: `Estudiante`,
+          rut: `11.111.11${i}-K`
+        }));
+        alumnosOrdenados = alumnosMock.sort((a, b) => (a.apellidos || '').localeCompare(b.apellidos || ''));
+      }
       setAlumnos(alumnosOrdenados);
 
       // Mock asistencia random

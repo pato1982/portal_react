@@ -21,7 +21,7 @@ import ResetPasswordPage from './components/ResetPasswordPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { PageErrorFallback, SectionErrorFallback } from './components/common/ErrorFallback';
 import { useAuth } from './contexts';
-import { usuarioDemo } from './data/demoData';
+// Demo removed
 import TutorialGuide from './components/common/TutorialGuide';
 import './styles/docente.css';
 import './styles/apoderado.css';
@@ -309,7 +309,7 @@ function App() {
   // Vista de administrador
   return (
     <div className="app-container">
-      <Header usuario={usuarioLogueado || usuarioDemo} onCerrarSesion={cerrarSesion} />
+      <Header usuario={usuarioLogueado} onCerrarSesion={cerrarSesion} />
 
       {/* Botón flotante para reactivar tutorial */}
       {!showTutorial && (

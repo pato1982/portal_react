@@ -2,13 +2,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useDropdown } from '../hooks';
 import { useMensaje } from '../contexts';
 import config from '../config/env';
-import { cursosDB as cursosDemo } from '../data/demoData';
+// Demo Import Removed
 
 function AsistenciaTab() {
   const { mostrarMensaje } = useMensaje();
   const [filtros, setFiltros] = useState({
-    curso: cursosDemo?.[0]?.nombre || '',
-    cursoId: cursosDemo?.[0]?.id || null
+    curso: '',
+    cursoId: null
   });
   // Año escolar: marzo (2) a diciembre (11)
   const [mesSeleccionado, setMesSeleccionado] = useState(2); // Marzo por defecto
@@ -150,17 +150,8 @@ function AsistenciaTab() {
   }, [filtros.cursoId]);
 
   const cargarCursos = async () => {
-    setCursosDB(cursosDemo);
-
-    // Auto-seleccionar primer curso para DEMO si hay cursos y no hay selección
-    if (cursosDemo && cursosDemo.length > 0 && !filtros.cursoId) {
-      const primerCurso = cursosDemo[0];
-      setFiltros(prev => ({
-        ...prev,
-        curso: primerCurso.nombre,
-        cursoId: primerCurso.id
-      }));
-    }
+    // Sin Demo
+    setCursosDB([]);
   };
 
   const cargarAlumnosDelCurso = async (cursoId) => {

@@ -4119,7 +4119,7 @@ select.form-control {
 
     .table-responsive.table-scroll table.tabla-compacta-movil th:nth-child(2),
     .table-responsive.table-scroll table.tabla-compacta-movil td:nth-child(2) {
-        width: 18% !important;
+        width: 12% !important;
     }
 
     .table-responsive.table-scroll table.tabla-compacta-movil th:nth-child(3),
@@ -4129,7 +4129,7 @@ select.form-control {
 
     .table-responsive.table-scroll table.tabla-compacta-movil th:nth-child(4),
     .table-responsive.table-scroll table.tabla-compacta-movil td:nth-child(4) {
-        width: 12% !important;
+        width: 18% !important;
     }
 
     .table-responsive.table-scroll table.tabla-compacta-movil th:nth-child(5),
@@ -4160,8 +4160,9 @@ select.form-control {
     }
 
     .table-responsive.table-scroll table.tabla-compacta-movil .docente-nota-badge {
-        font-size: 9px !important;
+        font-size: 12px !important;
         padding: 2px 4px !important;
+        font-weight: 700;
     }
 
     .docente-tabla-asistencia {
@@ -4265,14 +4266,15 @@ select.form-control {
     }
 
     .docente-tabla-trimestres {
-        font-size: 9px;
+        font-size: 8px;
         border-collapse: separate;
         border-spacing: 0;
     }
 
     .docente-tabla-trimestres th,
     .docente-tabla-trimestres td {
-        padding: 4px 3px;
+        padding: 5px 4px;
+        min-width: 22px;
     }
 
     /* Columna N - Sticky (solo primera fila del thead y todas las filas del tbody) */
@@ -5723,152 +5725,111 @@ select.form-control {
 }
 
 .tabla-asistencia-wrapper {
-    display: flex;
     max-height: 500px;
-    overflow: hidden;
+    overflow: auto;
 }
 
-.columnas-fijas {
-    flex-shrink: 0;
-    background: #fff;
-    z-index: 10;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
+.tabla-asistencia-unica {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: max-content;
 }
 
-.columnas-scroll {
-    flex: 1;
-    overflow-x: auto;
-    overflow-y: auto;
-}
-
-/* Sincronizar scroll vertical */
-.columnas-fijas::-webkit-scrollbar,
-.columnas-scroll::-webkit-scrollbar {
+/* Scrollbar */
+.tabla-asistencia-wrapper::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
-.columnas-fijas::-webkit-scrollbar-thumb,
-.columnas-scroll::-webkit-scrollbar-thumb {
+.tabla-asistencia-wrapper::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 4px;
 }
 
-.columnas-fijas::-webkit-scrollbar-track,
-.columnas-scroll::-webkit-scrollbar-track {
+.tabla-asistencia-wrapper::-webkit-scrollbar-track {
     background: #f1f5f9;
 }
 
-.tabla-fija,
-.tabla-dias {
-    border-collapse: collapse;
-    width: 100%;
-}
-
-.tabla-fija thead,
-.tabla-dias thead {
+.tabla-asistencia-unica thead {
     position: sticky;
     top: 0;
-    z-index: 5;
-    background: #fff;
+    z-index: 20;
 }
 
-.tabla-fija th,
-.tabla-fija td,
-.tabla-dias th,
-.tabla-dias td {
-    border: 1px solid #e2e8f0;
-    padding: 8px;
+/* Estilos tabla unificada */
+.tabla-asistencia-unica th,
+.tabla-asistencia-unica td {
+    border-bottom: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    padding: 0;
     text-align: center;
     white-space: nowrap;
+    box-sizing: border-box;
+    height: 34px;
+    vertical-align: middle;
 }
 
-.tabla-fija .th-espaciador {
+/* === FILA 1: Barra del mes (azul) === */
+.th-espaciador {
     background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     height: 36px;
-    padding: 0;
-    border: 1px solid #e2e8f0;
-    box-sizing: border-box;
+    position: sticky;
+    left: 0;
+    z-index: 25;
 }
 
-.tabla-fija .th-numero {
-    width: 40px;
-    background: #f1f5f9;
-    font-weight: 600;
-    color: #334155;
-    height: 34px;
-    padding: 0 4px;
-    box-sizing: border-box;
-    vertical-align: middle;
-    line-height: 34px;
-}
-
-.tabla-fija .th-alumno {
-    min-width: 180px;
-    text-align: left;
-    background: #f1f5f9;
-    font-weight: 600;
-    color: #334155;
-    height: 34px;
-    padding: 0 8px;
-    box-sizing: border-box;
-    vertical-align: middle;
-    line-height: 34px;
-}
-
-.tabla-fija .td-numero {
-    background: #f8fafc;
-    font-weight: 500;
-    color: #64748b;
-    height: 34px;
-    padding: 0 4px;
-    vertical-align: middle;
-    line-height: 34px;
-}
-
-.tabla-fija .td-alumno {
-    text-align: left;
-    font-size: 13px;
-    color: #334155;
-    background: #fff;
-    height: 34px;
-    padding: 0 8px;
-    vertical-align: middle;
-    line-height: 34px;
-}
-
-.tabla-dias .th-mes {
+.th-mes {
     background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     color: #fff;
     font-weight: 600;
     font-size: 14px;
     height: 36px;
     padding: 0 10px;
-    box-sizing: border-box;
-    vertical-align: middle;
     line-height: 36px;
 }
 
-.tabla-dias .th-dia {
+/* === FILA 2: Cabeceras de columna (gris) === */
+.th-numero {
+    width: 40px;
+    background: #f1f5f9;
+    font-weight: 600;
+    color: #334155;
+    padding: 0 4px;
+    line-height: 34px;
+    position: sticky;
+    left: 0;
+    z-index: 25;
+}
+
+.th-alumno {
+    min-width: 180px;
+    text-align: left;
+    background: #f1f5f9;
+    font-weight: 600;
+    color: #334155;
+    padding: 0 8px;
+    line-height: 34px;
+    position: sticky;
+    left: 40px;
+    z-index: 25;
+}
+
+.th-dia {
     background: #f1f5f9;
     font-weight: 600;
     color: #475569;
     min-width: 36px;
-    height: 34px;
     padding: 2px;
-    box-sizing: border-box;
-    vertical-align: middle;
 }
 
-.tabla-dias .th-dia .dia-inicial {
+.th-dia .dia-inicial {
     display: block;
     font-size: 10px;
     color: #64748b;
     line-height: 1;
 }
 
-.tabla-dias .th-dia .dia-numero {
+.th-dia .dia-numero {
     display: block;
     font-size: 11px;
     color: #334155;
@@ -5876,27 +5837,49 @@ select.form-control {
     line-height: 1.2;
 }
 
-.tabla-dias .td-dia {
-    padding: 0;
+/* === FILAS BODY === */
+.td-numero {
+    background: #f8fafc;
+    font-weight: 500;
+    color: #64748b;
+    padding: 0 4px;
+    line-height: 34px;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+}
+
+.td-alumno {
+    text-align: left;
+    font-size: 13px;
+    color: #334155;
+    background: #fff;
+    padding: 0 8px;
+    line-height: 34px;
+    position: sticky;
+    left: 40px;
+    z-index: 10;
+    border-right: 2px solid #cbd5e1;
+}
+
+.td-dia {
     min-width: 36px;
-    height: 34px;
-    vertical-align: middle;
-    box-sizing: border-box;
+    padding: 0;
 }
 
 /* Separador de semanas */
-.tabla-dias .inicio-semana {
+.inicio-semana {
     border-left: 3px solid #94a3b8 !important;
 }
 
 /* Días feriados */
-.tabla-dias .dia-feriado {
+.dia-feriado {
     background: #e2e8f0 !important;
     cursor: default;
 }
 
-.tabla-dias th.dia-feriado .dia-inicial,
-.tabla-dias th.dia-feriado .dia-numero {
+th.dia-feriado .dia-inicial,
+th.dia-feriado .dia-numero {
     color: #94a3b8;
 }
 
@@ -5906,18 +5889,22 @@ select.form-control {
     color: #94a3b8;
 }
 
-.tabla-fija tbody tr,
-.tabla-dias tbody tr {
+.tabla-asistencia-unica tbody tr {
     height: 34px;
 }
 
-.tabla-fija tbody tr:nth-child(even),
-.tabla-dias tbody tr:nth-child(even) {
+.tabla-asistencia-unica tbody tr:nth-child(even) .td-numero {
+    background: #f0f4f8;
+}
+
+.tabla-asistencia-unica tbody tr:nth-child(even) .td-alumno,
+.tabla-asistencia-unica tbody tr:nth-child(even) .td-dia {
     background: #f8fafc;
 }
 
-.tabla-fija tbody tr:hover,
-.tabla-dias tbody tr:hover {
+.tabla-asistencia-unica tbody tr:hover .td-numero,
+.tabla-asistencia-unica tbody tr:hover .td-alumno,
+.tabla-asistencia-unica tbody tr:hover .td-dia {
     background: #e0f2fe;
 }
 
@@ -6286,24 +6273,31 @@ select.form-control {
         max-height: 400px;
     }
 
-    .tabla-fija .th-alumno {
+    .tabla-asistencia-unica .th-alumno {
         min-width: 140px;
     }
 
-    .tabla-dias .th-dia {
-        min-width: 32px;
-        height: 32px;
+    .tabla-asistencia-unica .th-numero,
+    .tabla-asistencia-unica .th-alumno,
+    .tabla-asistencia-unica .th-dia {
+        height: 34px;
+        line-height: 34px;
     }
 
-    .tabla-dias .th-dia .dia-inicial {
+    .tabla-asistencia-unica .th-dia {
+        min-width: 32px;
+        line-height: 1;
+    }
+
+    .tabla-asistencia-unica .th-dia .dia-inicial {
         font-size: 9px;
     }
 
-    .tabla-dias .th-dia .dia-numero {
+    .tabla-asistencia-unica .th-dia .dia-numero {
         font-size: 10px;
     }
 
-    .tabla-dias .td-dia {
+    .td-dia {
         min-width: 32px;
     }
 
@@ -6360,35 +6354,63 @@ select.form-control {
         max-height: 350px;
     }
 
-    .tabla-fija .th-alumno {
+    /* Alturas unificadas movil */
+    .tabla-asistencia-unica th,
+    .tabla-asistencia-unica td {
+        height: 28px;
+    }
+
+    .tabla-asistencia-unica .th-espaciador,
+    .tabla-asistencia-unica .th-mes {
+        height: 24px;
+        line-height: 24px;
+    }
+
+    .tabla-asistencia-unica .th-numero,
+    .tabla-asistencia-unica .th-alumno,
+    .tabla-asistencia-unica .th-dia {
+        height: 28px;
+        line-height: 28px;
+    }
+
+    .tabla-asistencia-unica .td-numero,
+    .tabla-asistencia-unica .td-alumno,
+    .tabla-asistencia-unica .td-dia {
+        height: 28px;
+        line-height: 28px;
+    }
+
+    .tabla-asistencia-unica .th-numero,
+    .tabla-asistencia-unica .td-numero {
+        width: 30px;
+    }
+
+    .tabla-asistencia-unica .th-alumno,
+    .tabla-asistencia-unica .td-alumno {
+        left: 30px;
         min-width: 90px;
         max-width: 90px;
         font-size: 10px;
-    }
-
-    .tabla-fija .td-alumno {
-        font-size: 10px;
-        max-width: 90px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    .tabla-dias .th-dia {
+    .tabla-asistencia-unica .th-dia {
         min-width: 28px;
-        height: 30px;
         padding: 1px;
+        line-height: 1;
     }
 
-    .tabla-dias .th-dia .dia-inicial {
+    .tabla-asistencia-unica .th-dia .dia-inicial {
         font-size: 8px;
     }
 
-    .tabla-dias .th-dia .dia-numero {
+    .tabla-asistencia-unica .th-dia .dia-numero {
         font-size: 9px;
     }
 
-    .tabla-dias .td-dia {
+    .tabla-asistencia-unica .td-dia {
         padding: 2px;
         min-width: 28px;
     }
@@ -9112,147 +9134,3 @@ select.form-control {
     }
 }
 
-/* ==================== HELP TOOLTIP MODAL STYLES ==================== */
-/* ==================== HELP TOOLTIP MODAL STYLES ==================== */
-.help-modal-content {
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
-    /* Max limit */
-    height: auto;
-    /* Adapts to content height */
-    border-radius: 12px;
-    background-color: #ffffff;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    /* Clips outer but internal overflow works */
-}
-
-.help-modal-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #f8fafc;
-    flex-shrink: 0;
-}
-
-.help-modal-header h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.help-modal-close-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #64748b;
-    transition: background 0.2s;
-    flex-shrink: 0;
-}
-
-.help-modal-close-btn:hover {
-    background: #e2e8f0;
-    color: #ef4444;
-}
-
-.help-modal-body {
-    padding: 24px;
-    color: #334155;
-    line-height: 1.6;
-    font-size: 15px;
-    text-align: justify;
-    text-transform: none;
-    flex: 0 1 auto;
-    /* Don't expand unnecessarily, just fit content. Allow shrinking if max-height hit. */
-    overflow-y: auto;
-    /* Enables scrolling vertically if max-height is reached */
-    overflow-x: hidden;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-.help-modal-body p {
-    margin: 0;
-    white-space: normal;
-}
-
-.help-modal-footer {
-    padding: 12px 24px;
-    background-color: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    text-align: right;
-    flex-shrink: 0;
-}
-
-.help-modal-action-btn {
-    padding: 8px 16px;
-    background-color: #0f172a;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.help-modal-action-btn:hover {
-    background-color: #1e3a5f;
-}
-
-/* Responsive adjustment for Mobile & Tablet (Small Screens) */
-@media (max-width: 768px) {
-    .help-modal-content {
-        /* Ancho angosto */
-        width: 85% !important;
-        max-width: 320px !important;
-
-        /* Altura automática para ajustar al texto exacto */
-        height: auto !important;
-        min-height: 0 !important;
-        /* Remove ANY min-height constraint */
-        max-height: 90vh !important;
-        /* Cap it at screen edge */
-
-        margin: auto;
-    }
-
-    .help-modal-body {
-        /* Padding optimizado */
-        padding: 16px 16px !important;
-
-        /* Ajuste de texto */
-        font-size: 13px !important;
-        line-height: 1.5 !important;
-
-        /* Asegura que el texto baje */
-        white-space: normal !important;
-    }
-
-    .help-modal-header,
-    .help-modal-footer {
-        padding: 12px 16px !important;
-    }
-
-    .help-modal-header h3 {
-        font-size: 14px !important;
-        white-space: normal !important;
-    }
-}

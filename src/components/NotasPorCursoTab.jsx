@@ -199,7 +199,7 @@ function NotasPorCursoTab() {
           <h3>Notas por Curso y Asignatura</h3>
         </div>
         <div className="card-body">
-          <div className="form-row form-row-filtros filtros-notas-curso">
+          <div className="form-row form-row-filtros form-row-tres filtros-notas-curso">
             <div className="form-group">
               <label>Curso</label>
               <div className="custom-select-container">

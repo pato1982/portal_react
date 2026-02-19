@@ -130,10 +130,9 @@ function NotasTab({ pupilo, notas: notasProp }) {
   }, [notas]);
 
   const getNotaClass = (nota) => {
-    if (nota >= 6.0) return 'nota-excelente';
-    if (nota >= 5.0) return 'nota-buena';
-    if (nota >= 4.0) return 'nota-suficiente';
-    return 'nota-insuficiente';
+    if (nota < 4.0) return 'nota-roja';
+    if (nota < 5.0) return 'nota-amarilla';
+    return 'nota-azul';
   };
 
   const formatearFecha = (fecha) => {

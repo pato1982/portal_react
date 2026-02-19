@@ -22,17 +22,17 @@ const getAuthHeaders = () => {
  * @returns {Promise<Object>} Lista de contactos (admins primero, luego docentes)
  */
 export const obtenerContactos = async (usuarioId, establecimientoId) => {
-  if (config.isDemoMode()) {
-    // En modo demo, retornar datos de ejemplo
-    return {
-      success: true,
-      data: [
-        { usuario_id: 1, nombre_completo: 'Administrador Demo', tipo: 'administrador', es_admin: 1, mensajes_no_leidos: 0 },
-        { usuario_id: 2, nombre_completo: 'Prof. Garcia', tipo: 'docente', es_admin: 0, mensajes_no_leidos: 2 },
-        { usuario_id: 3, nombre_completo: 'Prof. Lopez', tipo: 'docente', es_admin: 0, mensajes_no_leidos: 0 }
-      ]
-    };
-  }
+  // if (config.isDemoMode()) {
+  //   // En modo demo, retornar datos de ejemplo
+  //   return {
+  //     success: true,
+  //     data: [
+  //       { usuario_id: 1, nombre_completo: 'Administrador Demo', tipo: 'administrador', es_admin: 1, mensajes_no_leidos: 0 },
+  //       { usuario_id: 2, nombre_completo: 'Prof. Garcia', tipo: 'docente', es_admin: 0, mensajes_no_leidos: 2 },
+  //       { usuario_id: 3, nombre_completo: 'Prof. Lopez', tipo: 'docente', es_admin: 0, mensajes_no_leidos: 0 }
+  //     ]
+  //   };
+  // }
 
   try {
     const response = await fetch(
@@ -60,9 +60,9 @@ export const obtenerContactos = async (usuarioId, establecimientoId) => {
  * @returns {Promise<Object>} Lista de conversaciones
  */
 export const obtenerConversaciones = async (usuarioId, establecimientoId) => {
-  if (config.isDemoMode()) {
-    return { success: true, data: [] };
-  }
+  // if (config.isDemoMode()) {
+  //   return { success: true, data: [] };
+  // }
 
   try {
     const response = await fetch(
@@ -92,15 +92,15 @@ export const obtenerConversaciones = async (usuarioId, establecimientoId) => {
  * @returns {Promise<Object>} Lista de mensajes
  */
 export const obtenerMensajes = async (conversacionId, usuarioId, limite = 50, offset = 0, sinceId = null) => {
-  if (config.isDemoMode()) {
-    return {
-      success: true,
-      data: [
-        { id: 1, mensaje: 'Hola, buenos dias', direccion: 'recibido', fecha_envio: new Date().toISOString() },
-        { id: 2, mensaje: 'Buenos dias, en que puedo ayudarle?', direccion: 'enviado', fecha_envio: new Date().toISOString() }
-      ]
-    };
-  }
+  // if (config.isDemoMode()) {
+  //   return {
+  //     success: true,
+  //     data: [
+  //       { id: 1, mensaje: 'Hola, buenos dias', direccion: 'recibido', fecha_envio: new Date().toISOString() },
+  //       { id: 2, mensaje: 'Buenos dias, en que puedo ayudarle?', direccion: 'enviado', fecha_envio: new Date().toISOString() }
+  //     ]
+  //   };
+  // }
 
   try {
     let url = `${config.apiBaseUrl}/chat/conversacion/${conversacionId}/mensajes?usuario_id=${usuarioId}&limite=${limite}&offset=${offset}`;
@@ -133,9 +133,9 @@ export const obtenerMensajes = async (conversacionId, usuarioId, limite = 50, of
  * @returns {Promise<Object>} ID de la conversacion
  */
 export const crearConversacion = async (usuarioId, otroUsuarioId, establecimientoId, asunto = null) => {
-  if (config.isDemoMode()) {
-    return { success: true, data: { id: 1 } };
-  }
+  // if (config.isDemoMode()) {
+  //   return { success: true, data: { id: 1 } };
+  // }
 
   try {
     const response = await fetch(`${config.apiBaseUrl}/chat/conversacion`, {
@@ -171,20 +171,20 @@ export const crearConversacion = async (usuarioId, otroUsuarioId, establecimient
  * @returns {Promise<Object>} Mensaje enviado
  */
 export const enviarMensaje = async (conversacionId, remitenteId, mensaje, tipoMensaje = 'texto') => {
-  if (config.isDemoMode()) {
-    return {
-      success: true,
-      data: {
-        id: Date.now(),
-        conversacion_id: conversacionId,
-        remitente_id: remitenteId,
-        mensaje,
-        tipo_mensaje: tipoMensaje,
-        fecha_envio: new Date().toISOString(),
-        leido: 0
-      }
-    };
-  }
+  // if (config.isDemoMode()) {
+  //   return {
+  //     success: true,
+  //     data: {
+  //       id: Date.now(),
+  //       conversacion_id: conversacionId,
+  //       remitente_id: remitenteId,
+  //       mensaje,
+  //       tipo_mensaje: tipoMensaje,
+  //       fecha_envio: new Date().toISOString(),
+  //       leido: 0
+  //     }
+  //   };
+  // }
 
   try {
     const response = await fetch(`${config.apiBaseUrl}/chat/mensaje`, {
@@ -218,9 +218,9 @@ export const enviarMensaje = async (conversacionId, remitenteId, mensaje, tipoMe
  * @returns {Promise<Object>} Resultado
  */
 export const marcarConversacionLeida = async (conversacionId, usuarioId) => {
-  if (config.isDemoMode()) {
-    return { success: true };
-  }
+  // if (config.isDemoMode()) {
+  //   return { success: true };
+  // }
 
   try {
     const response = await fetch(`${config.apiBaseUrl}/chat/conversacion/${conversacionId}/leer-todos`, {
@@ -249,9 +249,9 @@ export const marcarConversacionLeida = async (conversacionId, usuarioId) => {
  * @returns {Promise<Object>} Total de mensajes no leidos
  */
 export const obtenerNoLeidos = async (usuarioId, establecimientoId) => {
-  if (config.isDemoMode()) {
-    return { success: true, data: { total_no_leidos: 0 } };
-  }
+  // if (config.isDemoMode()) {
+  //   return { success: true, data: { total_no_leidos: 0 } };
+  // }
 
   try {
     const response = await fetch(
@@ -280,9 +280,9 @@ export const obtenerNoLeidos = async (usuarioId, establecimientoId) => {
  * @returns {Promise<Object>} Nuevos mensajes
  */
 export const obtenerNuevosMensajes = async (usuarioId, establecimientoId, desde) => {
-  if (config.isDemoMode()) {
-    return { success: true, data: [], timestamp: new Date().toISOString() };
-  }
+  // if (config.isDemoMode()) {
+  //   return { success: true, data: [], timestamp: new Date().toISOString() };
+  // }
 
   try {
     const url = desde
@@ -308,9 +308,17 @@ export const obtenerNuevosMensajes = async (usuarioId, establecimientoId, desde)
  * Obtiene los cursos del docente para el chat
  */
 export const obtenerCursosDocente = async (docenteId, establecimientoId) => {
-  if (config.isDemoMode()) {
-    return { success: true, data: [] };
-  }
+  // if (config.isDemoMode()) {
+  //   return {
+  //     success: true,
+  //     data: [
+  //       { id: 1, grado: '1', letra: 'A', nivel: 'Básica', nombre: 'Primero Básico A', mensajes_no_leidos: 2 },
+  //       { id: 2, grado: '1', letra: 'B', nivel: 'Básica', nombre: 'Primero Básico B', mensajes_no_leidos: 0 },
+  //       { id: 3, grado: '2', letra: 'A', nivel: 'Básica', nombre: 'Segundo Básico A', mensajes_no_leidos: 1 },
+  //       { id: 4, grado: '3', letra: 'A', nivel: 'Básica', nombre: 'Tercero Básico A', mensajes_no_leidos: 0 }
+  //     ]
+  //   };
+  // }
   try {
     const response = await fetch(`${config.apiBaseUrl}/chat/docente/${docenteId}/cursos?establecimiento_id=${establecimientoId}`, {
       headers: getAuthHeaders()
@@ -327,43 +335,43 @@ export const obtenerCursosDocente = async (docenteId, establecimientoId) => {
  * Obtiene los alumnos y apoderados de un curso
  */
 export const obtenerAlumnosCurso = async (cursoId, docenteUsuarioId) => {
-  if (config.isDemoMode()) {
-    return {
-      success: true,
-      data: [
-        {
-          alumno_id: 101,
-          nombre_alumno: 'Ana Gonzalez',
-          apoderado_id: 1,
-          apoderado_usuario_id: 10,
-          apoderado_activo: 1,
-          nombre_apoderado: 'Maria Gonzalez',
-          foto_apoderado: null,
-          mensajes_no_leidos: 2
-        },
-        {
-          alumno_id: 102,
-          nombre_alumno: 'Pedro Perez',
-          apoderado_id: 2,
-          apoderado_usuario_id: 11,
-          apoderado_activo: 0,
-          nombre_apoderado: 'Juan Perez',
-          foto_apoderado: null,
-          mensajes_no_leidos: 0
-        },
-        {
-          alumno_id: 103,
-          nombre_alumno: 'Luisa Martinez',
-          apoderado_id: 3,
-          apoderado_usuario_id: 12,
-          apoderado_activo: 1,
-          nombre_apoderado: 'Carlos Martinez',
-          foto_apoderado: null,
-          mensajes_no_leidos: 5
-        }
-      ]
-    };
-  }
+  // if (config.isDemoMode()) {
+  //   return {
+  //     success: true,
+  //     data: [
+  //       {
+  //         alumno_id: 101,
+  //         nombre_alumno: 'Ana Gonzalez',
+  //         apoderado_id: 1,
+  //         apoderado_usuario_id: 10,
+  //         apoderado_activo: 1,
+  //         nombre_apoderado: 'Maria Gonzalez',
+  //         foto_apoderado: null,
+  //         mensajes_no_leidos: 2
+  //       },
+  //       {
+  //         alumno_id: 102,
+  //         nombre_alumno: 'Pedro Perez',
+  //         apoderado_id: 2,
+  //         apoderado_usuario_id: 11,
+  //         apoderado_activo: 0,
+  //         nombre_apoderado: 'Juan Perez',
+  //         foto_apoderado: null,
+  //         mensajes_no_leidos: 0
+  //       },
+  //       {
+  //         alumno_id: 103,
+  //         nombre_alumno: 'Luisa Martinez',
+  //         apoderado_id: 3,
+  //         apoderado_usuario_id: 12,
+  //         apoderado_activo: 1,
+  //         nombre_apoderado: 'Carlos Martinez',
+  //         foto_apoderado: null,
+  //         mensajes_no_leidos: 5
+  //       }
+  //     ]
+  //   };
+  // }
   try {
     const response = await fetch(`${config.apiBaseUrl}/chat/curso/${cursoId}/alumnos-chat?usuario_id=${docenteUsuarioId}`, {
       headers: getAuthHeaders()

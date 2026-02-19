@@ -269,10 +269,9 @@ function ProgresoTab({ pupilo, notas: notasProp }) {
   };
 
   const getNotaClass = (nota) => {
-    if (nota >= 6.0) return 'nota-excelente';
-    if (nota >= 5.0) return 'nota-buena';
-    if (nota >= 4.0) return 'nota-suficiente';
-    return 'nota-insuficiente';
+    if (nota < 4.0) return 'nota-roja';
+    if (nota < 5.0) return 'nota-amarilla';
+    return 'nota-azul';
   };
 
   if (!pupilo) return <div className="tab-panel active"><div className="card-body">Seleccione un pupilo.</div></div>;
@@ -309,7 +308,7 @@ function ProgresoTab({ pupilo, notas: notasProp }) {
         .chart-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; }
         .chart-header { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
         .chart-body { flex: 1; min-height: 220px; padding: 15px; position: relative; }
-        .nota-excelente { color: #059669; } .nota-buena { color: #2563eb; } .nota-suficiente { color: #d97706; } .nota-insuficiente { color: #dc2626; }
+        .nota-azul { color: #2563eb; } .nota-amarilla { color: #d97706; } .nota-roja { color: #dc2626; }
         
         @media (max-width: 699px) {
           .chart-header h3, h3 {

@@ -150,8 +150,15 @@ function AsistenciaTab() {
   }, [filtros.cursoId]);
 
   const cargarCursos = async () => {
-    // Sin Demo
-    setCursosDB([]);
+    try {
+      const response = await fetch(`${config.apiBaseUrl}/cursos`);
+      const data = await response.json();
+      if (data.success) {
+        setCursosDB(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando cursos:', error);
+    }
   };
 
   const cargarAlumnosDelCurso = async (cursoId) => {
@@ -209,8 +216,9 @@ function AsistenciaTab() {
   const cargarAlumnosBajoUmbral = async (cursoId) => {
     // Mock bajo umbral
     setAlumnosBajoUmbral([
-      { id: 5, nombre: 'Alumno Estudiante 5', porcentaje: '82.5%' },
-      { id: 12, nombre: 'Alumno Estudiante 12', porcentaje: '75.0%' }
+      { alumno_id: 5, nombre_completo: 'Vicente Muñoz Soto', nombre_curso: '1° Medio A', porcentaje: '82.5' },
+      { alumno_id: 12, nombre_completo: 'Catalina Rojas Fuentes', nombre_curso: '2° Medio B', porcentaje: '75.0' },
+      { alumno_id: 18, nombre_completo: 'Martín González Vera', nombre_curso: '1° Medio A', porcentaje: '80.2' }
     ]);
   };
 
@@ -420,7 +428,7 @@ function AsistenciaTab() {
         </div>
         <div className="card-body">
           {/* Estadisticas Anuales - Movidas Arriba y siempre visibles */}
-          <h4 style={{ margin: '0 0 15px', color: '#64748b', fontSize: '14px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <h4 className="titulo-asistencia-global" style={{ margin: '0 0 15px', color: '#64748b', fontSize: '14px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Asistencia Global Acumulada (Establecimiento)
           </h4>
           <div className="asistencia-stats" style={{ marginBottom: '25px' }}>
@@ -560,6 +568,13 @@ function AsistenciaTab() {
 
           {/* Estilos específicos para móvil para reducir el tamaño de los números KPI */}
           <style>{`
+            @media (max-width: 699px) {
+              .titulo-asistencia-global {
+                font-size: 9px !important;
+                margin: 0 0 8px !important;
+                letter-spacing: 0.02em !important;
+              }
+            }
             @media (max-width: 480px) {
               .asistencia-stats {
                 display: grid !important;
@@ -635,86 +650,57 @@ function AsistenciaTab() {
                 </div>
               )}
               <div className="tabla-asistencia-wrapper">
-                {/* Columnas fijas (N° y Alumno) */}
-                <div className="columnas-fijas">
-                  <table className="tabla-fija">
-                    <thead>
-                      <tr className="fila-mes">
-                        <th className="th-espaciador" colSpan="2"></th>
-                      </tr>
-                      <tr className="fila-dias">
-                        <th className="th-numero">N°</th>
-                        <th className="th-alumno">Alumno</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {alumnosDelCurso.length > 0 ? (
-                        alumnosDelCurso.map((alumno, index) => (
-                          <tr key={alumno.id}>
-                            <td className="td-numero">{index + 1}</td>
-                            <td className="td-alumno">{formatearNombre(alumno.nombre_completo)}</td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="2" className="text-center text-muted">
-                            No hay alumnos
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Columnas scrolleables (días) */}
-                <div className="columnas-scroll">
-                  <table className="tabla-dias">
-                    <thead>
-                      <tr className="fila-mes">
-                        <th colSpan={diasDelMes.length} className="th-mes">
-                          {nombresMeses[mesSeleccionado]} {anioActual}
+                <table className="tabla-asistencia-unica">
+                  <thead>
+                    <tr className="fila-mes">
+                      <th className="th-espaciador" colSpan="2"></th>
+                      <th colSpan={diasDelMes.length} className="th-mes">
+                        {nombresMeses[mesSeleccionado]} {anioActual}
+                      </th>
+                    </tr>
+                    <tr className="fila-dias">
+                      <th className="th-numero">N°</th>
+                      <th className="th-alumno">Alumno</th>
+                      {diasDelMes.map((diaInfo, index) => (
+                        <th
+                          key={diaInfo.dia}
+                          className={`th-dia ${diaInfo.diaSemana === 1 && index > 0 ? 'inicio-semana' : ''} ${diaInfo.esFeriado ? 'dia-feriado' : ''}`}
+                        >
+                          <span className="dia-inicial">{diaInfo.inicial}</span>
+                          <span className="dia-numero">{diaInfo.dia}</span>
                         </th>
-                      </tr>
-                      <tr className="fila-dias">
-                        {diasDelMes.map((diaInfo, index) => (
-                          <th
-                            key={diaInfo.dia}
-                            className={`th-dia ${diaInfo.diaSemana === 1 && index > 0 ? 'inicio-semana' : ''} ${diaInfo.esFeriado ? 'dia-feriado' : ''}`}
-                          >
-                            <span className="dia-inicial">{diaInfo.inicial}</span>
-                            <span className="dia-numero">{diaInfo.dia}</span>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {alumnosDelCurso.length > 0 ? (
-                        alumnosDelCurso.map((alumno) => (
-                          <tr key={alumno.id}>
-                            {diasDelMes.map((diaInfo, index) => {
-                              const asistenciaDia = getAsistenciaDia(alumno.id, diaInfo.dia);
-                              return (
-                                <td
-                                  key={diaInfo.dia}
-                                  className={`td-dia ${diaInfo.esFeriado ? 'dia-feriado' : 'td-dia-clickable'} ${diaInfo.diaSemana === 1 && index > 0 ? 'inicio-semana' : ''}`}
-                                  onClick={() => !diaInfo.esFeriado && abrirPopup(alumno, diaInfo, asistenciaDia)}
-                                >
-                                  {diaInfo.esFeriado ? <span className="asistencia-feriado">Fer</span> : renderIconoAsistencia(asistenciaDia)}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={diasDelMes.length} className="text-center text-muted">
-                            No hay datos
-                          </td>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {alumnosDelCurso.length > 0 ? (
+                      alumnosDelCurso.map((alumno, index) => (
+                        <tr key={alumno.id}>
+                          <td className="td-numero">{index + 1}</td>
+                          <td className="td-alumno">{formatearNombre(alumno.nombre_completo)}</td>
+                          {diasDelMes.map((diaInfo, dIndex) => {
+                            const asistenciaDia = getAsistenciaDia(alumno.id, diaInfo.dia);
+                            return (
+                              <td
+                                key={diaInfo.dia}
+                                className={`td-dia ${diaInfo.esFeriado ? 'dia-feriado' : 'td-dia-clickable'} ${diaInfo.diaSemana === 1 && dIndex > 0 ? 'inicio-semana' : ''}`}
+                                onClick={() => !diaInfo.esFeriado && abrirPopup(alumno, diaInfo, asistenciaDia)}
+                              >
+                                {diaInfo.esFeriado ? <span className="asistencia-feriado">Fer</span> : renderIconoAsistencia(asistenciaDia)}
+                              </td>
+                            );
+                          })}
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={2 + diasDelMes.length} className="text-center text-muted">
+                          No hay alumnos
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           ) : (
@@ -822,14 +808,14 @@ function AsistenciaTab() {
             boxShadow: '0 4px 6px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', maxHeight: '80vh'
           }}>
             <div className="popup-header" style={{
-              padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              backgroundColor: '#fee2e2'
+              padding: '16px 20px', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              backgroundColor: '#dc2626', borderRadius: '8px 8px 0 0'
             }}>
-              <h4 style={{ margin: 0, color: '#991b1b', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h4 style={{ margin: 0, color: '#ffffff', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '20px' }}>⚠️</span> Alumnos en Riesgo (Bajo 85%)
               </h4>
               <button className="popup-close" onClick={cerrarPopupBajoUmbral} style={{
-                background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#991b1b', lineHeight: 1
+                background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#ffffff', lineHeight: 1
               }}>&times;</button>
             </div>
             <div className="popup-body" style={{ padding: '20px', overflowY: 'auto' }}>

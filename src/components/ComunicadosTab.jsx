@@ -135,188 +135,173 @@ function ComunicadosTab() {
 
   return (
     <div className="tab-panel active">
-      <div className="two-columns">
-        {/* Columna Izquierda: Opciones del Comunicado */}
-        <div className="column">
-          <div className="card">
-            <div className="card-header">
-              <h3>Opciones del Comunicado</h3>
-            </div>
-            <div className="card-body">
-              <div className="form-row form-row-filtros">
-                <div className="form-group">
-                  <label>Tipo de Comunicado</label>
-                  {isMobile ? (
-                    <div className="custom-select-container">
-                      <div
-                        className="custom-select-trigger"
-                        onClick={() => setDropdownAbierto(dropdownAbierto === 'tipo' ? null : 'tipo')}
-                      >
-                        <span>{formData.tipoComunicadoNombre || 'Seleccionar...'}</span>
-                        <span className="custom-select-arrow">{dropdownAbierto === 'tipo' ? '▲' : '▼'}</span>
-                      </div>
-                      {dropdownAbierto === 'tipo' && (
-                        <div className="custom-select-options">
-                          <div
-                            className="custom-select-option"
-                            onClick={() => {
-                              setFormData({ ...formData, tipoComunicado: '', tipoComunicadoNombre: '' });
-                              setDropdownAbierto(null);
-                            }}
-                          >
-                            Seleccionar...
-                          </div>
-                          {tiposComunicado.map(tipo => (
-                            <div
-                              key={tipo.id}
-                              className={`custom-select-option ${formData.tipoComunicado === tipo.id ? 'selected' : ''}`}
-                              onClick={() => {
-                                setFormData({ ...formData, tipoComunicado: tipo.id, tipoComunicadoNombre: tipo.nombre });
-                                setDropdownAbierto(null);
-                              }}
-                            >
-                              {tipo.nombre}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <select
-                      className="form-control"
-                      name="tipoComunicado"
-                      value={formData.tipoComunicado}
-                      onChange={(e) => setFormData({ ...formData, tipoComunicado: e.target.value })}
-                    >
-                      <option value="">Seleccionar...</option>
-                      {tiposComunicado.map(tipo => (
-                        <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-                <div className="form-group">
-                  <label>Curso</label>
-                  {isMobile ? (
-                    <div className="custom-select-container">
-                      <div
-                        className="custom-select-trigger"
-                        onClick={() => setDropdownAbierto(dropdownAbierto === 'modoCurso' ? null : 'modoCurso')}
-                      >
-                        <span>{formData.modoCursoNombre || 'Seleccionar...'}</span>
-                        <span className="custom-select-arrow">{dropdownAbierto === 'modoCurso' ? '▲' : '▼'}</span>
-                      </div>
-                      {dropdownAbierto === 'modoCurso' && (
-                        <div className="custom-select-options">
-                          <div
-                            className="custom-select-option"
-                            onClick={() => {
-                              setFormData({ ...formData, modoCurso: '', modoCursoNombre: '', cursosSeleccionados: [] });
-                              setDropdownAbierto(null);
-                            }}
-                          >
-                            Seleccionar...
-                          </div>
-                          {modosCurso.map(modo => (
-                            <div
-                              key={modo.id}
-                              className={`custom-select-option ${formData.modoCurso === modo.id ? 'selected' : ''}`}
-                              onClick={() => {
-                                setFormData({ ...formData, modoCurso: modo.id, modoCursoNombre: modo.nombre });
-                                setDropdownAbierto(null);
-                              }}
-                            >
-                              {modo.nombre}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <select
-                      className="form-control"
-                      name="modoCurso"
-                      value={formData.modoCurso}
-                      onChange={(e) => setFormData({ ...formData, modoCurso: e.target.value, cursosSeleccionados: [] })}
-                    >
-                      <option value="">Seleccionar...</option>
-                      {modosCurso.map(modo => (
-                        <option key={modo.id} value={modo.id}>{modo.nombre}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              </div>
-
-              {formData.modoCurso === 'especificos' && (
-                <div className="cursos-grid-container" style={{ marginTop: '15px' }}>
-                  <div className="checkbox-group checkbox-4-columnas">
-                    {cursosDB.map(curso => (
-                      <div key={curso.id} className="checkbox-item">
-                        <input
-                          type="checkbox"
-                          id={`curso-com-${curso.id}`}
-                          checked={formData.cursosSeleccionados.includes(curso.id)}
-                          onChange={() => handleCursoToggle(curso.id)}
-                        />
-                        <label htmlFor={`curso-com-${curso.id}`}>{curso.nombre}</label>
-                      </div>
-                    ))}
+      <div className="card">
+        <div className="card-header">
+          <h3>Enviar Comunicado</h3>
+        </div>
+        <div className="card-body">
+          <div className="form-row form-row-tres form-row-filtros">
+            <div className="form-group">
+              <label>Tipo de Comunicado</label>
+              {isMobile ? (
+                <div className="custom-select-container">
+                  <div
+                    className="custom-select-trigger"
+                    onClick={() => setDropdownAbierto(dropdownAbierto === 'tipo' ? null : 'tipo')}
+                  >
+                    <span>{formData.tipoComunicadoNombre || 'Seleccionar...'}</span>
+                    <span className="custom-select-arrow">{dropdownAbierto === 'tipo' ? '▲' : '▼'}</span>
                   </div>
+                  {dropdownAbierto === 'tipo' && (
+                    <div className="custom-select-options">
+                      <div
+                        className="custom-select-option"
+                        onClick={() => {
+                          setFormData({ ...formData, tipoComunicado: '', tipoComunicadoNombre: '' });
+                          setDropdownAbierto(null);
+                        }}
+                      >
+                        Seleccionar...
+                      </div>
+                      {tiposComunicado.map(tipo => (
+                        <div
+                          key={tipo.id}
+                          className={`custom-select-option ${formData.tipoComunicado === tipo.id ? 'selected' : ''}`}
+                          onClick={() => {
+                            setFormData({ ...formData, tipoComunicado: tipo.id, tipoComunicadoNombre: tipo.nombre });
+                            setDropdownAbierto(null);
+                          }}
+                        >
+                          {tipo.nombre}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+              ) : (
+                <select
+                  className="form-control"
+                  name="tipoComunicado"
+                  value={formData.tipoComunicado}
+                  onChange={(e) => setFormData({ ...formData, tipoComunicado: e.target.value })}
+                >
+                  <option value="">Seleccionar...</option>
+                  {tiposComunicado.map(tipo => (
+                    <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>
+                  ))}
+                </select>
               )}
             </div>
+            <div className="form-group">
+              <label>Curso</label>
+              {isMobile ? (
+                <div className="custom-select-container">
+                  <div
+                    className="custom-select-trigger"
+                    onClick={() => setDropdownAbierto(dropdownAbierto === 'modoCurso' ? null : 'modoCurso')}
+                  >
+                    <span>{formData.modoCursoNombre || 'Seleccionar...'}</span>
+                    <span className="custom-select-arrow">{dropdownAbierto === 'modoCurso' ? '▲' : '▼'}</span>
+                  </div>
+                  {dropdownAbierto === 'modoCurso' && (
+                    <div className="custom-select-options">
+                      <div
+                        className="custom-select-option"
+                        onClick={() => {
+                          setFormData({ ...formData, modoCurso: '', modoCursoNombre: '', cursosSeleccionados: [] });
+                          setDropdownAbierto(null);
+                        }}
+                      >
+                        Seleccionar...
+                      </div>
+                      {modosCurso.map(modo => (
+                        <div
+                          key={modo.id}
+                          className={`custom-select-option ${formData.modoCurso === modo.id ? 'selected' : ''}`}
+                          onClick={() => {
+                            setFormData({ ...formData, modoCurso: modo.id, modoCursoNombre: modo.nombre });
+                            setDropdownAbierto(null);
+                          }}
+                        >
+                          {modo.nombre}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <select
+                  className="form-control"
+                  name="modoCurso"
+                  value={formData.modoCurso}
+                  onChange={(e) => setFormData({ ...formData, modoCurso: e.target.value, cursosSeleccionados: [] })}
+                >
+                  <option value="">Seleccionar...</option>
+                  {modosCurso.map(modo => (
+                    <option key={modo.id} value={modo.id}>{modo.nombre}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+            <div className="form-group">
+              <label>Título</label>
+              <input
+                type="text"
+                className="form-control"
+                name="titulo"
+                value={formData.titulo}
+                onChange={handleInputChange}
+                placeholder="Ej: Reunion de apoderados"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Columna Derecha: Redactar Comunicado */}
-        <div className="column">
-          <div className="card">
-            <div className="card-header">
-              <h3>Redactar Comunicado</h3>
-            </div>
-            <div className="card-body">
-              <div className="form-group">
-                <label>Titulo</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="titulo"
-                  value={formData.titulo}
-                  onChange={handleInputChange}
-                  placeholder="Ej: Reunion de apoderados"
-                />
-              </div>
-              <div className="form-group">
-                <label>Mensaje</label>
-                <textarea
-                  className="form-control"
-                  name="mensaje"
-                  value={formData.mensaje}
-                  onChange={handleInputChange}
-                  rows="8"
-                  placeholder="Escriba el comunicado aqui..."
-                ></textarea>
-              </div>
-              <div className="form-actions form-actions-comunicados">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={limpiarFormulario}
-                  disabled={enviando}
-                >
-                  Limpiar
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={enviarComunicado}
-                  disabled={enviando}
-                >
-                  {enviando ? 'Enviando...' : 'Enviar'}
-                </button>
+          {formData.modoCurso === 'especificos' && (
+            <div className="cursos-grid-container" style={{ marginTop: '15px' }}>
+              <div className="checkbox-group checkbox-4-columnas">
+                {cursosDB.map(curso => (
+                  <div key={curso.id} className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      id={`curso-com-${curso.id}`}
+                      checked={formData.cursosSeleccionados.includes(curso.id)}
+                      onChange={() => handleCursoToggle(curso.id)}
+                    />
+                    <label htmlFor={`curso-com-${curso.id}`}>{curso.nombre}</label>
+                  </div>
+                ))}
               </div>
             </div>
+          )}
+
+          <div className="form-group">
+            <label>Mensaje</label>
+            <textarea
+              className="form-control"
+              name="mensaje"
+              value={formData.mensaje}
+              onChange={handleInputChange}
+              rows="8"
+              placeholder="Escriba el comunicado aqui..."
+            ></textarea>
+          </div>
+          <div className="form-actions" style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={limpiarFormulario}
+              disabled={enviando}
+            >
+              Limpiar
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={enviarComunicado}
+              disabled={enviando}
+            >
+              {enviando ? 'Enviando...' : 'Enviar'}
+            </button>
           </div>
         </div>
       </div>

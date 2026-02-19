@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMensaje } from '../contexts';
-import { useDropdown } from '../hooks';
+import { useDropdown, useResponsive } from '../hooks';
 import config from '../config/env';
 
 // Modal para editar docente
@@ -140,6 +140,7 @@ function DocentesTab() {
   const { mostrarMensaje } = useMensaje();
   const [subTab, setSubTab] = useState('agregar');
   const { dropdownAbierto, setDropdownAbierto } = useDropdown();
+  const { isMobile } = useResponsive();
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
@@ -592,7 +593,14 @@ function DocentesTab() {
                     {docentesFiltrados.length > 0 ? (
                       docentesFiltrados.map(docente => (
                         <tr key={docente.id}>
-                          <td>{docente.nombre_completo}</td>
+                          <td>
+                            {isMobile ? (
+                              <div>
+                                <div style={{ fontWeight: 600 }}>{docente.nombre_completo.split(',')[0]}</div>
+                                <div style={{ fontSize: '10px', color: '#64748b' }}>{docente.nombre_completo.split(',')[1]?.trim()}</div>
+                              </div>
+                            ) : docente.nombre_completo}
+                          </td>
                           <td>{getEspecialidadesDocente(docente)}</td>
                           <td>
                             <div className="acciones-btns">

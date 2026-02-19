@@ -552,23 +552,15 @@
   font-weight: 600;
 }
 
-.nota-excelente {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.nota-buena {
-  background: #dbeafe;
+.nota-azul {
   color: #2563eb;
 }
 
-.nota-suficiente {
-  background: #fef3c7;
+.nota-amarilla {
   color: #d97706;
 }
 
-.nota-insuficiente {
-  background: #fee2e2;
+.nota-roja {
   color: #dc2626;
 }
 
@@ -759,19 +751,15 @@
   font-size: 10px;
 }
 
-.tabla-notas-anual .nota-valor.nota-excelente {
-  color: #16a34a;
-}
-
-.tabla-notas-anual .nota-valor.nota-buena {
+.tabla-notas-anual .nota-valor.nota-azul {
   color: #2563eb;
 }
 
-.tabla-notas-anual .nota-valor.nota-suficiente {
+.tabla-notas-anual .nota-valor.nota-amarilla {
   color: #d97706;
 }
 
-.tabla-notas-anual .nota-valor.nota-insuficiente {
+.tabla-notas-anual .nota-valor.nota-roja {
   color: #dc2626;
 }
 
@@ -900,19 +888,15 @@
   font-weight: 700;
 }
 
-.nota-popup-valor.nota-excelente {
-  color: #16a34a;
-}
-
-.nota-popup-valor.nota-buena {
+.nota-popup-valor.nota-azul {
   color: #2563eb;
 }
 
-.nota-popup-valor.nota-suficiente {
+.nota-popup-valor.nota-amarilla {
   color: #d97706;
 }
 
-.nota-popup-valor.nota-insuficiente {
+.nota-popup-valor.nota-roja {
   color: #dc2626;
 }
 
@@ -1424,19 +1408,15 @@
   transition: width 0.3s ease;
 }
 
-.asignatura-progress-fill.nota-excelente {
-  background: #10b981;
-}
-
-.asignatura-progress-fill.nota-buena {
+.asignatura-progress-fill.nota-azul {
   background: #3b82f6;
 }
 
-.asignatura-progress-fill.nota-suficiente {
+.asignatura-progress-fill.nota-amarilla {
   background: #f59e0b;
 }
 
-.asignatura-progress-fill.nota-insuficiente {
+.asignatura-progress-fill.nota-roja {
   background: #ef4444;
 }
 
@@ -2878,7 +2858,7 @@
   max-width: 90%;
 }
 
-/* Colores Específicos */
+/* Colores Especï¿½ficos */
 .menu-card-libro.pink { border-left-color: #db2777; }
 .menu-card-libro.pink .menu-card-icon { color: #db2777; }
 
@@ -2891,7 +2871,7 @@
 .menu-card-libro.yellow { border-left-color: #d97706; }
 .menu-card-libro.yellow .menu-card-icon { color: #d97706; }
 
-/* Botón Volver */
+/* Botï¿½n Volver */
 .btn-volver-menu {
   display: flex;
   align-items: center;

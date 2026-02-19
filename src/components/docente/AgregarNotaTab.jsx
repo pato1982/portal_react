@@ -163,12 +163,20 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
   // Cargar cursos del docente
   useEffect(() => {
     const cargarCursos = async () => {
-      // Sin demo
-      setCursos([]);
-      setCargandoCursos(false);
+      try {
+        const response = await fetch(`${config.apiBaseUrl}/docente/${docenteId}/cursos`);
+        const data = await response.json();
+        if (data.success) {
+          setCursos(ordenarCursos(data.data || []));
+        }
+      } catch (error) {
+        console.error('Error cargando cursos:', error);
+      } finally {
+        setCargandoCursos(false);
+      }
     };
 
-    cargarCursos();
+    if (docenteId) cargarCursos();
   }, [docenteId, establecimientoId]);
 
   // Cargar tipos de evaluación
@@ -193,11 +201,17 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
         return;
       }
       setCargandoAsignaturas(true);
-      // Sin demo
-      setTimeout(() => {
-        setAsignaturas([]);
+      try {
+        const response = await fetch(`${config.apiBaseUrl}/docente/${docenteId}/asignaturas-por-curso/${cursoSeleccionado}`);
+        const data = await response.json();
+        if (data.success) {
+          setAsignaturas(data.data || []);
+        }
+      } catch (error) {
+        console.error('Error cargando asignaturas:', error);
+      } finally {
         setCargandoAsignaturas(false);
-      }, 200);
+      }
     };
 
     cargarAsignaturas();
@@ -212,17 +226,17 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
       }
 
       setCargandoAlumnos(true);
-      // Mock Demo
-      setTimeout(() => {
-        const alumnosMock = Array.from({ length: 25 }, (_, i) => ({
-          id: i + 1,
-          nombres: `Alumno ${i + 1}`,
-          apellidos: `Estudiante`,
-          nombre_completo: `Alumno ${i + 1} Estudiante`
-        }));
-        setAlumnos(alumnosMock);
+      try {
+        const response = await fetch(`${config.apiBaseUrl}/curso/${cursoSeleccionado}/alumnos`);
+        const data = await response.json();
+        if (data.success) {
+          setAlumnos(data.data || []);
+        }
+      } catch (error) {
+        console.error('Error cargando alumnos:', error);
+      } finally {
         setCargandoAlumnos(false);
-      }, 200);
+      }
     };
 
     cargarAlumnos();
@@ -230,11 +244,20 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
 
   const cargarNotasRecientes = async (cursoId = null, alumnoId = null) => {
     setCargandoNotas(true);
-    // Sin demo
-    setTimeout(() => {
-      setNotasRecientes([]);
+    try {
+      let url = `${config.apiBaseUrl}/docente/${docenteId}/notas/buscar?`;
+      if (cursoId) url += `curso_id=${cursoId}&`;
+      if (alumnoId) url += `alumno_id=${alumnoId}&`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.success) {
+        setNotasRecientes(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error cargando notas recientes:', error);
+    } finally {
       setCargandoNotas(false);
-    }, 300);
+    }
   };
 
   // Cargar notas recientes al inicio
@@ -252,15 +275,15 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
         return;
       }
 
-      // Mock filter
-      setTimeout(() => {
-        const alumnosMock = Array.from({ length: 25 }, (_, i) => ({
-          id: i + 1,
-          nombres: `Alumno ${i + 1}`,
-          apellidos: `Estudiante`
-        }));
-        setAlumnosFiltro(alumnosMock);
-      }, 100);
+      try {
+        const response = await fetch(`${config.apiBaseUrl}/curso/${filtroCurso}/alumnos`);
+        const data = await response.json();
+        if (data.success) {
+          setAlumnosFiltro(data.data || []);
+        }
+      } catch (error) {
+        console.error('Error cargando alumnos filtro:', error);
+      }
     };
 
     cargarAlumnosFiltro();
@@ -631,33 +654,39 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
             Sin notas recientes
           </div>
         ) : (
-          <div className="table-responsive" style={{ overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
-            <table className="data-table">
+          <div className="table-responsive" style={{ overflowY: 'auto', overflowX: showTabs ? 'hidden' : 'auto', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+            <table className="data-table" style={showTabs ? { tableLayout: 'fixed', width: '100%' } : {}}>
               <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8fafc', zIndex: 1 }}>
                 <tr>
-                  <th style={{ width: isMobile ? '65px' : '80px', whiteSpace: 'nowrap' }}>
+                  <th style={{ width: showTabs ? '42px' : '80px', whiteSpace: 'nowrap', padding: showTabs ? '4px 2px' : undefined }}>
                     Fecha
-                    <div style={{ display: 'inline-flex', marginLeft: isMobile ? '2px' : '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
-                      <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'asc' ? '#3b82f6' : '#cbd5e1' }}>▲</span>
-                      <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'desc' ? '#3b82f6' : '#cbd5e1' }}>▼</span>
-                    </div>
+                    {!showTabs && (
+                      <div style={{ display: 'inline-flex', marginLeft: '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
+                        <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'asc' ? '#3b82f6' : '#cbd5e1' }}>▲</span>
+                        <span onClick={() => setSortConfig({ key: 'fecha_evaluacion', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'fecha_evaluacion' && sortConfig.direction === 'desc' ? '#3b82f6' : '#cbd5e1' }}>▼</span>
+                      </div>
+                    )}
                   </th>
-                  <th style={{ width: 'auto', whiteSpace: 'nowrap' }}>
+                  <th style={{ width: 'auto', whiteSpace: 'nowrap', padding: showTabs ? '4px 2px' : undefined }}>
                     Alumno
-                    <div style={{ display: 'inline-flex', marginLeft: '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
-                      <span onClick={() => setSortConfig({ key: 'alumno_apellidos', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'alumno_apellidos' && sortConfig.direction === 'asc' ? '#3b82f6' : '#cbd5e1' }}>▲</span>
-                      <span onClick={() => setSortConfig({ key: 'alumno_apellidos', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'alumno_apellidos' && sortConfig.direction === 'desc' ? '#3b82f6' : '#cbd5e1' }}>▼</span>
-                    </div>
+                    {!showTabs && (
+                      <div style={{ display: 'inline-flex', marginLeft: '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
+                        <span onClick={() => setSortConfig({ key: 'alumno_apellidos', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'alumno_apellidos' && sortConfig.direction === 'asc' ? '#3b82f6' : '#cbd5e1' }}>▲</span>
+                        <span onClick={() => setSortConfig({ key: 'alumno_apellidos', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'alumno_apellidos' && sortConfig.direction === 'desc' ? '#3b82f6' : '#cbd5e1' }}>▼</span>
+                      </div>
+                    )}
                   </th>
                   {!showTabs && <th style={{ width: '60px' }}>Curso</th>}
-                  <th style={{ width: '60px' }}>Asig.</th>
-                  <th style={{ width: '40px' }}>Tri.</th>
-                  <th style={{ width: '65px', whiteSpace: 'nowrap' }}>
+                  <th style={{ width: showTabs ? '35px' : '60px', padding: showTabs ? '4px 2px' : undefined }}>Asig.</th>
+                  <th style={{ width: showTabs ? '25px' : '40px', textAlign: 'center', padding: showTabs ? '4px 1px' : undefined }}>Tri.</th>
+                  <th style={{ width: showTabs ? '35px' : '65px', whiteSpace: 'nowrap', padding: showTabs ? '4px 2px' : undefined }}>
                     Nota
-                    <div style={{ display: 'inline-flex', marginLeft: '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
-                      <span onClick={() => setSortConfig({ key: 'nota', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'nota' && sortConfig.direction === 'asc' ? '#3b82f6' : '#cbd5e1' }}>▲</span>
-                      <span onClick={() => setSortConfig({ key: 'nota', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'nota' && sortConfig.direction === 'desc' ? '#3b82f6' : '#cbd5e1' }}>▼</span>
-                    </div>
+                    {!showTabs && (
+                      <div style={{ display: 'inline-flex', marginLeft: '6px', gap: '1px', verticalAlign: 'middle', alignItems: 'center' }}>
+                        <span onClick={() => setSortConfig({ key: 'nota', direction: 'asc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'nota' && sortConfig.direction === 'asc' ? '#3b82f6' : '#cbd5e1' }}>▲</span>
+                        <span onClick={() => setSortConfig({ key: 'nota', direction: 'desc' })} style={{ cursor: 'pointer', fontSize: '12px', lineHeight: '0.8', color: sortConfig.key === 'nota' && sortConfig.direction === 'desc' ? '#3b82f6' : '#cbd5e1' }}>▼</span>
+                      </div>
+                    )}
                   </th>
                 </tr>
               </thead>
@@ -677,16 +706,16 @@ function AgregarNotaTabInternal({ docenteId, establecimientoId, usuarioId }) {
                   return 0;
                 }).map(n => (
                   <tr key={n.id}>
-                    <td style={{ fontSize: '12px' }}>{formatearFecha(n.fecha_evaluacion)}</td>
-                    <td style={{ fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
+                    <td style={{ fontSize: showTabs ? '10px' : '12px', padding: showTabs ? '4px 2px' : undefined }}>{formatearFecha(n.fecha_evaluacion)}</td>
+                    <td style={{ fontSize: showTabs ? '10px' : '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: showTabs ? '90px' : '150px', padding: showTabs ? '4px 2px' : undefined }}>
                       {n.alumno_apellidos}, {n.alumno_nombres?.split(' ')[0]}
                     </td>
                     {!showTabs && <td style={{ fontSize: '12px' }}>{formatearCurso(n.curso_nombre)}</td>}
-                    <td style={{ fontSize: '12px' }}>
+                    <td style={{ fontSize: showTabs ? '10px' : '12px', padding: showTabs ? '4px 2px' : undefined }}>
                       {abreviarAsignatura(n.asignatura_nombre)}
                     </td>
-                    <td style={{ textAlign: 'center', fontSize: '12px' }}>{n.trimestre}°</td>
-                    <td style={{ textAlign: 'center', fontWeight: '600', fontSize: '13px', color: n.es_pendiente ? '#f59e0b' : (n.nota >= 4.0 ? '#10b981' : '#ef4444') }}>
+                    <td style={{ textAlign: 'center', fontSize: showTabs ? '10px' : '12px', padding: showTabs ? '4px 1px' : undefined }}>{n.trimestre}°</td>
+                    <td style={{ textAlign: 'center', fontWeight: '600', fontSize: showTabs ? '11px' : '13px', padding: showTabs ? '4px 2px' : undefined, color: n.es_pendiente ? '#f59e0b' : (n.nota >= 4.0 ? '#10b981' : '#ef4444') }}>
                       {n.es_pendiente ? 'P' : (
                         Number(n.nota) ? Number(n.nota).toFixed(1) : '-'
                       )}

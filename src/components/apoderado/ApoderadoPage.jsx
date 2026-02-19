@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import HelpTooltip from '../common/HelpTooltip';
 
 import InformacionTab from './InformacionTab';
 import NotasTab from './NotasTab';
@@ -36,60 +35,7 @@ const pupiloDemo = {
   sexo: 'Masculino'
 };
 
-// Datos demo de Notas
-const notasDemo = [
-  // Matemáticas
-  { id: 1, alumno_id: 1, asignatura: 'Matemáticas', trimestre: 1, nota: 6.5, fecha: '2025-03-15', numero_evaluacion: 1, comentario: 'Excelente desempeño' },
-  { id: 2, alumno_id: 1, asignatura: 'Matemáticas', trimestre: 1, nota: 5.8, fecha: '2025-04-02', numero_evaluacion: 2 },
-  { id: 3, alumno_id: 1, asignatura: 'Matemáticas', trimestre: 1, nota: 7.0, fecha: '2025-04-20', numero_evaluacion: 3, comentario: 'Prueba perfecta' },
-  { id: 4, alumno_id: 1, asignatura: 'Matemáticas', trimestre: 2, nota: 6.2, fecha: '2025-06-10', numero_evaluacion: 1 },
-  // Lenguaje
-  { id: 5, alumno_id: 1, asignatura: 'Lenguaje y Comunicación', trimestre: 1, nota: 5.5, fecha: '2025-03-18', numero_evaluacion: 1 },
-  { id: 6, alumno_id: 1, asignatura: 'Lenguaje y Comunicación', trimestre: 1, nota: 6.0, fecha: '2025-04-05', numero_evaluacion: 2 },
-  { id: 7, alumno_id: 1, asignatura: 'Lenguaje y Comunicación', trimestre: 2, nota: 6.8, fecha: '2025-06-12', numero_evaluacion: 1 },
-  // Historia
-  { id: 8, alumno_id: 1, asignatura: 'Historia', trimestre: 1, nota: 6.9, fecha: '2025-03-22', numero_evaluacion: 1 },
-  { id: 9, alumno_id: 1, asignatura: 'Historia', trimestre: 1, nota: 6.7, fecha: '2025-04-10', numero_evaluacion: 2 },
-  // Ciencias
-  { id: 10, alumno_id: 1, asignatura: 'Ciencias Naturales', trimestre: 1, nota: 5.0, fecha: '2025-03-25', numero_evaluacion: 1 },
-  { id: 11, alumno_id: 1, asignatura: 'Ciencias Naturales', trimestre: 1, nota: 5.2, fecha: '2025-04-15', numero_evaluacion: 2 },
-  // Inglés
-  { id: 12, alumno_id: 1, asignatura: 'Inglés', trimestre: 1, nota: 7.0, fecha: '2025-03-28', numero_evaluacion: 1 },
-];
-
-// Datos demo de Comunicados
-const comunicadosDemo = [
-  {
-    id: 1,
-    alumno_id: 1,
-    titulo: 'Reunión de Apoderados',
-    contenido: 'Se cita a reunión de apoderados para el día Martes 20 a las 19:00 hrs. Tabla: Rendimiento académico primer trimestre.',
-    fecha_envio: '2025-05-15T10:30:00',
-    remitente_nombre: 'Profesor Jefe',
-    leido: false,
-    tipo: 'reunion'
-  },
-  {
-    id: 2,
-    alumno_id: 1,
-    titulo: 'Salida Pedagógica al Museo',
-    contenido: 'Estimados apoderados, el próximo viernes realizaremos una visita al Museo de Historia Natural. Se requiere autorización firmada.',
-    fecha_envio: '2025-05-10T09:15:00',
-    remitente_nombre: 'Coordinación Académica',
-    leido: true,
-    tipo: 'actividad'
-  },
-  {
-    id: 3,
-    alumno_id: 1,
-    titulo: 'Feria Científica 2025',
-    contenido: 'Invitamos a toda la comunidad escolar a participar de nuestra feria científica anual este sábado a partir de las 10:00 hrs.',
-    fecha_envio: '2025-05-05T14:45:00',
-    remitente_nombre: 'Dirección',
-    leido: true,
-    tipo: 'general'
-  }
-];
+// Notas y comunicados se cargan desde el interceptor demo (datos estáticos en src/data/demoData.js)
 
 function ApoderadoPage({ onCambiarVista, usuario }) {
   const [tabActiva, setTabActiva] = useState('menu');
@@ -114,15 +60,11 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
   const [mostrarModalAgregar, setMostrarModalAgregar] = useState(false);
   const [mostrarModalPendientes, setMostrarModalPendientes] = useState(false);
   const [rutAlumnoAgregar, setRutAlumnoAgregar] = useState('');
-  const [comunicados, setComunicados] = useState(comunicadosDemo);
   const [cargando, setCargando] = useState(false);
   const dropdownRef = useRef(null);
 
   // Datos del apoderado (del usuario logueado o demo)
   const apoderadoActual = usuario || apoderadoDemo;
-
-  // Validar si el usuario pertenece al establecimiento 1 para mostrar ayuda
-  const mostrarAyuda = (apoderadoActual?.establecimiento_id === 1) || true;
 
   // Cargar pupilos y pupilos pendientes al montar
   useEffect(() => {
@@ -310,47 +252,29 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
   ];
 
   // Filtrar notas por pupilo seleccionado
-  const notasFiltradas = useMemo(() => {
-    if (!pupiloSeleccionado) return [];
-    return notasDemo.filter(nota => nota.alumno_id === pupiloSeleccionado.id);
-  }, [pupiloSeleccionado]);
-
-  // Filtrar comunicados por pupilo seleccionado
-  const comunicadosFiltrados = useMemo(() => {
-    if (!pupiloSeleccionado) return [];
-    return comunicados.filter(c => c.alumno_id === pupiloSeleccionado.id);
-  }, [comunicados, pupiloSeleccionado]);
+  // Notas y comunicados se cargan directamente en sus tabs via API/interceptor
+  // No filtrar por alumno_id aquí, cada tab consulta por pupilo.id
+  const notasFiltradas = undefined;
+  const comunicadosFiltrados = undefined;
 
   const handleCambiarPupilo = (pupilo) => {
     setPupiloSeleccionado(pupilo);
     setMostrarSelectorPupilo(false);
   };
 
-  const marcarComoLeido = (comunicadoId) => {
-    setComunicados(prev => prev.map(c =>
-      c.id === comunicadoId ? { ...c, leido: true } : c
-    ));
-  };
-
-  // Contar comunicados no leidos del pupilo seleccionado
-  const comunicadosNoLeidos = comunicadosFiltrados.filter(c => !c.leido).length;
-
-  // Calcular progreso dinámico (promedio de notas convertido a porcentaje)
-  const progresoPorcentaje = useMemo(() => {
-    if (notasFiltradas.length === 0) return 0;
-    const promedio = notasFiltradas.reduce((acc, nota) => acc + nota.nota, 0) / notasFiltradas.length;
-    // Escala de 1.0 a 7.0 a porcentaje 0-100%
-    return Math.round(((promedio - 1) / 6) * 100);
-  }, [notasFiltradas]);
+  // Badge y progreso se muestran con valores por defecto
+  // Los datos reales se cargan dentro de cada tab via API
+  const comunicadosNoLeidos = 0;
+  const progresoPorcentaje = 0;
 
   const yearEscolar = new Date().getFullYear();
 
   const renderTabContent = () => {
     const tabsConfig = [
       { id: 'informacion', Component: InformacionTab, props: { pupilo: pupiloSeleccionado, apoderado: apoderadoActual } },
-      { id: 'notas', Component: NotasTab, props: { pupilo: pupiloSeleccionado, notas: notasFiltradas } },
-      { id: 'comunicados', Component: ComunicadosTab, props: { pupilo: pupiloSeleccionado, usuarioId: apoderadoActual.id, comunicados: comunicadosFiltrados } },
-      { id: 'progreso', Component: ProgresoTab, props: { pupilo: pupiloSeleccionado, notas: notasFiltradas } }
+      { id: 'notas', Component: NotasTab, props: { pupilo: pupiloSeleccionado } },
+      { id: 'comunicados', Component: ComunicadosTab, props: { pupilo: pupiloSeleccionado, usuarioId: apoderadoActual.id } },
+      { id: 'progreso', Component: ProgresoTab, props: { pupilo: pupiloSeleccionado } }
     ];
 
     return tabsConfig.map(({ id, Component, props }) => {
@@ -523,7 +447,7 @@ function ApoderadoPage({ onCambiarVista, usuario }) {
                   key={tab.id}
                   className={`menu-card-libro ${tab.color}`}
                   onClick={() => setTabActiva(tab.id)}
-                  data-tab-id={tab.id} // Para tutorial si es necesario
+                  data-tab-id={tab.id}
                 >
                   <span className="material-symbols-outlined menu-card-icon">{tab.icon}</span>
 

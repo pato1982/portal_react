@@ -26,7 +26,23 @@
       "Bash(git commit:*)",
       "Bash(git config:*)",
       "Bash(git push:*)",
-      "Bash(npm --version:*)"
+      "Bash(npm --version:*)",
+      "Bash(/usr/bin/env node:*)",
+      "Bash(/mnt/c/Program Files/nodejs/node.exe --version)",
+      "Bash(\"/mnt/c/Program Files/nodejs/node.exe\" -e:*)",
+      "Bash(\"/mnt/c/Program Files/nodejs/node.exe\" -e \"\n// Verify interceptor can be loaded \\(syntax check\\)\ntry {\n    const fn = require\\(''./server/middleware/demoInterceptor''\\);\n    console.log\\(''demoInterceptor OK - type:'', typeof fn\\);\n} catch\\(e\\) {\n    console.error\\(''ERROR:'', e.message\\);\n}\n\")",
+      "Bash(ss:*)",
+      "Bash(netstat:*)",
+      "Bash(\"/mnt/c/Windows/System32/cmd.exe\" /c \"netstat -ano | findstr :3001\")",
+      "Bash(\"/mnt/c/Windows/System32/cmd.exe\" /c \"netstat -ano | findstr :5173\")",
+      "Bash(\"/mnt/c/Windows/System32/cmd.exe\" /c \"taskkill /PID 15332 /F\")",
+      "Bash(\"/mnt/c/Windows/System32/cmd.exe\" /c \"taskkill /PID 13832 /F\")",
+      "Bash(\"/mnt/c/Windows/System32/cmd.exe\" /c \"netstat -ano | findstr :3001 | findstr LISTENING\")",
+      "Bash(\"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe\" -Command \"Invoke-RestMethod -Uri ''http://localhost:3001/api/cursos'' | ConvertTo-Json\")",
+      "Bash(\"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe\" -Command \"\nWrite-Host ''=== DOCENTES ==='' \n\\(Invoke-RestMethod -Uri ''http://localhost:3001/api/docentes''\\).data | ForEach-Object { Write-Host $_nombre_completo }\n\nWrite-Host ''=== ESTADISTICAS GENERAL ===''\n$stats = \\(Invoke-RestMethod -Uri ''http://localhost:3001/api/estadisticas/general''\\).data\nWrite-Host \\(''Promedio: '' + $stats.promedio + '' | Alumnos: '' + $stats.alumnos + '' | Aprobacion: '' + $stats.aprobacion + ''%''\\)\n\nWrite-Host ''=== NOTAS PUPILO 1000 ===''\n$notas = \\(Invoke-RestMethod -Uri ''http://localhost:3001/api/apoderado/pupilo/1000/notas''\\).data\nWrite-Host \\(''Total notas: '' + $notas.Count\\)\n\nWrite-Host ''=== COMUNICADOS ===''\n$com = \\(Invoke-RestMethod -Uri ''http://localhost:3001/api/apoderado/pupilo/1000/comunicados''\\).data\nWrite-Host \\(''Total comunicados: '' + $com.Count\\)\n\nWrite-Host ''=== PROGRESO PUPILO ===''\n$prog = \\(Invoke-RestMethod -Uri ''http://localhost:3001/api/apoderado/pupilo/1000/progreso''\\).data\nWrite-Host \\(''Promedio: '' + $prog.estadisticas.promedio + '' | Asistencia: '' + $prog.asistencia.porcentaje + ''%''\\)\n\")",
+      "Bash(\"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe\" -Command \"\\(Invoke-RestMethod -Uri ''http://localhost:3001/api/docentes''\\).data.nombre_completo\")",
+      "Bash(\"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe\" -Command \"\\(Invoke-RestMethod -Uri ''http://localhost:3001/api/estadisticas/general''\\).data | ConvertTo-Json -Depth 2\")",
+      "Bash(\"/mnt/c/Windows/System32/cmd.exe\" /c \"netstat -ano | findstr :5173 | findstr LISTENING\")"
     ]
   }
 }

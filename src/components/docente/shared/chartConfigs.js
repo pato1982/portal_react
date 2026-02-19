@@ -125,8 +125,5 @@ export const formatearFecha = (fecha) => {
 // Clase CSS segun valor de nota
 export const getNotaClass = (nota) => {
   if (nota === null) return 'nota-pendiente';
-  if (nota >= 6.0) return 'nota-excelente';
-  if (nota >= 5.0) return 'nota-buena';
-  if (nota >= 4.0) return 'nota-suficiente';
-  return 'nota-insuficiente';
+  return nota >= 4.0 ? 'nota-aprobada' : 'nota-reprobada';
 };

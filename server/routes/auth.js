@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
+const mockData = require('../data/mockDataFull');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'portal_estudiantil_secret_key_2024';
@@ -27,6 +28,28 @@ const registrarLoginFallido = async (emailIngresado, tipoUsuario, motivoFallo, r
 // ============================================
 router.post('/login', async (req, res) => {
     const { email, password, tipo } = req.body;
+
+    // --- MOCK DEMO LOGIN ---
+    if (password === '123456' && email && email.endsWith('@demo.com')) {
+        let userMock = null;
+        if (email === 'admin@demo.com' && tipo === 'admin') userMock = mockData.users.admin;
+        else if (email === 'docente@demo.com' && tipo === 'docente') userMock = mockData.users.docente;
+        else if (email === 'apoderado@demo.com' && tipo === 'apoderado') userMock = mockData.users.apoderado;
+
+        if (userMock) {
+            const token = jwt.sign(
+                { id: userMock.id, email: userMock.email, tipo, tipo_usuario: userMock.role, isDemo: true },
+                JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+            return res.json({
+                success: true,
+                token,
+                usuario: { ...userMock, tipo }
+            });
+        }
+    }
+    // --- END MOCK DEMO ---
 
     // Mapear tipo del frontend al tipo de la base de datos
     const tipoMap = {
@@ -291,6 +314,22 @@ router.get('/me', async (req, res) => {
     try {
         // Verificar token
         const decoded = jwt.verify(token, JWT_SECRET);
+
+        // --- MOCK DEMO CHECK ---
+        if (decoded.isDemo) {
+            let userMock = null;
+            if (decoded.email === 'admin@demo.com') userMock = mockData.users.admin;
+            else if (decoded.email === 'docente@demo.com') userMock = mockData.users.docente;
+            else if (decoded.email === 'apoderado@demo.com') userMock = mockData.users.apoderado;
+
+            if (userMock) {
+                return res.json({
+                    success: true,
+                    usuario: { ...userMock, tipo: decoded.tipo }
+                });
+            }
+        }
+        // --- END MOCK DEMO ---
 
         // Verificar que la sesión esté activa en la base de datos
         const [sesiones] = await pool.query(

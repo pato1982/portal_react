@@ -1,48 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
-import TabsNav from './components/TabsNav';
-import AlumnosTab from './components/AlumnosTab';
-import MatriculasTab from './components/MatriculasTab';
-import DocentesTab from './components/DocentesTab';
-import AsignacionesTab from './components/AsignacionesTab';
-import NotasPorCursoTab from './components/NotasPorCursoTab';
-import AsistenciaTab from './components/AsistenciaTab';
-import ComunicadosTab from './components/ComunicadosTab';
-import EstadisticasTab from './components/EstadisticasTab';
-import ChatFlotante from './components/ChatFlotante';
-import ChatDocenteV2 from './components/ChatDocenteV2';
 import DocentePage from './components/docente/DocentePage';
 import ApoderadoPage from './components/apoderado/ApoderadoPage';
-import AdminPage from './components/admin/AdminPage'; // Mantenemos import aunque no se use directo
+import AdminPage from './components/admin/AdminPage';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import RegistroPage from './components/RegistroPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
-import { PageErrorFallback, SectionErrorFallback } from './components/common/ErrorFallback';
+import { PageErrorFallback } from './components/common/ErrorFallback';
 import { useAuth } from './contexts';
-// Demo removed
-import TutorialGuide from './components/common/TutorialGuide';
 import './styles/docente.css';
 import './styles/apoderado.css';
 import './styles/login.css';
 import './styles/registro.css';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('alumnos');
-
-  // Estado para optimización Keep-Alive: solo monta componentes cuando se visitan por primera vez
-  const [visitedTabs, setVisitedTabs] = useState(new Set(['alumnos']));
-
-  useEffect(() => {
-    setVisitedTabs(prev => {
-      if (prev.has(activeTab)) return prev;
-      const newSet = new Set(prev);
-      newSet.add(activeTab);
-      return newSet;
-    });
-  }, [activeTab]);
-
   // Detectar si venimos de un link de recuperación (/?token=...)
   const [vistaActual, setVistaActual] = useState(window.location.search.includes('token') ? 'reset-password' : 'landing');
   const [tokenRecuperacion] = useState(new URLSearchParams(window.location.search).get('token'));
@@ -50,11 +22,6 @@ function App() {
   const [tipoUsuarioRegistro, setTipoUsuarioRegistro] = useState(null); // 'administrador', 'docente', 'apoderado'
   const [usuarioLogueado, setUsuarioLogueado] = useState(null); // Datos del usuario autenticado
   const { login: loginContext, logout: logoutContext, isAuthenticated, usuario: usuarioAuth, tipoUsuario: tipoUsuarioAuth, cargandoSesion } = useAuth();
-
-  // Estado para el tutorial
-  const [showTutorial, setShowTutorial] = useState(() => {
-    return !localStorage.getItem('hasSeenAdminTour');
-  });
 
   // Efecto para redirigir si ya hay sesión iniciada (RESTORE SESSION)
   useEffect(() => {
@@ -75,44 +42,6 @@ function App() {
       }
     }
   }, [cargandoSesion, isAuthenticated, usuarioAuth, tipoUsuarioAuth, vistaActual]);
-
-
-
-
-  const renderTabContent = () => {
-    // Configuración de componentes por tab
-    const tabComponents = {
-      'alumnos': AlumnosTab,
-      'matriculas': MatriculasTab,
-      'docentes': DocentesTab,
-      'asignacion-cursos': AsignacionesTab,
-      'notas-por-curso': NotasPorCursoTab,
-      'asistencia': AsistenciaTab,
-      'comunicados': ComunicadosTab,
-      'estadisticas': EstadisticasTab
-    };
-
-    // Renderizado optimizado: Keep Alive
-    return Object.entries(tabComponents).map(([tabId, Component]) => {
-      // Si la pestaña nunca ha sido visitada y no es la actual, no renderizamos nada (Lazy Load)
-      if (!visitedTabs.has(tabId) && activeTab !== tabId) return null;
-
-      const isActive = activeTab === tabId;
-
-      return (
-        <div
-          key={tabId}
-          style={{ display: isActive ? 'block' : 'none' }}
-          role="tabpanel"
-          hidden={!isActive}
-        >
-          <ErrorBoundary FallbackComponent={SectionErrorFallback}>
-            <Component />
-          </ErrorBoundary>
-        </div>
-      );
-    });
-  };
 
   const cerrarSesion = () => {
     setUsuarioLogueado(null);
@@ -308,97 +237,9 @@ function App() {
 
   // Vista de administrador
   return (
-    <div className="app-container">
-      <Header usuario={usuarioLogueado} onCerrarSesion={cerrarSesion} />
-
-      {/* Botón flotante para reactivar tutorial */}
-      {!showTutorial && (
-        <button
-          onClick={() => setShowTutorial(true)}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            left: '20px',
-            zIndex: 90,
-            background: '#1e3a5f',
-            color: 'white',
-            border: 'none',
-            borderRadius: '50%',
-            width: '50px',
-            height: '50px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            title: 'Ver Tutorial'
-          }}
-        >
-          <span className="material-symbols-outlined">help</span>
-        </button>
-      )}
-
-      <TutorialGuide
-        isVisible={showTutorial}
-        onClose={() => { setShowTutorial(false); localStorage.setItem('hasSeenAdminTour', 'true'); }}
-        activeTab={activeTab}
-        onStepChange={setActiveTab}
-      />
-
-      <main className="main-content">
-        <section className="control-panel">
-          <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2>Panel de Control</h2>
-            <button
-              onClick={() => setShowTutorial(true)}
-              className="btn-primary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                backgroundColor: '#f59e0b',
-                border: 'none',
-                padding: '6px 16px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                color: 'white',
-                fontWeight: 500,
-                fontSize: '14px'
-              }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>help</span>
-              Ver Tutorial
-            </button>
-          </div>
-
-          <div className="tabs-container">
-            <TabsNav activeTab={activeTab} setActiveTab={setActiveTab} tutorialActive={showTutorial} />
-
-            <div className="tabs-content">
-              {renderTabContent()}
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <footer className="main-footer">
-        <p>Sistema de Gestion Academica &copy; 2024 | Todos los derechos reservados</p>
-        <p className="footer-creditos">Sistema escolar desarrollado por <span className="ch-naranja">CH</span>system</p>
-      </footer>
-
-      {/* Chat V2 - Global para Docentes y Administradores */}
-      <ErrorBoundary fallback={null}>
-        <ChatDocenteV2
-          usuario={usuarioLogueado ? {
-            id: usuarioLogueado.id,
-            tipo: usuarioLogueado.tipo || usuarioLogueado.tipo_usuario?.toLowerCase(),
-            nombres: usuarioLogueado.nombres,
-            apellidos: usuarioLogueado.apellidos
-          } : null}
-          establecimientoId={usuarioLogueado?.establecimiento_id}
-        />
-      </ErrorBoundary>
-    </div>
+    <ErrorBoundary FallbackComponent={PageErrorFallback}>
+      <AdminPage usuario={usuarioLogueado} onCerrarSesion={cerrarSesion} />
+    </ErrorBoundary>
   );
 }
 

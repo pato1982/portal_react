@@ -338,24 +338,16 @@ textarea.docente-form-control {
     font-size: 12px;
 }
 
-.nota-excelente {
-    background: #d1fae5;
-    color: #059669;
+.nota-aprobada,
+.docente-tabla td.nota-aprobada,
+.docente-tabla-trimestres td.nota-aprobada {
+    color: #2563eb !important;
 }
 
-.nota-buena {
-    background: #dbeafe;
-    color: #2563eb;
-}
-
-.nota-suficiente {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.nota-insuficiente {
-    background: #fee2e2;
-    color: #dc2626;
+.nota-reprobada,
+.docente-tabla td.nota-reprobada,
+.docente-tabla-trimestres td.nota-reprobada {
+    color: #dc2626 !important;
 }
 
 .nota-pendiente {
@@ -817,7 +809,11 @@ textarea.docente-form-control {
     }
 
     .docente-modal-info {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .docente-modal-info .docente-info-item:first-child {
+        grid-column: 1 / -1;
     }
 
     .docente-user-info {

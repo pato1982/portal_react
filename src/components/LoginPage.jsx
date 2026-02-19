@@ -21,9 +21,23 @@ function LoginPage({ onVolver, onLoginExitoso }) {
 
   const seleccionarTipo = (tipo) => {
     setTipoSeleccionado(tipo);
-    // Ya no autollenamos credenciales (Modo Producción Limpio)
-    setFormData({ email: '', password: '' });
     setError('');
+
+    // Autollenado de credenciales Demo (Solicitado por usuario)
+    const demoCreds = {
+      administrador: { email: 'admin@demo.com', pass: '123456' },
+      docente: { email: 'docente@demo.com', pass: '123456' },
+      apoderado: { email: 'apoderado@demo.com', pass: '123456' }
+    };
+
+    if (demoCreds[tipo]) {
+      setFormData({
+        email: demoCreds[tipo].email,
+        password: demoCreds[tipo].pass
+      });
+    } else {
+      setFormData({ email: '', password: '' });
+    }
   };
 
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import HelpTooltip from '../common/HelpTooltip';
 import AsistenciaTab from './AsistenciaTab';
 import AgregarNotaTab from './AgregarNotaTab';
 import ModificarNotaTab from './ModificarNotaTab';
@@ -32,9 +31,6 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
   const [establecimientoActual, setEstablecimientoActual] = useState(null);
   const [cargandoEstablecimientos, setCargandoEstablecimientos] = useState(true);
   const dropdownRef = useRef(null);
-
-  // Lógica de visibilidad de ayuda (Solo establecimiento ID 1)
-  const mostrarAyuda = establecimientoActual?.id === 1 || establecimientoActual?.id === '1';
 
   // Datos del docente desde el usuario logueado
   const docenteActual = {
@@ -267,7 +263,7 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
 
           <div className="tabs-container">
             {vistaActual === 'menu' ? (
-              <div className="apoderado-menu-grid">
+              <div className="docente-menu-5"><div className="apoderado-menu-grid">
                 {tabs.map(tab => (
                   <div
                     key={tab.id}
@@ -287,7 +283,7 @@ function DocentePage({ onCambiarVista, usuarioDocente }) {
                     </div>
                   </div>
                 ))}
-              </div>
+              </div></div>
             ) : (
               <div className="apoderado-content-view">
                 <div className="tabs-content" style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>

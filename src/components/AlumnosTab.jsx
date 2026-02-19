@@ -640,7 +640,14 @@ function AlumnosTab() {
               <tbody>
                 {alumnosFiltrados.length > 0 ? alumnosFiltrados.map(alumno => (
                   <tr key={alumno.id}>
-                    <td>{alumno.nombre_completo}</td>
+                    <td>
+                      {isMobile ? (
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{alumno.nombre_completo.split(',')[0]}</div>
+                          <div style={{ fontSize: '10px', color: '#64748b' }}>{alumno.nombre_completo.split(',')[1]?.trim()}</div>
+                        </div>
+                      ) : alumno.nombre_completo}
+                    </td>
                     <td>{alumno.rut}</td>
                     <td>{alumno.curso_nombre?.replace(/Básico|Basico|Básica|Basica/gi, 'B').replace(/Media/gi, 'M')}</td>
                     <td>

@@ -324,7 +324,7 @@ function AsignacionesTab() {
         </div>
 
         {/* Columna Derecha: Asignaciones Actuales */}
-        <div className={`column ${subTab === 'asignar' ? 'hidden-mobile' : ''}`}>
+        <div className={`column ${subTab === 'asignar' ? 'hidden-mobile' : ''}`} style={{ alignSelf: 'start' }}>
           <div className="card">
             <div className="card-header">
               <h3>Asignaciones Actuales</h3>
@@ -386,7 +386,7 @@ function AsignacionesTab() {
                   </div>
                 </div>
               </div>
-              <div className="table-responsive table-scroll">
+              <div className="table-responsive table-scroll" style={{ maxHeight: '250px', overflowY: 'auto' }}>
                 <table className="data-table tabla-asignaciones">
                   <thead>
                     <tr>

@@ -31,6 +31,11 @@ app.use((req, res, next) => {
     next();
 });
 
+// --- DEMO MODE INTERCEPTOR ---
+// Si el usuario es demo, este middleware interceptará las peticiones y responderá con datos simulados
+app.use(require('./middleware/demoInterceptor'));
+// --- END DEMO INTERCEPTOR ---
+
 // Gestión de conexiones Socket.io
 io.on('connection', (socket) => {
     console.log('Cliente conectado al socket:', socket.id);
@@ -4900,5 +4905,6 @@ server.listen(PORT, async () => {
     console.log(`   PUT  /api/alumnos/:id   - Actualizar alumno`);
     console.log(`   DELETE /api/alumnos/:id - Eliminar alumno\n`);
 
-    await testConnection();
+    // Comentado para modo demo (evitar errores de conexión si no hay DB local)
+    // await testConnection();
 });
